@@ -806,7 +806,7 @@ export default function Home() {
         <meta property="og:title" content={content.siteName} />
         <meta property="og:description" content={content.description} />
         <meta property="og:type" content="website" />
-        <link rel="icon" href="/Server-Icon.png" />
+        <link rel="icon" href="/Server-Icon.jpg" />
       </Head>
 
       <div className="page">
@@ -819,7 +819,7 @@ export default function Home() {
         <header className="header">
           <div className="headerStart">
             <a className="logoTile" href="/" aria-label="Kyriadon home">
-              <img src="/Server-Icon.png" alt="" width="48" height="48" decoding="async" />
+              <img src="/Server-Icon.jpg" alt="" width="48" height="48" decoding="async" />
             </a>
           </div>
 
