@@ -1,0 +1,37 @@
+[
+  {
+    "id": "welcome-new-site",
+    "category": "update",
+    "date": "2026-10-01",
+    "title": "Welcome to the new Kyriadon website",
+    "excerpt": "A fresh home for mods, announcements and community stats. More pages are on the way."
+  },
+  {
+    "id": "search-shortcut",
+    "category": "update",
+    "date": "2026-09-28",
+    "title": "Search everything with Ctrl + K",
+    "excerpt": "Press Ctrl + K anywhere on the site to search mods and projects instantly."
+  },
+  {
+    "id": "community-events",
+    "category": "event",
+    "date": "2026-09-20",
+    "title": "Community events are coming",
+    "excerpt": "Watch the Discord for dates and details on the next community event."
+  },
+  {
+    "id": "maintenance-window",
+    "category": "maintenance",
+    "date": "2026-09-12",
+    "title": "Scheduled maintenance window",
+    "excerpt": "Short downtime may happen while the site and services are being upgraded."
+  },
+  {
+    "id": "join-the-discord",
+    "category": "community",
+    "date": "2026-09-03",
+    "title": "Join the Discord community",
+    "excerpt": "Chat with other players, share feedback and follow every release as it lands."
+  }
+]

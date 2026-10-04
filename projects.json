@@ -1,0 +1,32 @@
+[
+  {
+    "id": "example-mod-one",
+    "type": "mod",
+    "title": "Example mod one",
+    "description": "Placeholder entry. Replace with a real mod to test search.",
+    "tags": ["example", "placeholder", "fabric"],
+    "aliases": ["emo"],
+    "href": "/projects/example-mod-one",
+    "featured": true
+  },
+  {
+    "id": "example-mod-two",
+    "type": "mod",
+    "title": "Example mod two",
+    "description": "Another placeholder mod used to demonstrate grouped results.",
+    "tags": ["example", "placeholder", "forge"],
+    "aliases": [],
+    "href": "/projects/example-mod-two",
+    "featured": true
+  },
+  {
+    "id": "example-project",
+    "type": "project",
+    "title": "Example project",
+    "description": "Placeholder project. The future Projects system will feed this list.",
+    "tags": ["example", "project"],
+    "aliases": [],
+    "href": "/projects/example-project",
+    "featured": false
+  }
+]
