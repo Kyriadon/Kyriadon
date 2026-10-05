@@ -848,29 +848,44 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="headerEnd">
-            {authStatus === 'authenticated' ? (
-<div className="userChip" data-menu-open={userMenuOpen} ref={userMenuRef}>
-  <button
-    type="button"
-    className="btn btnGhost btnIcon btnCompact"
-    onClick={() => setUserMenuOpen(!userMenuOpen)}
-    aria-label="User menu"
-    aria-expanded={userMenuOpen}
-  >
-    {session.user?.image && <img className="userAvatar" src={session.user.image} alt="" width="32" height="32" />}
-  </button>
-  <div className="userMenu">
-    <button type="button" className="userMenuItem" onClick={() => { setUserMenuOpen(false); /* navigate to account */ }}>
-      Account
+<div className="headerEnd">
+  {authStatus === 'authenticated' ? (
+    <div className="userChip" data-menu-open={userMenuOpen} ref={userMenuRef}>
+      <button
+        type="button"
+        className="btn btnGhost btnIcon btnCompact"
+        onClick={() => setUserMenuOpen((open) => !open)}
+        aria-label="User menu"
+        aria-expanded={userMenuOpen}
+      >
+        {session.user?.image && <img className="userAvatar" src={session.user.image} alt="" width="32" height="32" />}
+      </button>
+
+      <div className="userMenu">
+        <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
+          Account
+        </button>
+        <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
+          Notifications
+        </button>
+        <button
+          type="button"
+          className="userMenuItem userMenuLogout"
+          onClick={() => {
+            setUserMenuOpen(false);
+            signOut();
+          }}
+        >
+          Log out
+        </button>
+      </div>
+    </div>
+  ) : (
+    <button type="button" className="btn btnPrimary" onClick={() => signIn('discord')}>
+      <IconDiscord size={20} />
+      Login
     </button>
-    <button type="button" className="userMenuItem" onClick={() => { setUserMenuOpen(false); /* navigate to notifications */ }}>
-      Notifications
-    </button>
-    <button type="button" className="userMenuItem userMenuLogout" onClick={() => { setUserMenuOpen(false); signOut(); }}>
-      Log out
-    </button>
-  </div>
+  )}
 </div>
 
         <main className="main">
