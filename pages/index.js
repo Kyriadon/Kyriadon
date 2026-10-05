@@ -793,19 +793,33 @@ export default function Home() {
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
 
-  // Closes the dropdown when ESC is pressed
-  useEffect(() => {
-  const handleClickOutside = (event) => {
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+const userMenuRef = useRef(null);
+
+// Close menu on outside click / Escape
+useEffect(() => {
+  if (!userMenuOpen) return undefined;
+
+  const handlePointerDown = (event) => {
     if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
       setUserMenuOpen(false);
     }
   };
-  if (userMenuOpen) {
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }
-}, [userMenuOpen]);
 
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      setUserMenuOpen(false);
+    }
+  };
+
+  document.addEventListener('mousedown', handlePointerDown);
+  window.addEventListener('keydown', handleKeyDown);
+
+  return () => {
+    document.removeEventListener('mousedown', handlePointerDown);
+    window.removeEventListener('keydown', handleKeyDown);
+  };
+}, [userMenuOpen]);
   // Closing returns focus to the search trigger
   const closeSearch = useCallback(() => {
     setSearchOpen(false);
