@@ -502,8 +502,29 @@ h6 {
   max-width: 40rem;
 }
 
+/* Hero title: white at rest, fades into a blue and pink gradient on hover */
 .heroContent h1 {
   color: var(--color-text-primary);
+  background-image: linear-gradient(
+    100deg,
+    var(--color-azure) 0%,
+    var(--color-light-blue) 18%,
+    var(--color-baby-blue) 34%,
+    #ffd1e8 52%,
+    #ff9ad5 76%,
+    #ff6fb5 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: var(--color-text-primary);
+  transition: -webkit-text-fill-color var(--motion-slow) linear;
+}
+
+/* Hovering the hero panel reveals the gradient (same hover guard as the panel) */
+@media (hover: hover) and (pointer: fine) {
+  .heroShell:hover .heroContent h1 {
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 .heroContent h2 {
