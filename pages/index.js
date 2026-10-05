@@ -837,21 +837,28 @@ export default function Home() {
 
           <div className="headerEnd">
             {authStatus === 'authenticated' ? (
-              <div className="userChip">
-                {session.user?.image && <img className="userAvatar" src={session.user.image} alt="" width="32" height="32" />}
-                <span className="userName">{session.user?.name}</span>
-                <button type="button" className="btn btnSecondary btnCompact" onClick={() => signOut()}>
-                  Log out
-                </button>
-              </div>
-            ) : (
-              <button type="button" className="btn btnPrimary" onClick={() => signIn('discord')}>
-                <IconDiscord size={20} />
-                Login
-              </button>
-            )}
-          </div>
-        </header>
+<div className="userChip" data-menu-open={userMenuOpen} ref={userMenuRef}>
+  <button
+    type="button"
+    className="btn btnGhost btnIcon btnCompact"
+    onClick={() => setUserMenuOpen(!userMenuOpen)}
+    aria-label="User menu"
+    aria-expanded={userMenuOpen}
+  >
+    {session.user?.image && <img className="userAvatar" src={session.user.image} alt="" width="32" height="32" />}
+  </button>
+  <div className="userMenu">
+    <button type="button" className="userMenuItem" onClick={() => { setUserMenuOpen(false); /* navigate to account */ }}>
+      Account
+    </button>
+    <button type="button" className="userMenuItem" onClick={() => { setUserMenuOpen(false); /* navigate to notifications */ }}>
+      Notifications
+    </button>
+    <button type="button" className="userMenuItem userMenuLogout" onClick={() => { setUserMenuOpen(false); signOut(); }}>
+      Log out
+    </button>
+  </div>
+</div>
 
         <main className="main">
           <div className="homeGrid">
