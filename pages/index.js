@@ -96,7 +96,7 @@ function IconMegaphone({ size = 18 }) {
 function IconDiscord({ size = 18 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true" focusable="false">
-      <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
+      <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.0741.0741 0 00-.0785-.0371A19.7913 19.7913 0 003.683 4.3698C1.217 7.7645.875 11.0359.96 14.2887a19.9414 19.9414 0 005.985 2.965.0741.0741 0 00.0808-.0362c.4592-.6277.8662-1.2914 1.2113-1.9867a.0741.0741 0 00-.0405-.103c-.6425-.2443-1.253-.55-1.8337-.915a.0741.0741 0 01-.0089-.1256c.1224-.0937.2456-.1919.364-.2977a.074.074 0 01.0779-.0128c3.8444 1.7571 7.9975 1.7571 11.7944 0a.074.074 0 01.0779.0128c.1184.1058.2416.2039.364.2977a.0741.0741 0 01-.0089.1256c-.5807.365-.1.6707-1.8337.915-.0405.103-.0405.103-.0405.00l.00-.00z" />
     </svg>
   );
 }
@@ -105,7 +105,7 @@ function IconDiscord({ size = 18 }) {
 function IconYouTube({ size = 18 }) {
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true" focusable="false">
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136C4.495 20.455 12 20.455 12 20.455s7.505 0 9.377-.505a3.016 3.016 0 0 0 2.121-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
     </svg>
   );
 }
@@ -769,8 +769,8 @@ export default function Home() {
   const { data: session, status: authStatus } = useSession();
   const [searchOpen, setSearchOpen] = useState(false);
   const [modifierLabel, setModifierLabel] = useState('Ctrl');
-  const triggerRef = useRef(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const triggerRef = useRef(null);
   const userMenuRef = useRef(null);
   const fade = useScrollFade(behavior.scrollFade);
 
@@ -791,35 +791,32 @@ export default function Home() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  useEffect(() => {
+    if (!userMenuOpen) return undefined;
+
+    const handlePointerDown = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userMenuOpen]);
+
   const openSearch = useCallback(() => setSearchOpen(true), []);
 
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-const userMenuRef = useRef(null);
-
-// Close menu on outside click / Escape
-useEffect(() => {
-  if (!userMenuOpen) return undefined;
-
-  const handlePointerDown = (event) => {
-    if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-      setUserMenuOpen(false);
-    }
-  };
-
-  const handleKeyDown = (event) => {
-    if (event.key === 'Escape') {
-      setUserMenuOpen(false);
-    }
-  };
-
-  document.addEventListener('mousedown', handlePointerDown);
-  window.addEventListener('keydown', handleKeyDown);
-
-  return () => {
-    document.removeEventListener('mousedown', handlePointerDown);
-    window.removeEventListener('keydown', handleKeyDown);
-  };
-}, [userMenuOpen]);
   // Closing returns focus to the search trigger
   const closeSearch = useCallback(() => {
     setSearchOpen(false);
@@ -862,45 +859,46 @@ useEffect(() => {
             </button>
           </div>
 
-<div className="headerEnd">
-  {authStatus === 'authenticated' ? (
-    <div className="userChip" data-menu-open={userMenuOpen} ref={userMenuRef}>
-      <button
-        type="button"
-        className="btn btnGhost btnIcon btnCompact"
-        onClick={() => setUserMenuOpen((open) => !open)}
-        aria-label="User menu"
-        aria-expanded={userMenuOpen}
-      >
-        {session.user?.image && <img className="userAvatar" src={session.user.image} alt="" width="32" height="32" />}
-      </button>
+          <div className="headerEnd">
+            {authStatus === 'authenticated' ? (
+              <div className="userChip" data-menu-open={userMenuOpen} ref={userMenuRef}>
+                <button
+                  type="button"
+                  className="btn btnGhost btnIcon btnCompact"
+                  onClick={() => setUserMenuOpen((open) => !open)}
+                  aria-label="User menu"
+                  aria-expanded={userMenuOpen}
+                >
+                  {session.user?.image && <img className="userAvatar" src={session.user.image} alt="" width="32" height="32" />}
+                </button>
 
-      <div className="userMenu">
-        <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
-          Account
-        </button>
-        <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
-          Notifications
-        </button>
-        <button
-          type="button"
-          className="userMenuItem userMenuLogout"
-          onClick={() => {
-            setUserMenuOpen(false);
-            signOut();
-          }}
-        >
-          Log out
-        </button>
-      </div>
-    </div>
-  ) : (
-    <button type="button" className="btn btnPrimary" onClick={() => signIn('discord')}>
-      <IconDiscord size={20} />
-      Login
-    </button>
-  )}
-</div>
+                <div className="userMenu">
+                  <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
+                    Account
+                  </button>
+                  <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
+                    Notifications
+                  </button>
+                  <button
+                    type="button"
+                    className="userMenuItem userMenuLogout"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      signOut();
+                    }}
+                  >
+                    Log out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" className="btn btnPrimary" onClick={() => signIn('discord')}>
+                <IconDiscord size={20} />
+                Login
+              </button>
+            )}
+          </div>
+        </header>
 
         <main className="main">
           <div className="homeGrid">
