@@ -366,7 +366,6 @@ function AnnouncementsPanel() {
           className="viewToggle"
           onClick={() => setView(nextView)}
           aria-label={`Switch to ${nextView} view`}
-          title={`Switch to ${nextView} view`}
         >
           <MorphIcon mode={iconMode} />
         </button>
