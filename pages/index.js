@@ -770,6 +770,8 @@ export default function Home() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [modifierLabel, setModifierLabel] = useState('Ctrl');
   const triggerRef = useRef(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
   const fade = useScrollFade(behavior.scrollFade);
 
   // Show the command key on Apple devices (set after mount to avoid hydration mismatch)
