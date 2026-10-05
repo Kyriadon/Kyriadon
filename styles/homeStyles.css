@@ -420,7 +420,7 @@ h6 {
 .panelGlow::before {
   content: '';
   position: absolute;
-  inset: -1px;
+  inset: -1.5px;
   padding: 1px;
   border-radius: inherit;
   background: var(--gradient-holo-flow);
