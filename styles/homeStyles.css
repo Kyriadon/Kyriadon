@@ -278,8 +278,8 @@ h6 {
 }
 
 .userAvatar {
-  width: 2rem;
-  height: 2rem;
+  width: 3.5rem;
+  height: 3.5rem;
   border-radius: var(--radius-pill);
   background: var(--color-card-hover);
   object-fit: cover;
