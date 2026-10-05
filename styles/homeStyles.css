@@ -1282,6 +1282,10 @@ h6 {
 }
 
 /* User dropdown menu */
+.userChip {
+  position: relative;
+}
+
 .userMenu {
   position: absolute;
   top: calc(100% + var(--space-2));
@@ -1299,10 +1303,6 @@ h6 {
   visibility: hidden;
   transform: translateY(-8px);
   transition: opacity var(--motion-fast) linear, visibility var(--motion-fast) linear, transform var(--motion-fast) linear;
-}
-
-.userChip {
-  position: relative;
 }
 
 .userChip[data-menu-open='true'] .userMenu {
