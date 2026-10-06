@@ -26,9 +26,9 @@ const content = {
   description:
     "The home of Kyriadon's Minecraft mods and projects: search the library, read announcements and follow community stats.",
   hero: {
-    title: 'Everything Kyriadon, in one place',
+    title: 'All of Kyriadon, in one place',
     subtitle: 'Mods, announcements and community stats for the Kyriadon Minecraft community.',
-    body: "Search the full library of Kyriadon's mods and projects, catch the latest announcements, and see how the community is doing. Log in with Discord to get started.",
+    body: "Search the full library of Kyriadon's mods and projects, catch the latest announcements, and check out the amazing community!",
   },
 };
 
