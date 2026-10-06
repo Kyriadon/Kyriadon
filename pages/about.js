@@ -407,7 +407,7 @@ export default function About() {
         {/* Left: registration guide, help, testing guide */}
         <div className="aboutGuides">
           <RegistrationGuide guildId={discord?.guildId} />
-          <HelpPanel />
+          <HelpPanel guildId={discord?.guildId} />
           <TestingGuide guildId={discord?.guildId} />
         </div>
       </div>
