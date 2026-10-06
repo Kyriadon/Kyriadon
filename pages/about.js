@@ -267,7 +267,8 @@ function HelpPanel({ guildId }) {
           </a>
         </li>
         <li>
-          <Link className="linkRow" href={SUPPORT_GUIDE_HREF}>
+                    {/* Opens the support channel in Discord */}
+          <a className="linkRow" href={channelHref(guildId, channels.support)} target="_blank" rel="noopener noreferrer">
             <span className="linkIcon">
               <IconBook />
             </span>
