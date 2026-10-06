@@ -1,0 +1,485 @@
+/* ==========================================================================
+   aboutStyles.css
+   Styles for the About page (/about). Everything reuses the design tokens
+   generated from lib/siteDesign.js and the primitives in homeStyles.css
+   (panels, buttons, badges, link rows, hero). Only what is new lives here.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Layout: hero top-left, guides on the left, Discord panel on the right
+   -------------------------------------------------------------------------- */
+.aboutGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    'hero   hero   .'
+    'guides guides aside';
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.aboutGuides {
+  display: grid;
+  grid-area: guides;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* The Discord panel stays in view while the long guides scroll */
+.aboutAside {
+  grid-area: aside;
+  position: sticky;
+  top: var(--space-5);
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   2. Hero tone: same hero component, purple holographic gradient
+   -------------------------------------------------------------------------- */
+.heroPanel[data-tone='purple'] .heroGlow {
+  background: var(--gradient-holo-hero-purple);
+}
+
+/* --------------------------------------------------------------------------
+   3. Button family: light variant (shares geometry with .btn)
+   -------------------------------------------------------------------------- */
+.btnLight {
+  color: var(--color-bg-page);
+  background: var(--color-text-primary);
+}
+
+.btnLight:hover {
+  filter: brightness(0.92);
+}
+
+.btnLight:active {
+  filter: brightness(0.86);
+}
+
+/* --------------------------------------------------------------------------
+   4. Mentions: role-style chips for channels, websites and commands
+   Same geometry as the footer role chip; colours come from the mention tokens.
+   -------------------------------------------------------------------------- */
+.mention {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.55rem;
+  text-decoration: none;
+  background: var(--mention-bg);
+  border-radius: var(--radius-subtle);
+}
+
+.mention[data-tone='register'] {
+  --mention-bg: var(--mention-register-background);
+  --mention-gradient: var(--mention-register-gradient);
+}
+
+.mention[data-tone='testing'] {
+  --mention-bg: var(--mention-testing-background);
+  --mention-gradient: var(--mention-testing-gradient);
+}
+
+.mention[data-tone='site'] {
+  --mention-bg: var(--mention-site-background);
+  --mention-gradient: var(--mention-site-gradient);
+}
+
+.mention[data-tone='command'] {
+  --mention-bg: var(--mention-command-background);
+}
+
+/* Gradient text, same technique as the footer role name */
+.mentionName {
+  font-family: var(--font-special);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+  background: var(--mention-gradient);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Commands are technical text: mono font, solid light blue */
+.mention[data-tone='command'] .mentionName {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--mention-command-color);
+  background: none;
+  -webkit-text-fill-color: var(--mention-command-color);
+}
+
+/* Links shimmer on hover or keyboard focus (keyframes live in homeStyles.css) */
+.mention[href]:hover .mentionName,
+.mention[href]:focus-visible .mentionName {
+  animation: roleShimmer 2.4s linear infinite;
+}
+
+/* --------------------------------------------------------------------------
+   5. Discord server panel: blurred banner, icon, counts, join
+   -------------------------------------------------------------------------- */
+.discordPanel {
+  padding: 0;
+}
+
+/* The ring from .panelGlow must sit above the banner and scrim */
+.discordPanel.panelGlow::before {
+  z-index: 3;
+}
+
+/* Clips the oversized, blurred banner to the panel shape */
+.discordBanner {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.discordBanner img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(24px) saturate(1.25);
+  transform: scale(1.25);
+  animation: fadeIn var(--motion-slow) linear both;
+}
+
+/* Flat scrim keeps text readable over any banner */
+.discordScrim {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-banner-scrim);
+}
+
+.discordBody {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.discordHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.discordIcon {
+  flex: none;
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: cover;
+  background: var(--color-water-tile);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+}
+
+.discordMeta {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  padding-top: 0.125rem;
+}
+
+.discordMeta h3 {
+  color: var(--color-text-primary);
+}
+
+.discordMeta p {
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: var(--type-body-secondary-line-height);
+  color: var(--color-text-secondary);
+}
+
+/* Counts pill: online and members */
+.discordStats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  width: fit-content;
+  max-width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-modal);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.discordStat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+}
+
+.discordStat strong {
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.discordStatIcon {
+  display: grid;
+  align-self: center;
+  color: var(--color-success);
+}
+
+.discordStatDivider {
+  align-self: stretch;
+  width: 1px;
+  background: var(--color-divider);
+}
+
+.discordJoin {
+  justify-self: start;
+}
+
+/* --------------------------------------------------------------------------
+   6. Guides: numbered steps with a connector line
+   -------------------------------------------------------------------------- */
+.guideHeader {
+  align-items: flex-start;
+}
+
+.guideSubtitle {
+  margin-top: var(--space-1);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-line-height);
+  color: var(--color-text-secondary);
+}
+
+.guideSteps {
+  display: grid;
+  gap: var(--space-6);
+  margin: 0;
+  padding: var(--space-6);
+  list-style: none;
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+
+.guideStep {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+/* Connector from this marker down to the next one */
+.guideStep:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: calc(2.25rem + var(--space-1));
+  bottom: calc(var(--space-1) - var(--space-6));
+  left: calc(1.125rem - 0.5px);
+  width: 1px;
+  background: var(--color-border);
+}
+
+.guideMarker {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+}
+
+.guideBody {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding-top: 0.2rem;
+}
+
+.guideTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-primary);
+}
+
+.guideText {
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+}
+
+.guideCaption {
+  font-family: var(--type-helper-family);
+  font-size: var(--type-helper-size);
+  line-height: var(--type-helper-line-height);
+  color: var(--color-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   7. Discord form preview (decorative): Discord's modal colours and proportions
+   -------------------------------------------------------------------------- */
+.discordForm {
+  width: 100%;
+  max-width: 26rem;
+  margin-top: var(--space-3);
+  overflow: hidden;
+  color: var(--color-discord-text);
+  background: var(--color-discord-modal);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-panel);
+  pointer-events: none;
+  user-select: none;
+}
+
+.discordFormHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-5) var(--space-2);
+}
+
+.discordFormTitle {
+  font-family: var(--font-ui);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.discordFormClose {
+  display: grid;
+  color: var(--color-discord-placeholder);
+}
+
+.discordFormBody {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5) var(--space-5);
+}
+
+.discordFormField {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.discordFormLabel {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-discord-label);
+}
+
+.discordFormRequired {
+  margin-left: 0.25rem;
+  color: var(--color-danger);
+}
+
+.discordFormSelect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-discord-placeholder);
+  background: var(--color-discord-field);
+  border-radius: var(--radius-subtle);
+}
+
+.discordFormFoot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: color-mix(in srgb, var(--color-discord-modal) 80%, black);
+}
+
+.discordFormCancel {
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.discordFormSubmit {
+  display: inline-flex;
+  align-items: center;
+  height: 2.25rem;
+  padding: 0 var(--space-5);
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-on-accent);
+  background: var(--color-discord);
+  border-radius: var(--radius-subtle);
+}
+
+/* --------------------------------------------------------------------------
+   8. Responsive: one column when the three-column layout stops working
+   -------------------------------------------------------------------------- */
+@media (max-width: 980px) {
+  .aboutGrid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'hero'
+      'aside'
+      'guides';
+    gap: var(--space-4);
+  }
+
+  .aboutAside {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .guideSteps {
+    padding: var(--space-4);
+  }
+
+  .guideStep {
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  .guideStep:not(:last-child)::before {
+    top: calc(2rem + var(--space-1));
+    left: calc(1rem - 0.5px);
+  }
+
+  .guideMarker {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .discordBody {
+    padding: var(--space-5);
+  }
+}
