@@ -41,10 +41,8 @@ const content = {
 const channels = {
   register: '1479437622970679386',
   testing: '',
+  support: '1479414074176700426',
 };
-
-// Where the "support guide" link leads (page not built yet)
-const SUPPORT_GUIDE_HREF = '/support';
 
 // ----------------------------------------------------------------------------
 // Fallbacks used when the Discord lookup fails or the server has no banner
