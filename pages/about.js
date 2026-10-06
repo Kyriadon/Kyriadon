@@ -279,7 +279,7 @@ function HelpPanel({ guildId }) {
             <span className="linkChevron">
               <IconChevron />
             </span>
-          </Link>
+          </a>
         </li>
       </ul>
     </section>
