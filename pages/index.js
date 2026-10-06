@@ -9,8 +9,8 @@ import { behavior, gradientStops } from '../lib/siteDesign';
 import {
   IconChevron,
   IconDiscord,
+  IconInfo,
   IconMegaphone,
-  IconSearch,
   IconYouTube,
   SiteShell,
   formatCount,
