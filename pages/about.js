@@ -241,7 +241,7 @@ function RegistrationGuide({ guildId }) {
 // ----------------------------------------------------------------------------
 // Help panel: Discord and the support guide
 // ----------------------------------------------------------------------------
-function HelpPanel() {
+function HelpPanel({ guildId }) {
   return (
     <section className="panel panelGlow" aria-labelledby="helpTitle">
       <div className="panelHeader guideHeader">
