@@ -255,7 +255,7 @@ function StatsPanel() {
 function QuickLinksPanel({ onOpenSearch }) {
   // Each link is either an in-page action, an anchor or an external URL
   const links = [
-    { id: 'search', title: 'Search mods', description: 'Find any mod or project', icon: <IconSearch />, action: onOpenSearch },
+    { id: 'about', title: 'About Kyriadon', description: 'Guides, registration and testing', icon: <IconInfo />, href: '/about' }, // About page
     { id: 'news', title: 'Latest announcements', description: 'What is new right now', icon: <IconMegaphone />, href: '#announcements' },
     { id: 'discord', title: 'Join the Discord', description: 'Chat with the community', icon: <IconDiscord />, href: siteLinks.discord, external: true },
     { id: 'youtube', title: 'Watch on YouTube', description: 'Videos and showcases', icon: <IconYouTube />, href: siteLinks.youtube, external: true },
