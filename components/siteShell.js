@@ -178,6 +178,17 @@ export function IconChevronDown({ size = 16 }) {
   );
 }
 
+// Circled "i" (about and information)
+export function IconInfo({ size = 18 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" {...strokeProps}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5.2" />
+      <path d="M12 7.8h.01" />
+    </svg>
+  );
+}
+
 // ----------------------------------------------------------------------------
 // Hook: fetch JSON with loading, error and retry states
 // ----------------------------------------------------------------------------
