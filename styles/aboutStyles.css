@@ -763,13 +763,14 @@
 .boostPreview {
   display: flex;
   align-items: center;
-  min-height: 2.75rem;
+  min-height: 1.375rem;
   overflow-wrap: anywhere;
 }
 
+/* Same size as a username in a Discord message */
 .boostName {
-  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
-  line-height: 1.3;
+  font-size: 1rem;
+  line-height: 1.375;
 }
 
 .boostHint {
