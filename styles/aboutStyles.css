@@ -483,3 +483,296 @@
     padding: var(--space-5);
   }
 }
+
+/* --------------------------------------------------------------------------
+   9. Boosting perks: tier chips, live gradients and the hue that flows in on hover
+   -------------------------------------------------------------------------- */
+
+/* Chip tones for the boosting panel (colours come from the mention tokens) */
+.mention[data-tone='boosterOne'] {
+  --mention-bg: var(--mention-booster-one-background);
+  --mention-gradient: var(--mention-booster-one-gradient);
+}
+
+.mention[data-tone='boosterTwo'] {
+  --mention-bg: var(--mention-booster-two-background);
+  --mention-gradient: var(--mention-booster-two-gradient);
+}
+
+.mention[data-tone='spectrum'] {
+  --mention-bg: var(--mention-spectrum-background);
+  --mention-gradient: var(--mention-spectrum-gradient);
+}
+
+.mention[data-tone='skull'] {
+  --mention-bg: var(--mention-skull-background);
+  --mention-gradient: var(--mention-skull-gradient);
+}
+
+.mention[data-tone='icon'] {
+  --mention-bg: var(--mention-icon-background);
+  color: var(--mention-icon-color);
+}
+
+/* Stars chip: golden, yellow and light yellow (the star icon sits inside the text) */
+.mention[data-tone='gold'] {
+  --mention-bg: var(--mention-gold-background);
+  --mention-gradient: var(--mention-gold-gradient);
+}
+
+.mentionName svg {
+  display: inline-block;
+  vertical-align: -0.2em;
+}
+
+/* Supporters link: purple, light purple, pink, light pink */
+.mention[data-tone='supporters'] {
+  --mention-bg: var(--mention-supporters-background);
+  --mention-gradient: var(--mention-supporters-gradient);
+}
+
+/* Live flow: the gradient keeps moving (keyframes live in homeStyles.css) */
+.mention[data-flow='live'] .mentionName,
+.mentionName[data-flow='live'] {
+  animation: roleShimmer 3s linear infinite;
+}
+
+/* While a tier is hovered, its own hue ring replaces the outer panel ring */
+.boostPanel:has(.boostTier:hover)::before,
+.boostPanel:has(.boostTier:focus-within)::before {
+  opacity: 0;
+  animation: none;
+}
+
+.boostTiers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* Tier hues (from the mention tokens) */
+.boostTier[data-tone='boosterOne'] {
+  --tier-color: var(--mention-booster-one-color);
+  --tier-light: var(--mention-booster-one-light);
+  --tier-ring: var(--mention-booster-one-gradient);
+  --mention-gradient: var(--mention-booster-one-gradient);
+}
+
+.boostTier[data-tone='boosterTwo'] {
+  --tier-color: var(--mention-booster-two-color);
+  --tier-light: var(--mention-booster-two-light);
+  --tier-ring: var(--mention-booster-two-gradient);
+  --mention-gradient: var(--mention-booster-two-gradient);
+}
+
+/* Tier card: neutral at rest */
+.boostTier {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  transition: border-color var(--motion-slow) var(--motion-ease-in-out);
+}
+
+.boostTier:hover,
+.boostTier:focus-within {
+  border-color: color-mix(in srgb, var(--tier-color) 32%, var(--color-divider));
+}
+
+/* Hue wash that fades in on hover (light to main hue, kept soft) */
+.boostTier::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--tier-light) 16%, transparent) 0%,
+    color-mix(in srgb, var(--tier-color) 8%, transparent) 100%
+  );
+  opacity: 0;
+  transition: opacity var(--motion-slow) var(--motion-ease-in-out);
+}
+
+/* Flowing hue ring on hover, same technique as .panelGlow */
+.boostTier::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  padding: 2px;
+  border-radius: inherit;
+  background: var(--tier-ring);
+  background-size: 200% 100%;
+  background-repeat: repeat-x;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-slow) var(--motion-ease-in-out);
+}
+
+.boostTier:hover::after,
+.boostTier:focus-within::after {
+  opacity: 1;
+}
+
+.boostTier:hover::before,
+.boostTier:focus-within::before {
+  opacity: 1;
+  animation: holoFlow var(--motion-flow) linear infinite;
+}
+
+.boostTierName {
+  color: var(--color-text-primary);
+  transition: color var(--motion-slow) var(--motion-ease-in-out);
+}
+
+.boostTier:hover .boostTierName,
+.boostTier:focus-within .boostTierName {
+  color: var(--tier-color);
+}
+
+/* "What the role looks like" row */
+.boostRole {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.boostRoleLabel {
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+}
+
+/* Perk lists */
+.perkGroup {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.perkGroupTitle {
+  color: var(--color-text-secondary);
+}
+
+.perkList {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.perkItem {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.perkCheck {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.5rem;
+  color: var(--color-text-muted);
+  transition: color var(--motion-slow) var(--motion-ease-in-out);
+}
+
+.boostTier:hover .perkCheck,
+.boostTier:focus-within .perkCheck {
+  color: var(--tier-color);
+}
+
+.perkText {
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.perkText strong {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* Try it out: search-style field and the name preview */
+.boostTry {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.boostTry > .btn {
+  justify-self: start;
+}
+
+.boostTryPanel {
+  display: grid;
+  gap: var(--space-3);
+  animation: dialogIn var(--motion-base) var(--motion-ease) both;
+}
+
+.boostField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 2.75rem;
+  padding: 0 var(--space-3) 0 var(--space-4);
+  color: var(--color-text-muted);
+  background: var(--color-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  transition: border-color var(--motion-fast) linear;
+}
+
+.boostField:hover {
+  border-color: var(--color-border-strong);
+}
+
+.boostField:focus-within {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.boostCount {
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.boostPreview {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  overflow-wrap: anywhere;
+}
+
+.boostName {
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  line-height: 1.3;
+}
+
+.boostHint {
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-muted);
+}
+
+/* Tiers stack when the left column gets too narrow for two cards */
+@media (max-width: 1100px) {
+  .boostTiers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
