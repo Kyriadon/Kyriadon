@@ -381,6 +381,193 @@ function TestingGuide({ guildId }) {
 }
 
 // ----------------------------------------------------------------------------
+// RoleChip: non-clickable role-style chip (same look as Mention).
+// `live` makes the gradient flow continuously.
+// ----------------------------------------------------------------------------
+function RoleChip({ tone, live = false, roleId, children }) {
+  return (
+    <span className="mention" data-tone={tone} data-flow={live ? 'live' : undefined} data-role-id={roleId}>
+      <span className="mentionName">{children}</span>
+    </span>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Icon chip: the "Icon" part of the Booster II custom role perk
+// ----------------------------------------------------------------------------
+function IconChip() {
+  return (
+    <span className="mention" data-tone="icon" role="img" aria-label="icon">
+      <IconSparkle size={16} />
+    </span>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Stars chip: golden role-style chip with a star icon before "Stars"
+// ----------------------------------------------------------------------------
+function StarsChip({ amount }) {
+  return (
+    <span className="mention" data-tone="gold">
+      <span className="mentionName">
+        {amount} <IconStar size={14} /> Stars
+      </span>
+    </span>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Booster tiers: tone, perks and Discord role IDs. Perks can contain chips and links.
+// ----------------------------------------------------------------------------
+const boosterTiers = [
+  {
+    id: 'booster-one',
+    tone: 'boosterOne',
+    name: 'Booster I',
+    discordPerks: [
+      <>Custom <RoleChip tone="boosterOne" roleId="1493948681026670732">@Booster I</RoleChip> role</>,
+      'Reduced slow mode',
+      'Enhanced voice chat perms',
+    ],
+    websitePerks: [
+      <><StarsChip amount="+350" /> (<StarsChip amount="+350" /> per boost)</>,
+      <>Special <strong>Booster</strong> tag</>,
+      'Priority support',
+    ],
+  },
+  {
+    id: 'booster-two',
+    tone: 'boosterTwo',
+    name: 'Booster II',
+    discordPerks: [
+      <>Custom <RoleChip tone="boosterTwo" roleId="1493951439968407572">@Booster II</RoleChip> role</>,
+      'Custom channel & voice chat creation permissions',
+      <>Custom role with <RoleChip tone="spectrum" live>Gradient</RoleChip> and <IconChip /></>,
+      'Priority testing and support',
+      'Access to a booster-only channel',
+    ],
+    websitePerks: [
+      <><StarsChip amount="+1050" /> (1050x3 for 6 boosts)</>,
+      'Custom tag perms',
+      <>Even better showcase in the <Mention tone="supporters" href="/supporters">Supporters</Mention> page</>,
+      <>Custom website gradient access <span className="badge" data-tone="warning">BETA</span></>,
+      <><RoleChip tone="skull">Skull Cracker</RoleChip> profile effect</>,
+    ],
+  },
+];
+
+// ----------------------------------------------------------------------------
+// One group of perks (Discord or website) with check marks
+// ----------------------------------------------------------------------------
+function PerkGroup({ title, perks }) {
+  return (
+    <div className="perkGroup">
+      <h5 className="perkGroupTitle">{title}</h5>
+      <ul className="perkList" role="list">
+        {perks.map((perk, index) => (
+          <li className="perkItem" key={index}>
+            <span className="perkCheck" aria-hidden="true">
+              <IconCheck size={16} />
+            </span>
+            <span className="perkText">{perk}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// One booster tier: role preview, perks and the "Try it out" name preview.
+// The tier hue flows in on hover (see section 9 of aboutStyles.css).
+// ----------------------------------------------------------------------------
+function BoostTier({ tier }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const tryId = `${tier.id}-try`;
+
+  return (
+    <div className="boostTier" data-tone={tier.tone}>
+      <h4 className="boostTierName">{tier.name}</h4>
+
+      {/* What the role looks like (the gradient flows live) */}
+      <div className="boostRole">
+        <span className="boostRoleLabel">What the role looks like</span>
+        <RoleChip tone={tier.tone} live>
+          {tier.name}
+        </RoleChip>
+      </div>
+
+      <PerkGroup title="Discord perks" perks={tier.discordPerks} />
+      <PerkGroup title="Website perks" perks={tier.websitePerks} />
+
+      {/* Try it out: type a name (max 15 characters) to see it in the role gradient */}
+      <div className="boostTry">
+        <button type="button" className="btn btnSecondary" aria-expanded={open} aria-controls={tryId} onClick={() => setOpen((value) => !value)}>
+          Try it out
+        </button>
+
+        {open && (
+          <div className="boostTryPanel" id={tryId}>
+            <label className="boostField">
+              <IconSearch size={18} />
+              <input
+                className="searchInput"
+                type="text"
+                value={name}
+                maxLength={15}
+                placeholder="Type your username"
+                aria-label="Your username"
+                autoComplete="off"
+                spellCheck={false}
+                autoFocus
+                onChange={(event) => setName(event.target.value)}
+              />
+              <span className="boostCount" aria-hidden="true">
+                {name.length}/15
+              </span>
+            </label>
+
+            {/* The name alone, in the tier gradient, without the box */}
+            <div className="boostPreview" aria-live="polite">
+              {name.trim() ? (
+                <span className="mentionName boostName" data-flow="live">
+                  {name}
+                </span>
+              ) : (
+                <span className="boostHint">Your name appears here.</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Boosting perks panel: both tiers side by side
+// ----------------------------------------------------------------------------
+function BoostingPerks() {
+  return (
+    <section className="panel panelGlow boostPanel" id="boosting" aria-labelledby="boostingTitle">
+      <div className="panelHeader guideHeader">
+        <div>
+          <h3 id="boostingTitle">Boosting perks</h3>
+          <p className="guideSubtitle">Boost the Discord server to unlock perks on Discord and on the website.</p>
+        </div>
+      </div>
+
+      <div className="boostTiers">
+        {boosterTiers.map((tier) => (
+          <BoostTier key={tier.id} tier={tier} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ----------------------------------------------------------------------------
 // Page
 // ----------------------------------------------------------------------------
 export default function About() {
