@@ -125,9 +125,17 @@
   padding: 0;
 }
 
-/* The ring from .panelGlow must sit above the banner and scrim */
+/* The ring from .panelGlow must sit above the banner and scrim.
+   The flow animation is always attached but paused, so on unhover the ring fades out
+   from where it is instead of snapping back to its start (that snap was the cut gradient). */
 .discordPanel.panelGlow::before {
   z-index: 3;
+  animation: holoFlow var(--motion-flow) linear infinite paused;
+}
+
+.discordPanel.panelGlow:hover::before,
+.discordPanel.panelGlow:focus-within::before {
+  animation-play-state: running;
 }
 
 /* Clips the oversized, blurred banner to the panel shape */
