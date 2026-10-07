@@ -9,10 +9,14 @@ import Link from 'next/link';
 import { useState } from 'react';
 import {
   IconBook,
+  IconCheck,
   IconChevron,
   IconChevronDown,
   IconClose,
   IconDiscord,
+  IconSearch,
+  IconSparkle,
+  IconStar,
   IconUsers,
   SiteShell,
   formatCount,
