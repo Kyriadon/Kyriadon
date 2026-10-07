@@ -189,6 +189,36 @@ export function IconInfo({ size = 18 }) {
   );
 }
 
+// Check mark (perk lists)
+export function IconCheck({ size = 18 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" {...strokeProps}>
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
+// Star in two golds (Stars currency)
+export function IconStar({ size = 18 }) {
+  const [light, gold] = gradientStops.star;
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false">
+      <path fill={gold} d="M12 2.5l2.6 6.6 7.1.4-5.5 4.6 1.8 6.9-6-3.9-6 3.9 1.8-6.9-5.5-4.6 7.1-.4L12 2.5Z" />
+      <path fill={light} d="M12 2.5v14.7l-6 3.9 1.8-6.9-5.5-4.6 7.1-.4L12 2.5Z" />
+    </svg>
+  );
+}
+
+// Sparkle (role icon preview)
+export function IconSparkle({ size = 18 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" {...strokeProps}>
+      <path d="M11 3.5l1.9 5.1 5.1 1.9-5.1 1.9L11 17.5l-1.9-5.1L4 10.5l5.1-1.9L11 3.5Z" />
+      <path d="M18.5 16.5v3M17 18h3" />
+    </svg>
+  );
+}
+
 // ----------------------------------------------------------------------------
 // Hook: fetch JSON with loading, error and retry states
 // ----------------------------------------------------------------------------
