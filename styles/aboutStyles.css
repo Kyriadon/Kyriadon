@@ -125,11 +125,23 @@
   padding: 0;
 }
 
-/* The ring from .panelGlow must sit above the banner and scrim.
-   The flow animation is always attached but paused, so on unhover the ring fades out
-   from where it is instead of snapping back to its start (that snap was the cut gradient). */
+.discordPanel {
+  padding: 0;
+  isolation: isolate;
+}
+
+/* Banner and scrim sit behind everything with a negative z-index, so the ring keeps the
+   normal stacking of every other .panelGlow panel. The old z-index: 3 on the ring forced it
+   into its own GPU layer above the animated banner, which left a 1px strip of the gradient
+   stuck on the right and bottom edges after unhover. */
+.discordBanner,
+.discordScrim {
+  z-index: -1;
+}
+
+/* The flow animation is always attached but paused, so on unhover the ring fades out
+   from where it is instead of snapping back to its start. */
 .discordPanel.panelGlow::before {
-  z-index: 3;
   animation: holoFlow var(--motion-flow) linear infinite paused;
 }
 
