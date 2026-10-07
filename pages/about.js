@@ -430,7 +430,7 @@ const boosterTiers = [
       'Enhanced voice chat perms',
     ],
     websitePerks: [
-      <><StarsChip amount="+350" /> (<StarsChip amount="+350" /> per boost)</>,
+      <><StarsChip amount="+350" /> (+350 Stars per boost)</>,
       <>Special <strong>Booster</strong> tag</>,
       'Priority support',
     ],
