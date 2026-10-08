@@ -31,7 +31,7 @@ import {
 // Content: everything the page says lives here so copy is easy to edit
 // ----------------------------------------------------------------------------
 const content = {
-  title: 'About | Kyriadon',
+  title: 'About - Kyriadon',
   description: 'How to register, get tested and join the Kyriadon community: step-by-step guides, help and the official Discord.',
   hero: {
     title: 'About Kyriadon',
@@ -442,6 +442,8 @@ const boosterTiers = [
     id: 'booster-two',
     tone: 'boosterTwo',
     name: 'Booster II',
+    // Shows the "Advanced view" chip inside Try it out
+    advanced: true,
     discordPerks: [
       <>Custom <RoleChip tone="boosterTwo" roleId="1493951439968407572">@Booster II</RoleChip> role</>,
       'Custom channel & voice chat creation permissions',
