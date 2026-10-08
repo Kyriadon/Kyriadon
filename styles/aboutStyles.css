@@ -797,3 +797,444 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* --------------------------------------------------------------------------
+   10. Role studio: Advanced view chip, modal, icon picker, drawing canvas,
+   colour editor and previews
+   -------------------------------------------------------------------------- */
+
+/* "Advanced view" chip (a button that looks like the other role chips) */
+.mentionButton {
+  justify-self: start;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.mentionButton .mentionName {
+  font-size: 0.8125rem;
+}
+
+.mentionButton:hover .mentionName,
+.mentionButton:focus-visible .mentionName {
+  animation: roleShimmer 2.4s linear infinite;
+}
+
+/* Modal shell (rendered in a portal, above the edge fades and the search palette) */
+.studioBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--color-backdrop);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: fadeIn var(--motion-fast) linear both;
+}
+
+.studioDialog {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 62rem;
+  max-height: min(92dvh, 52rem);
+  overflow: hidden;
+  background: var(--color-modal);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-modal);
+  box-shadow: var(--shadow-modal), inset 0 1px 0 var(--color-inset);
+  animation: dialogIn var(--motion-base) var(--motion-ease) both;
+}
+
+.studioHeader {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.studioBody {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+  gap: var(--space-6);
+  min-height: 0;
+  padding: var(--space-5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.studioFooter {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-divider);
+}
+
+/* Preview column stays in view while the editor scrolls */
+.studioPreview {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+  align-self: start;
+  position: sticky;
+  top: 0;
+  min-width: 0;
+}
+
+.studioPreviewBlock {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.studioPreviewBlock .discordMessage {
+  justify-self: stretch;
+}
+
+.studioEditor {
+  display: grid;
+  gap: var(--space-6);
+  align-content: start;
+  min-width: 0;
+}
+
+.studioSection {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.studioSectionTitle {
+  color: var(--color-text-primary);
+}
+
+.studioLabel {
+  font-family: var(--type-label-family);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-label-weight);
+  color: var(--color-text-secondary);
+}
+
+.studioRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.studioField {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* Text input (same material as the search-style field) */
+.studioInput {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0 var(--space-3);
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background: var(--color-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  transition: border-color var(--motion-fast) linear;
+}
+
+.studioInput:hover {
+  border-color: var(--color-border-strong);
+}
+
+.studioInput:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.studioHex {
+  width: 8rem;
+  font-family: var(--font-mono);
+}
+
+/* Segmented control */
+.segmented {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--color-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.segment {
+  height: 2rem;
+  padding: 0 var(--space-3);
+  font-family: var(--type-label-family);
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-subtle);
+  transition: background-color var(--motion-fast) linear, color var(--motion-fast) linear;
+}
+
+.segment:hover {
+  color: var(--color-text-primary);
+}
+
+.segment[aria-pressed='true'] {
+  color: var(--color-text-primary);
+  background: var(--color-card-hover);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+/* Flow live switch */
+.studioSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.studioSwitch input,
+.stopRow input[type='range'] {
+  accent-color: var(--mention-booster-two-color);
+}
+
+/* Icon picker */
+.studioIcons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+  gap: var(--space-2);
+}
+
+.studioIconTile {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-height: 3rem;
+  font-family: var(--type-caption-family);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-control);
+  transition: background-color var(--motion-fast) linear, border-color var(--motion-fast) linear, color var(--motion-fast) linear;
+}
+
+.studioIconTile:hover {
+  color: var(--color-text-primary);
+  background: var(--color-card-hover);
+}
+
+.studioIconTile[aria-pressed='true'] {
+  color: var(--mention-booster-two-light);
+  background: color-mix(in srgb, var(--mention-booster-two-color) 16%, var(--color-card));
+  border-color: color-mix(in srgb, var(--mention-booster-two-color) 55%, var(--color-divider));
+}
+
+/* Drawing canvas */
+.drawer {
+  display: grid;
+  grid-template-columns: minmax(0, 18.75rem) minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.drawCanvas {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  color: var(--color-divider);
+  background: var(--color-input);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.drawTools {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* Colour editor */
+.colorInput {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+}
+
+.colorInput::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+
+.colorInput::-webkit-color-swatch {
+  border: 0;
+  border-radius: var(--radius-subtle);
+}
+
+.colorInput::-moz-color-swatch {
+  border: 0;
+  border-radius: var(--radius-subtle);
+}
+
+.gradientBar {
+  height: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.stopList {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.stopRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 2.75rem auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.stopPos {
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Role text: solid colour or gradient text (flows when data-flow is true) */
+.roleLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.roleIcon {
+  flex: none;
+}
+
+.roleLine .roleIcon {
+  color: var(--color-text-primary);
+}
+
+.roleText {
+  font-family: var(--font-special);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.mention .roleText {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.roleText[data-kind='gradient'] {
+  color: var(--color-text-primary);
+  background: var(--role-paint);
+  background-size: var(--role-size, 100% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.roleText[data-kind='gradient'][data-flow='true'] {
+  animation: roleShimmer 3s linear infinite;
+}
+
+/* Discord-style message used for the name preview */
+.discordMessage {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-discord-modal);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.discordAvatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  background: var(--color-discord-field);
+  border-radius: var(--radius-pill);
+}
+
+.discordMessageBody {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.discordMessageHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.discordMessageTime {
+  font-family: var(--type-helper-family);
+  font-size: var(--type-helper-size);
+  color: var(--color-discord-placeholder);
+}
+
+.discordMessageText {
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.5;
+  color: var(--color-discord-text);
+}
+
+/* The studio stacks on narrower screens */
+@media (max-width: 860px) {
+  .studioBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .studioPreview {
+    position: static;
+  }
+
+  .drawer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .studioBackdrop {
+    padding: var(--space-2);
+  }
+
+  .studioDialog {
+    max-height: 96dvh;
+  }
+}
+
