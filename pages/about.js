@@ -6,7 +6,10 @@
 // All visual values live in lib/siteDesign.js and styles/aboutStyles.css.
 // ============================================================================
 import Link from 'next/link';
-import { useState } from 'react';
+// React hooks, portal for the modal, and the shared colour tokens
+import { createPortal } from 'react-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { gradientStops } from '../lib/siteDesign';
 import {
   IconBook,
   IconCheck,
