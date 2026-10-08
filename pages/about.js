@@ -486,10 +486,19 @@ function PerkGroup({ title, perks }) {
 // One booster tier: role preview, perks and the "Try it out" name preview.
 // The tier hue flows in on hover (see section 9 of aboutStyles.css).
 // ----------------------------------------------------------------------------
+// One booster tier: role preview, perks, name preview and (Booster II) the Advanced view chip
 function BoostTier({ tier }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
+  const [studioOpen, setStudioOpen] = useState(false);
+  const studioButtonRef = useRef(null);
   const tryId = `${tier.id}-try`;
+
+  // Closing the studio returns focus to the chip that opened it
+  const closeStudio = () => {
+    setStudioOpen(false);
+    requestAnimationFrame(() => studioButtonRef.current?.focus());
+  };
 
   return (
     <div className="boostTier" data-tone={tier.tone}>
@@ -543,9 +552,19 @@ function BoostTier({ tier }) {
                 <span className="boostHint">Your name appears here.</span>
               )}
             </div>
+
+            {/* Advanced view (Booster II): opens the role studio */}
+            {tier.advanced && (
+              <button ref={studioButtonRef} type="button" className="mention mentionButton" data-tone={tier.tone} aria-haspopup="dialog" onClick={() => setStudioOpen(true)}>
+                <span className="mentionName">Advanced view</span>
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* Role studio modal */}
+      {studioOpen && <RoleStudio onClose={closeStudio} />}
     </div>
   );
 }
