@@ -1238,3 +1238,30 @@
   }
 }
 
+/* Role studio editor: no hover effects (selected, pressed and focus states stay) */
+.studioEditor .btnGhost:hover {
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+
+.studioEditor .btnSecondary:hover {
+  background: var(--color-card);
+  border-color: var(--color-border);
+}
+
+.studioEditor .btnLight:hover {
+  filter: none;
+}
+
+.studioEditor .segment[aria-pressed='false']:hover {
+  color: var(--color-text-secondary);
+}
+
+.studioEditor .studioIconTile[aria-pressed='false']:hover {
+  color: var(--color-text-secondary);
+  background: var(--color-card);
+}
+
+.studioEditor .studioInput:hover {
+  border-color: var(--color-border);
+}
