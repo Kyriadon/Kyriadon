@@ -17,6 +17,7 @@ import {
   IconChevronDown,
   IconClose,
   IconDiscord,
+  IconInfo,
   IconSearch,
   IconSparkle,
   IconStar,
