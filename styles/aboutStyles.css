@@ -1277,6 +1277,13 @@
   --mention-gradient: var(--mention-rules-gradient);
 }
 
+/* Rules chip: the book is a stroke icon in the chip's light blue, sitting on the text baseline */
+.mention[data-tone='rules'] .mentionName svg {
+  margin: 0 0.15em 0 0.1em;
+  color: var(--color-light-blue);
+  vertical-align: -0.2em;
+}
+
 .mention[data-tone='holo'] {
   --mention-bg: var(--mention-holo-background);
   --mention-gradient: var(--mention-holo-gradient);
@@ -1289,13 +1296,16 @@
 
 .sheetBody {
   display: grid;
+  grid-auto-rows: max-content;
   flex: 1;
   gap: var(--space-4);
   align-content: start;
   min-height: 0;
-  padding: var(--space-5);
+  padding: var(--space-5) var(--space-5) var(--space-6);
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
 }
 
 .sheetToolbar {
@@ -1345,9 +1355,9 @@
 
 .embedBody {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
   min-width: 0;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-5) var(--space-6);
 }
 
 .embedTitle {
