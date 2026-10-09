@@ -334,12 +334,22 @@ function FormPreview() {
   );
 }
 
+// Open book for the Rules chip (stroke icon, same 24px grid as the shared icons)
+function IconBookOpen({ size = 16 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d="M12 6.5C10.4 5.2 8 4.5 4 4.5v13c4 0 6.4.7 8 2 1.6-1.3 4-2 8-2v-13c-4 0-6.4.7-8 2Z" />
+      <path d="M12 6.5v13" />
+    </svg>
+  );
+}
+
 // TESTING:
 // ----------------------------------------------------------------------------
 // Guide content helpers: channel and role names shown for Discord mentions
 // ----------------------------------------------------------------------------
 const channelMeta = {
-  '1475510046388650126': { label: 'Rules', emoji: '📖', tone: 'rules' },
+  '1475510046388650126': { label: 'Rules', icon: 'book', tone: 'rules' },
   '1511301888375652522': { label: 'Testing', tone: 'testing' },
 };
 
@@ -378,12 +388,12 @@ function renderInline(text, ctx, prefix = '') {
       const meta = channelMeta[id] || { label: 'channel', tone: 'register' };
       return (
         <Mention key={key} tone={meta.tone} href={channelHref(ctx.guildId, id)}>
-          {meta.emoji ? `#${meta.emoji} ${meta.label}` : `#${meta.label}`}
+          {meta.icon ? <>#<IconBookOpen /> {meta.label}</> : `#${meta.label}`}
         </Mention>
       );
     }
     const id = part.slice(3, -1);
-    return <RoleChip key={key} tone="site" roleId={id}>{`@${roleLabels[id] || 'Tier role'}`}</RoleChip>;
+    return <RoleChip key={key} tone="holo" live roleId={id}>{`@${roleLabels[id] || 'Tier role'}`}</RoleChip>;
   });
 }
 
@@ -868,7 +878,7 @@ function TopicSection({ section, ctx }) {
     <div className="topicSection">
       {section.title && <h5 className="mdH">{section.title}</h5>}
       {section.chips && <div className="chipGrid">{section.chips.map((chip) => <span className="infoChip" key={chip}>{chip}</span>)}</div>}
-      {section.roles && <div className="chipGrid">{section.roles.map((id) => <RoleChip key={id} tone="site" roleId={id}>{`@${roleLabels[id]}`}</RoleChip>)}</div>}
+      {section.roles && <div className="chipGrid">{section.roles.map((id) => <RoleChip key={id} tone="holo" live roleId={id}>{`@${roleLabels[id]}`}</RoleChip>)}</div>}
       {section.servers && <div className="serverGrid" data-compact={section.compact ? 'true' : undefined}>{section.servers.map((server) => <ServerCard key={server.name} server={server} />)}</div>}
     </div>
   );
