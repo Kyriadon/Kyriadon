@@ -9,7 +9,7 @@ import Link from 'next/link';
 // React hooks, portal for the modal, and the shared colour tokens
 import { createPortal } from 'react-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { gradientStops } from '../lib/siteDesign';
+import { gradientStops, pppRoleColors, roleChipPaint, tierRoleColors } from '../lib/siteDesign';
 import {
   IconBook,
   IconCheck,
@@ -344,6 +344,15 @@ function IconBookOpen({ size = 16 }) {
   );
 }
 
+// Right arrow for the "View" label on the topic cards (same stroke style as the shared icons)
+function IconArrowRight({ size = 16 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 // TESTING:
 // ----------------------------------------------------------------------------
 // Guide content helpers: channel and role names shown for Discord mentions
@@ -358,18 +367,29 @@ const tierRoleIds = [
   '1511269095851556895', '1511269046912552970', '1511268988452343868', '1511268924581478520', '1511268857967284244',
   '1511268786920099860', '1511268726585167936', '1511268670611914782', '1511268609907757159', '1511268533923876944',
 ];
+// PPP (Premium, PUGs and PUPs) roles, in the same order as pppRoleNames and pppRoleColors
+const pppRoleIds = [
+  '1511270040299901068', '1511269985702641675', '1511269932745101312', '1511269622094237696',
+  '1511269545661436014', '1511269479894482964', '1511269414907936838',
+];
+const pppRoleNames = ['Premium', 'PUGs', 'PUGs Trial', 'PUPs I', 'PUPs II', 'PUPs III', 'PUPs IV'];
 const roleLabels = {
-  '1511269414907936838': 'Elevated tier',
   ...Object.fromEntries(tierRoleIds.map((id, index) => [id, `${index % 2 === 0 ? 'HT' : 'LT'}${Math.floor(index / 2) + 1}`])),
+  ...Object.fromEntries(pppRoleIds.map((id, index) => [id, pppRoleNames[index]])),
+};
+// Exact Discord role colours (the hex values live in lib/siteDesign.js)
+const roleColors = {
+  ...Object.fromEntries(tierRoleIds.map((id, index) => [id, tierRoleColors[index]])),
+  ...Object.fromEntries(pppRoleIds.map((id, index) => [id, pppRoleColors[index]])),
 };
 
 const md = (...lines) => lines.join('\n');
 
 // ----------------------------------------------------------------------------
 // Mini markdown: **bold**, __underline__, `code`, [link](url), ==highlight==,
-// <#channel>, <@&role>, ## heading, - list, > quote, -# small, ``` code ```
+// <#channel>, <@&role>, <ppp>, ## heading, - list, > quote, -# small, ``` code ```
 // ----------------------------------------------------------------------------
-const INLINE = /(\*\*(?:[^*]|\*(?!\*))+\*\*|__[^_]+__|`[^`]+`|\[[^\]]+\]\([^)]+\)|==[^=]+==|<#\d+>|<@&\d+>)/g;
+const INLINE = /(\*\*(?:[^*]|\*(?!\*))+\*\*|__[^_]+__|`[^`]+`|\[[^\]]+\]\([^)]+\)|==[^=]+==|<#\d+>|<@&\d+>|<ppp>)/g;
 
 function renderInline(text, ctx, prefix = '') {
   return text.split(INLINE).map((part, index) => {
@@ -383,6 +403,7 @@ function renderInline(text, ctx, prefix = '') {
       const [, label, href] = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       return <a key={key} className="mdLink" href={href} target="_blank" rel="noopener noreferrer">{label}</a>;
     }
+    if (part === '<ppp>') return <PppChip key={key} />;
     if (part.startsWith('<#')) {
       const id = part.slice(2, -1);
       const meta = channelMeta[id] || { label: 'channel', tone: 'register' };
@@ -393,7 +414,7 @@ function renderInline(text, ctx, prefix = '') {
       );
     }
     const id = part.slice(3, -1);
-    return <RoleChip key={key} tone="holo" live roleId={id}>{`@${roleLabels[id] || 'Tier role'}`}</RoleChip>;
+    return <GuideRoleChip key={key} roleId={id} />;
   });
 }
 
@@ -464,7 +485,13 @@ const guideArt = {
   ),
   bars: (
     <div className="art artBars" aria-hidden="true">
-      {[30, 48, 64, 80, 100].map((height) => <span key={height} style={{ '--h': `${height}%` }} />)}
+      {[
+        [30, 'var(--color-azure)'],
+        [48, 'var(--color-success)'],
+        [64, 'var(--mention-booster-two-color)'],
+        [80, 'var(--mention-booster-one-color)'],
+        [100, 'var(--color-warning)'],
+      ].map(([height, color]) => <span key={height} style={{ '--h': `${height}%`, '--c': color }} />)}
     </div>
   ),
   timeline: (
@@ -630,7 +657,7 @@ const legal = {
 
 const infoTopics = [
   {
-    id: 'servers', icon: 'servers', title: 'Supported servers', stops: ['#38bdf8', '#7dd3fc', '#a5b4fc'],
+    id: 'servers', icon: 'servers', title: 'Supported servers', color: '#38bdf8',
     summary: 'Addresses, regions and versions we test on.',
     sections: [
       { md: md('Information regarding supported testing servers, alternate addresses, regional connections and version availability.', '', "We conduct tier tests in both **1.8.9** and **1.9+** PvP environments. Select an address to copy it.") },
@@ -641,29 +668,30 @@ const infoTopics = [
     ],
   },
   {
-    id: 'procedures', icon: 'procedures', title: 'Testing procedures', stops: ['#a78bfa', '#f0abfc', '#fbcfe8'],
+    id: 'procedures', icon: 'procedures', title: 'Testing procedures', color: '#a78bfa',
     summary: 'How to request a test and which gamemodes we run.',
     sections: [
       { md: md('Head to <#1511301888375652522> and click the **Test now** button. You will be prompted to answer a few questions. Once you fill them out, a custom testing ticket will be created for you to test in.', '', 'You will be pinged and tested within ==24–48 hours==.') },
       { title: 'Prompt questions', chips: ['Version', 'Game mode', 'Server'] },
       { md: 'We test in multiple gamemodes, divided by version. They are listed below.' },
       { title: '1.8 gamemodes', chips: ['Top Fight', 'Emerald Rush', 'Bed Fight', 'Boxing', 'Block Fight', 'Wall Run', 'Low - Mid (Veltrix exclusive)', 'Top Bridge (Veltrix exclusive)', 'Bridge', 'Fireball Fight', 'Sumo', 'Fireball Royale'] },
-      { md: '**Bedwars 1v1:** FT 5 and FT 10 (will be explained in PPP).' },
+      { md: '**Bedwars 1v1:** FT 5 and FT 10 (will be explained in <ppp>).' },
       { title: '1.9+ gamemodes', chips: ['Sword, Speed', 'Sumo', 'DPOT', 'NPOT', 'UHC', 'Crystal', 'Cart', 'Mace', 'Spear', 'Unstable', 'Lifesteal', 'SMP', 'DSMP', 'Axe'] },
       { md: md('## General information', '- We have testers from all around the world to ensure the fastest and easiest tier-testing experience.', '- Ask questions if needed (FAQ coming soon).', "- When reporting a player or tester, don't forget to record and collect evidence against them.") },
     ],
   },
   {
-    id: 'tiers', icon: 'tiers', title: 'Tier assignments', stops: ['#5eead4', '#7dd3fc', '#c4b5fd'],
+    id: 'tiers', icon: 'tiers', title: 'Tier assignments', color: '#5eead4',
     summary: 'The first half tier roles you can earn.',
     sections: [
       { md: 'There are **10** first half tier roles. They are listed below.' },
       { roles: tierRoleIds },
-      { md: '-# Second tier roles are mentioned in PPP' },
+      { md: '-# Second tier roles are mentioned in <ppp>' },
+      { roles: pppRoleIds },
     ],
   },
   {
-    id: 'cooldowns', icon: 'cooldowns', title: 'Cooldowns', stops: ['#fbbf24', '#fde68a', '#fdba74'],
+    id: 'cooldowns', icon: 'cooldowns', title: 'Cooldowns', color: '#fbbf24',
     summary: 'How long to wait before you can retest.',
     sections: [
       {
@@ -688,7 +716,7 @@ const infoTopics = [
     ],
   },
   {
-    id: 'rules', icon: 'rules', title: 'Testing rules', stops: ['#60a5fa', '#93c5fd', '#bfdbfe'],
+    id: 'rules', icon: 'rules', title: 'Testing rules', color: '#60a5fa',
     summary: 'General rules and your rights as a player.',
     sections: [
       {
@@ -714,7 +742,7 @@ const infoTopics = [
     ],
   },
   {
-    id: 'legal', icon: 'legal', title: 'Allowed and banned', stops: ['#34d399', '#fde68a', '#f87171'],
+    id: 'legal', icon: 'legal', title: 'Allowed and banned', color: '#34d399',
     summary: 'Mods, clients, software and packs, at a glance.',
     sections: [
       { legal },
@@ -722,7 +750,7 @@ const infoTopics = [
     ],
   },
   {
-    id: 'gatekeeping', icon: 'gatekeeping', title: 'Gate keeping', stops: ['#c084fc', '#e879f9', '#f9a8d4'],
+    id: 'gatekeeping', icon: 'gatekeeping', title: 'Gate keeping', color: '#c084fc',
     summary: 'Why extra verification happens and what to do.',
     sections: [
       {
@@ -878,7 +906,7 @@ function TopicSection({ section, ctx }) {
     <div className="topicSection">
       {section.title && <h5 className="mdH">{section.title}</h5>}
       {section.chips && <div className="chipGrid">{section.chips.map((chip) => <span className="infoChip" key={chip}>{chip}</span>)}</div>}
-      {section.roles && <div className="chipGrid">{section.roles.map((id) => <RoleChip key={id} tone="holo" live roleId={id}>{`@${roleLabels[id]}`}</RoleChip>)}</div>}
+      {section.roles && <div className="chipGrid">{section.roles.map((id) => <GuideRoleChip key={id} roleId={id} />)}</div>}
       {section.servers && <div className="serverGrid" data-compact={section.compact ? 'true' : undefined}>{section.servers.map((server) => <ServerCard key={server.name} server={server} />)}</div>}
     </div>
   );
@@ -1068,11 +1096,7 @@ function InfoHub({ ctx, onClose, onBack }) {
                   key={item.id}
                   type="button"
                   className="topicCard"
-                  style={{
-                    '--topic-grad': `linear-gradient(135deg, ${item.stops.join(', ')})`,
-                    '--topic-ring': `linear-gradient(90deg, ${[...item.stops, ...[...item.stops].reverse().slice(1)].join(', ')})`,
-                    '--topic-color': item.stops[0],
-                  }}
+                  style={{ '--topic-color': item.color }}
                   onClick={() => setTopicId(item.id)}
                 >
                   <span className="topicIcon"><TopicIcon name={item.icon} /></span>
@@ -1080,7 +1104,7 @@ function InfoHub({ ctx, onClose, onBack }) {
                     <span className="topicTitle">{item.title}</span>
                     <span className="topicSummary">{item.summary}</span>
                   </span>
-                  <span className="topicChevron"><IconChevron size={16} /></span>
+                  <span className="topicView">View<IconArrowRight size={16} /></span>
                 </button>
               ))}
             </div>
@@ -1114,7 +1138,7 @@ function TestingGuide({ guildId }) {
           <h3 id="testingTitle">Testing guide</h3>
           <p className="guideSubtitle">Once you are registered, here is how to get tested.</p>
         </div>
-        <button ref={chipRef} type="button" className="mention mentionButton" data-tone="holo" data-flow="live" aria-haspopup="dialog" onClick={() => setView('guide')}>
+        <button ref={chipRef} type="button" className="mention mentionButton" data-tone="holo" aria-haspopup="dialog" onClick={() => setView('guide')}>
           <span className="mentionName">Advanced guide</span>
         </button>
       </div>
@@ -1168,6 +1192,35 @@ function RoleChip({ tone, live = false, roleId, children }) {
   return (
     <span className="mention" data-tone={tone} data-flow={live ? 'live' : undefined} data-role-id={roleId}>
       <span className="mentionName">{children}</span>
+    </span>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// GuideRoleChip: a tier or PPP role in its exact Discord colour (Doctrine 8).
+// Static at rest; a lighter tint of the same hue sweeps through on hover.
+// ----------------------------------------------------------------------------
+function GuideRoleChip({ roleId }) {
+  const label = `@${roleLabels[roleId] || 'Role'}`;
+  if (!roleColors[roleId]) return <RoleChip tone="site" roleId={roleId}>{label}</RoleChip>;
+  const paint = roleChipPaint(roleColors[roleId]);
+  return (
+    <span className="mention" data-tone="role" data-role-id={roleId} style={{ '--role-color': paint.color, '--role-light': paint.light }}>
+      <span className="mentionName">{label}</span>
+    </span>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// PppChip: "PPP" with the exact crown from the Booster II icon picker, in purple
+// ----------------------------------------------------------------------------
+function PppChip() {
+  const crown = presetIcons.find((item) => item.id === 'crown');
+  return (
+    <span className="mention" data-tone="ppp">
+      <span className="mentionName">
+        <RoleIcon icon={crown} size={15} /> PPP
+      </span>
     </span>
   );
 }
