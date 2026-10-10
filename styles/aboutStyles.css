@@ -1289,6 +1289,29 @@
   --mention-gradient: var(--mention-holo-gradient);
 }
 
+/* Guide role chips (tier and PPP roles): the exact Discord role colour on a neutral dark
+   surface. Static at rest; a lighter tint of the same hue sweeps through on hover. */
+.mention[data-tone='role'] {
+  --mention-bg: color-mix(in srgb, var(--role-color) 14%, var(--mention-role-background));
+  --mention-gradient: linear-gradient(90deg, var(--role-color) 0%, var(--role-color) 50%, var(--role-light) 75%, var(--role-color) 100%);
+}
+
+/* PPP chip: purple family, with the crown from the Booster II icon picker */
+.mention[data-tone='ppp'] {
+  --mention-bg: var(--mention-ppp-background);
+  --mention-gradient: var(--mention-ppp-gradient);
+}
+
+.mention[data-tone='ppp'] .mentionName svg {
+  margin-right: 0.1em;
+  color: var(--mention-ppp-color);
+}
+
+.mention[data-tone='role']:hover .mentionName,
+.mention[data-tone='ppp']:hover .mentionName {
+  animation: roleShimmer 2.4s linear infinite;
+}
+
 /* Modal sizing and scrolling body for the guide dialogs */
 .sheetDialog {
   max-width: 54rem;
@@ -1332,7 +1355,7 @@
   margin-right: auto;
 }
 
-/* Embed: card with a flowing holographic line on the left edge */
+/* Embed: card with a two-stop purple line on the left edge (static) */
 .embed {
   display: grid;
   grid-template-columns: 0.3125rem minmax(0, 1fr);
@@ -1343,14 +1366,7 @@
 }
 
 .embedBar {
-  background: var(--gradient-holo-line);
-  background-size: 100% 200%;
-  background-repeat: repeat-y;
-  animation: embedFlow 7s linear infinite;
-}
-
-@keyframes embedFlow {
-  to { background-position: 0 200%; }
+  background: var(--gradient-embed-line);
 }
 
 .embedBody {
@@ -1474,7 +1490,8 @@
   color: var(--color-text-muted);
 }
 
-/* CSS illustrations (decorative) */
+/* CSS illustrations (decorative). Each one has its own solid colour (--art), and its
+   steps and bars carry their own colours on top, so no two share a gradient. */
 .art {
   display: flex;
   flex-wrap: wrap;
@@ -1485,27 +1502,100 @@
   font-size: var(--type-caption-size);
   font-weight: var(--type-label-weight);
   color: var(--color-text-secondary);
-  background: var(--color-bg-raised);
-  border: 1px dashed var(--color-border);
+  background: color-mix(in srgb, var(--art) 7%, var(--color-bg-raised));
+  border: 1px solid color-mix(in srgb, var(--art) 30%, var(--color-border));
   border-radius: var(--radius-control);
 }
 
+.artFlow {
+  --art: var(--color-azure);
+  counter-reset: step;
+}
+
+.artBars {
+  --art: var(--mention-booster-two-color);
+}
+
+.artTimeline {
+  --art: var(--color-warning);
+}
+
+.artShield {
+  --art: var(--color-success);
+}
+
+.artMenu {
+  --art: var(--color-discord);
+}
+
+/* Steps: a tinted pill in the step's own colour */
 .artFlow span,
 .artTimeline span,
 .artShield span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: 0.3rem 0.75rem;
-  background: var(--color-input);
-  border: 1px solid var(--color-border);
+  color: var(--pill, var(--art));
+  background: color-mix(in srgb, var(--pill, var(--art)) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--pill, var(--art)) 45%, transparent);
   border-radius: var(--radius-pill);
 }
 
+.artFlow span:nth-of-type(1),
+.artTimeline span:nth-of-type(1) {
+  --pill: var(--color-azure);
+}
+
+.artFlow span:nth-of-type(2) {
+  --pill: var(--mention-booster-two-color);
+}
+
+.artFlow span:nth-of-type(3),
+.artTimeline span:nth-of-type(3) {
+  --pill: var(--color-success);
+}
+
+.artTimeline span:nth-of-type(2) {
+  --pill: var(--color-warning);
+  background: color-mix(in srgb, var(--pill) 24%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pill) 16%, transparent);
+}
+
+/* Flow: numbered steps */
+.artFlow span::before {
+  content: counter(step);
+  counter-increment: step;
+  display: grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-bg-page);
+  background: var(--pill);
+  border-radius: var(--radius-pill);
+}
+
+/* Timeline and shield: a solid dot in the step's colour */
+.artTimeline span::before,
+.artShield span::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--pill, var(--art));
+  border-radius: var(--radius-pill);
+}
+
+/* Connectors with an arrowhead */
 .artFlow i,
 .artTimeline i {
   position: relative;
   flex: 1;
   min-width: 1.25rem;
   height: 1px;
-  background: var(--color-border-strong);
+  background: color-mix(in srgb, var(--art) 55%, transparent);
 }
 
 .artFlow i::after,
@@ -1516,45 +1606,54 @@
   right: 0;
   width: 6px;
   height: 6px;
-  border-top: 1px solid var(--color-border-strong);
-  border-right: 1px solid var(--color-border-strong);
+  border-top: 1px solid color-mix(in srgb, var(--art) 70%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--art) 70%, transparent);
   transform: rotate(45deg);
 }
 
 .artTimeline i {
   background: none;
-  border-top: 1px dashed var(--color-border-strong);
+  border-top: 1px dashed color-mix(in srgb, var(--art) 70%, transparent);
 }
 
-.artTimeline span:nth-of-type(2) {
-  color: var(--mention-booster-two-light);
-  border-color: color-mix(in srgb, var(--mention-booster-two-color) 55%, var(--color-border));
-}
-
+/* Bars: one solid colour per bar */
 .artBars {
   align-items: flex-end;
-  height: 6.5rem;
+  height: 7.5rem;
 }
 
 .artBars span {
-  width: 2rem;
+  width: 2.25rem;
   height: var(--h);
-  background: var(--gradient-holo-line);
+  background: var(--c);
   border-radius: var(--radius-subtle) var(--radius-subtle) 0 0;
-  opacity: 0.85;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--c) 40%, transparent);
 }
 
+/* Shield: icon tile in the section colour */
 .artShield svg {
-  color: var(--mention-booster-two-light);
+  box-sizing: content-box;
+  padding: 0.5rem;
+  color: var(--art);
+  background: color-mix(in srgb, var(--art) 16%, transparent);
+  border-radius: var(--radius-control);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--art) 40%, transparent);
 }
 
+/* Menu: a Discord select field with a blurple focus ring */
 .artMenu {
   justify-content: space-between;
   max-width: 16rem;
   height: 2.5rem;
   padding: 0 var(--space-3);
+  color: var(--color-discord-placeholder);
   background: var(--color-discord-field);
-  border-style: solid;
+  border-color: color-mix(in srgb, var(--art) 75%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--art) 20%, transparent);
+}
+
+.artMenu svg {
+  color: color-mix(in srgb, var(--art) 55%, white);
 }
 
 /* The two choice buttons at the bottom of the Advanced guide */
@@ -1605,18 +1704,23 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-danger) 40%, transparent);
 }
 
-/* Holographic ring and wash flow in on hover (cards, choice buttons) */
-.choiceButton::before,
-.topicCard::before {
+/* Choice buttons: a solid ring in the answer's own colour fades in on hover */
+.choiceButton[data-choice='yes'] {
+  --choice-color: var(--color-success);
+}
+
+.choiceButton[data-choice='no'] {
+  --choice-color: var(--color-danger);
+}
+
+.choiceButton::before {
   content: '';
   position: absolute;
   inset: -1px;
   z-index: 1;
   padding: 2px;
   border-radius: inherit;
-  background: var(--topic-ring, var(--gradient-holo-flow));
-  background-size: 200% 100%;
-  background-repeat: repeat-x;
+  background: color-mix(in srgb, var(--choice-color) 70%, transparent);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -1627,11 +1731,8 @@
 }
 
 .choiceButton:hover::before,
-.choiceButton:focus-visible::before,
-.topicCard:hover::before,
-.topicCard:focus-visible::before {
+.choiceButton:focus-visible::before {
   opacity: 1;
-  animation: holoFlow var(--motion-flow) linear infinite;
 }
 
 /* Information hub: search, topic cards */
@@ -1645,49 +1746,40 @@
 
 .topicGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
 }
 
+/* Topic card (same anatomy as the punishments link card): tinted icon tile, title and
+   summary, then "View" with an arrow. The topic colour is solid and only fills in on hover. */
 .topicCard {
-  position: relative;
-  isolation: isolate;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
   text-align: left;
   background: var(--color-card);
   border: 1px solid var(--color-divider);
   border-radius: var(--radius-card);
+  transition: background-color var(--motion-base) linear, border-color var(--motion-base) linear;
 }
 
-.topicCard::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  pointer-events: none;
-  background: var(--topic-grad);
-  opacity: 0;
-  transition: opacity var(--motion-slow) var(--motion-ease-in-out);
-}
-
-.topicCard:hover::after,
-.topicCard:focus-visible::after {
-  opacity: 0.12;
+.topicCard:hover,
+.topicCard:focus-visible {
+  background: color-mix(in srgb, var(--topic-color) 6%, var(--color-card));
+  border-color: color-mix(in srgb, var(--topic-color) 40%, var(--color-divider));
 }
 
 .topicIcon {
   display: grid;
   flex: none;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  color: var(--color-bg-page);
-  background: var(--topic-grad);
+  width: 3rem;
+  height: 3rem;
+  color: var(--topic-color);
+  background: color-mix(in srgb, var(--topic-color) 14%, var(--color-bg-raised));
   border-radius: var(--radius-control);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--topic-color) 26%, transparent);
 }
 
 .topicText {
@@ -1698,7 +1790,7 @@
 
 .topicTitle {
   font-family: var(--type-label-family);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--color-text-primary);
 }
@@ -1710,10 +1802,31 @@
   color: var(--color-text-secondary);
 }
 
-.topicChevron {
+.topicView {
+  display: inline-flex;
   flex: none;
+  align-items: center;
+  gap: var(--space-1);
   margin-left: auto;
+  font-family: var(--type-label-family);
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
   color: var(--color-text-muted);
+  transition: color var(--motion-base) linear;
+}
+
+.topicView svg {
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.topicCard:hover .topicView,
+.topicCard:focus-visible .topicView {
+  color: var(--topic-color);
+}
+
+.topicCard:hover .topicView svg,
+.topicCard:focus-visible .topicView svg {
+  transform: translateX(2px);
 }
 
 /* Topic sections, chips and server cards */
