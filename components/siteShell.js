@@ -8,6 +8,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { behavior, gradientStops } from '../lib/siteDesign';
 
@@ -570,6 +571,9 @@ export function SiteShell({ title, description, children }) {
   const userMenuRef = useRef(null);
   const fade = useScrollFade(behavior.scrollFade);
 
+  // Records page views, errors, failed requests, console warnings and clicks (debug logs)
+  useLogCapture();
+
   // Show the command key on Apple devices (set after mount to avoid hydration mismatch)
   useEffect(() => {
     if (/Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent)) setModifierLabel('\u2318');
@@ -735,4 +739,241 @@ export function SiteShell({ title, description, children }) {
       <SearchPalette open={searchOpen} onClose={closeSearch} />
     </>
   );
+}
+
+// ----------------------------------------------------------------------------
+// Debug log icons (stroke style, same as the rest of the site)
+// ----------------------------------------------------------------------------
+const iconBase = (size) => ({ viewBox: '0 0 24 24', width: size, height: size, 'aria-hidden': 'true', focusable: 'false', ...strokeProps });
+
+export function IconFilter({ size = 18 }) {
+  return (<svg {...iconBase(size)}><path d="M4 5.5h16l-6.2 7.3V19l-3.6-1.8v-4.4L4 5.5Z" /></svg>);
+}
+
+export function IconCode({ size = 18 }) {
+  return (<svg {...iconBase(size)}><path d="m8.5 8-4 4 4 4M15.5 8l4 4-4 4M13.5 6l-3 12" /></svg>);
+}
+
+export function IconRows({ size = 18 }) {
+  return (<svg {...iconBase(size)}><rect x="4" y="4.5" width="16" height="6" rx="1.8" /><rect x="4" y="13.5" width="16" height="6" rx="1.8" /></svg>);
+}
+
+export function IconDownload({ size = 18 }) {
+  return (<svg {...iconBase(size)}><path d="M12 4.5v10M7.5 10.5 12 15l4.5-4.5M5 19.5h14" /></svg>);
+}
+
+export function IconTrash({ size = 18 }) {
+  return (<svg {...iconBase(size)}><path d="M5 7h14M10 7V5h4v2M7 7l.8 12h8.4L17 7M10 11v5M14 11v5" /></svg>);
+}
+
+export function IconCopy({ size = 18 }) {
+  return (<svg {...iconBase(size)}><rect x="8.5" y="8.5" width="11" height="11" rx="2" /><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2" /></svg>);
+}
+
+export function IconRefresh({ size = 18 }) {
+  return (<svg {...iconBase(size)}><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4h-4" /></svg>);
+}
+
+export function IconWarning({ size = 18 }) {
+  return (<svg {...iconBase(size)}><path d="M12 4.5 3.5 19h17L12 4.5Z" /><path d="M12 10v4M12 16.8h.01" /></svg>);
+}
+
+export function IconAlert({ size = 18 }) {
+  return (<svg {...iconBase(size)}><circle cx="12" cy="12" r="8.5" /><path d="m9 9 6 6M15 9l-6 6" /></svg>);
+}
+
+export function IconLock({ size = 18 }) {
+  return (<svg {...iconBase(size)}><rect x="5" y="10.5" width="14" height="9.5" rx="2" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></svg>);
+}
+
+// ----------------------------------------------------------------------------
+// Modal: shared dialog (portal, scroll lock, Escape, focus trap). Clicks inside
+// are not logged as user actions (data-nolog) to keep the logs readable.
+// ----------------------------------------------------------------------------
+export function Modal({ titleId, title, subtitle, onClose, toolbar, footer, size, children }) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    const opener = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const frame = requestAnimationFrame(() => {
+      const target = dialogRef.current?.querySelector('[data-autofocus]') || dialogRef.current;
+      target?.focus();
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      document.body.style.overflow = previousOverflow;
+      if (opener instanceof HTMLElement && document.contains(opener)) opener.focus();
+    };
+  }, []);
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      onClose();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = [...dialogRef.current.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href]')];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
+  return createPortal(
+    <div
+      className="studioBackdrop"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="studioDialog sheetDialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} ref={dialogRef} onKeyDown={onKeyDown} data-size={size} data-nolog>
+        <div className="studioHeader">
+          <div>
+            <h3 id={titleId}>{title}</h3>
+            {subtitle && <p className="guideSubtitle">{subtitle}</p>}
+          </div>
+          <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={onClose} aria-label="Close">
+            <IconClose />
+          </button>
+        </div>
+        {toolbar && <div className="sheetToolbar">{toolbar}</div>}
+        <div className="sheetBody">{children}</div>
+        {footer && <div className="studioFooter">{footer}</div>}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Client logger: events are queued and sent to /api/logs in small batches.
+// Limits: 60 events per minute per tab, identical events collapsed for 3 seconds.
+// ----------------------------------------------------------------------------
+const LOG_ENDPOINT = '/api/logs';
+const logQueue = [];
+const recentEvents = new Map();
+let logTimer = null;
+let windowStart = 0;
+let windowCount = 0;
+let capturing = false;
+
+// Records one event (level: info, warning or error)
+export function logEvent({ level = 'info', code, reason = '', fix, meta } = {}) {
+  if (typeof window === 'undefined' || !code) return;
+  const now = Date.now();
+  if (now - windowStart > 60000) {
+    windowStart = now;
+    windowCount = 0;
+  }
+  if (windowCount >= 60) return;
+
+  const key = `${level}|${code}|${reason}`;
+  if (now - (recentEvents.get(key) || 0) < 3000) return;
+  recentEvents.set(key, now);
+  if (recentEvents.size > 200) recentEvents.clear();
+
+  windowCount += 1;
+  logQueue.push({ level, code, reason: String(reason).slice(0, 500), fix, meta, path: window.location.pathname, at: new Date().toISOString() });
+  if (!logTimer) logTimer = setTimeout(() => flushLogs(false), 4000);
+}
+
+// Sends queued events (sendBeacon when the page is closing)
+function flushLogs(useBeacon) {
+  clearTimeout(logTimer);
+  logTimer = null;
+  if (!logQueue.length) return;
+  const body = JSON.stringify({ events: logQueue.splice(0, 25) });
+  if (useBeacon && navigator.sendBeacon) {
+    navigator.sendBeacon(LOG_ENDPOINT, new Blob([body], { type: 'application/json' }));
+  } else {
+    (window.__kyriadonFetch || window.fetch)(LOG_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {});
+  }
+  if (logQueue.length) logTimer = setTimeout(() => flushLogs(false), 1000);
+}
+
+// Turns console arguments into one readable line
+const describeArgs = (args) =>
+  args
+    .map((arg) => (typeof arg === 'string' ? arg : arg?.message || (() => { try { return JSON.stringify(arg); } catch { return String(arg); } })()))
+    .join(' ')
+    .slice(0, 500);
+
+// Installs the global capture once per page load: errors, rejections, failed
+// requests, console warnings and errors, clicks, and the page view itself.
+function useLogCapture() {
+  const router = useRouter();
+
+  useEffect(() => {
+    logEvent({ code: 'PAGE_VIEW', reason: `Opened ${router.asPath.split(/[?#]/)[0]}` });
+    if (window.__kyriadonLogging) return undefined;
+    window.__kyriadonLogging = true;
+
+    window.addEventListener('error', (event) => {
+      logEvent({ level: 'error', code: 'JS_ERROR', reason: event.message, meta: { source: event.filename, line: event.lineno, column: event.colno, stack: event.error?.stack?.slice(0, 1500) } });
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      logEvent({ level: 'error', code: 'UNHANDLED_REJECTION', reason: event.reason?.message || String(event.reason), meta: { stack: event.reason?.stack?.slice(0, 1500) } });
+    });
+
+    // Failed requests (the log endpoint itself is skipped to avoid loops)
+    const originalFetch = window.fetch.bind(window);
+    window.__kyriadonFetch = originalFetch;
+    window.fetch = async (...args) => {
+      const target = String(typeof args[0] === 'string' ? args[0] : args[0]?.url || '');
+      try {
+        const response = await originalFetch(...args);
+        if (!response.ok && !target.includes(LOG_ENDPOINT)) {
+          logEvent({ level: response.status >= 500 ? 'error' : 'warning', code: response.status >= 500 ? 'HTTP_5XX' : 'HTTP_4XX', reason: `${response.status} from ${target.slice(0, 160)}` });
+        }
+        return response;
+      } catch (error) {
+        if (!target.includes(LOG_ENDPOINT)) logEvent({ level: 'error', code: 'FETCH_FAILED', reason: `${error?.message || 'Network error'} (${target.slice(0, 160)})` });
+        throw error;
+      }
+    };
+
+    // Console warnings and errors
+    ['warn', 'error'].forEach((method) => {
+      const original = console[method].bind(console);
+      console[method] = (...args) => {
+        original(...args);
+        if (capturing) return;
+        capturing = true;
+        try {
+          logEvent({ level: method === 'error' ? 'error' : 'warning', code: method === 'error' ? 'CONSOLE_ERROR' : 'CONSOLE_WARN', reason: describeArgs(args) });
+        } finally {
+          capturing = false;
+        }
+      };
+    });
+
+    // User clicks on buttons and links
+    document.addEventListener(
+      'click',
+      (event) => {
+        const element = event.target.closest?.('button, a, [role="button"]');
+        if (!element || element.closest('[data-nolog]')) return;
+        const label = (element.getAttribute('aria-label') || element.textContent || element.getAttribute('href') || '').trim().replace(/\s+/g, ' ').slice(0, 80);
+        logEvent({ code: 'USER_CLICK', reason: `${element.tagName === 'A' ? 'Link' : 'Button'}: ${label || 'unlabelled'}` });
+      },
+      true,
+    );
+
+    // Send what is left when the tab is hidden or closed
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flushLogs(true);
+    });
+    window.addEventListener('pagehide', () => flushLogs(true));
+    return undefined;
+  }, [router.asPath]);
 }
