@@ -20,7 +20,7 @@ const parseBody = (body) => {
   }
 };
 
-export default async function handler(req, res) {
+async function handleRequest(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   const session = await getServerSession(req, res, authOptions);
   const userId = session?.user?.id || null;
@@ -72,4 +72,19 @@ export default async function handler(req, res) {
 
   res.setHeader('Allow', 'GET, POST, DELETE');
   return res.status(405).json({ error: 'Method not allowed' });
+}
+
+// Catches anything the route throws: the error is stored as an API_ERROR log and the client gets a clean 500
+export default async function handler(req, res) {
+  try {
+    return await handleRequest(req, res);
+  } catch (error) {
+    try {
+      appendLogs([makeEntry({ level: 'error', code: 'API_ERROR', reason: `${req.method} /api/logs failed: ${error?.message || error}`, meta: { stack: String(error?.stack || '').slice(0, 1500) } }, { user: null, release: getRelease() })]);
+    } catch {
+      /* logging must never throw */
+    }
+    if (!res.headersSent) return res.status(500).json({ error: 'Internal server error' });
+    return undefined;
+  }
 }
