@@ -719,6 +719,116 @@
   color: var(--color-text-muted);
 }
 
+/* Relevant logs: release summary, tone accents and highlighted keywords */
+.relevantStat[data-tone='new'],
+.relevantGroup[data-tone='new'],
+.relevantRow[data-tone='new'],
+.relevantNote strong[data-tone='new'] {
+  --relevant-accent: var(--level-error-color);
+}
+
+.relevantStat[data-tone='ongoing'],
+.relevantGroup[data-tone='ongoing'],
+.relevantRow[data-tone='ongoing'],
+.relevantNote strong[data-tone='ongoing'] {
+  --relevant-accent: var(--level-warning-color);
+}
+
+.relevantStat[data-tone='old'],
+.relevantGroup[data-tone='old'],
+.relevantRow[data-tone='old'],
+.relevantNote strong[data-tone='old'] {
+  --relevant-accent: var(--color-text-muted);
+}
+
+.relevantRelease {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.relevantReleaseLabel {
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+}
+
+.relevantCommit {
+  flex-basis: 100%;
+  font-family: var(--type-label-family);
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.relevantStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.relevantStat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.relevantStat strong,
+.relevantNote strong[data-tone],
+.relevantCount {
+  color: var(--relevant-accent);
+}
+
+.relevantNote strong:not([data-tone]) {
+  color: var(--color-text-primary);
+}
+
+.relevantLocal {
+  margin: 0;
+  padding: var(--space-3);
+  font-family: var(--type-helper-family);
+  font-size: var(--type-helper-size);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-raised);
+  border-left: 3px solid var(--level-warning-color);
+  border-radius: var(--radius-control);
+}
+
+.relevantLocal strong {
+  color: var(--level-warning-color);
+}
+
+.relevantGroup .relevantGroupTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--relevant-accent);
+}
+
+.relevantPill {
+  min-width: 1.5rem;
+  padding: 0 var(--space-2);
+  text-align: center;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  border: 1px solid var(--relevant-accent);
+  border-radius: var(--radius-pill);
+}
+
+.relevantRow[data-tone] {
+  border-left: 3px solid var(--relevant-accent);
+}
+
 .lockedBox {
   justify-items: center;
   padding: var(--space-8) var(--space-5);
