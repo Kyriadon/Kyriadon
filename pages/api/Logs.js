@@ -1,0 +1,75 @@
+// ============================================================================
+// /api/logs
+//   POST    any visitor: store a batch of client events (user is taken from the session)
+//   GET     signed-in users: list logs plus the viewer's roles and the current release
+//   DELETE  staff only: delete by ids, by level, or everything (the deletion is logged)
+// ============================================================================
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from './auth/[...nextauth]';
+import { VIEW_REQUIRES_ROLE, appendLogs, deleteLogs, getRelease, getViewerRoles, makeEntry, rateLimited, readLogs } from '../../lib/logServer';
+
+export const config = { api: { bodyParser: { sizeLimit: '64kb' } } };
+
+// Parses a JSON string body safely (sendBeacon may deliver text)
+const parseBody = (body) => {
+  if (typeof body !== 'string') return body;
+  try {
+    return JSON.parse(body);
+  } catch {
+    return null;
+  }
+};
+
+export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store');
+  const session = await getServerSession(req, res, authOptions);
+  const userId = session?.user?.id || null;
+  const user = session?.user ? { id: String(userId), name: String(session.user.name || 'Unknown').slice(0, 60) } : null;
+  const release = getRelease();
+
+  // Store client events
+  if (req.method === 'POST') {
+    const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
+    if (rateLimited(ip)) return res.status(429).json({ error: 'Too many log events' });
+    const body = parseBody(req.body);
+    const events = Array.isArray(body?.events) ? body.events.slice(0, 25) : [];
+    appendLogs(events.map((event) => makeEntry(event, { user, release })));
+    return res.status(202).json({ accepted: events.length });
+  }
+
+  // Everything below needs a signed-in user
+  if (!userId) return res.status(401).json({ error: 'Log in to view logs' });
+  const viewer = { id: String(userId), name: user.name, ...(await getViewerRoles(userId)) };
+
+  // Optional role gate for viewing (see VIEW_REQUIRES_ROLE in lib/logServer.js)
+  if (VIEW_REQUIRES_ROLE && !viewer.staff && !viewer.developer) {
+    if (req.method === 'GET') appendLogs([makeEntry({ level: 'warning', code: 'VIEW_DENIED', reason: `${user.name} tried to open the debug logs without the Staff or Developer role.` }, { user, release })]);
+    return res.status(403).json({ error: 'You do not have access to the debug logs' });
+  }
+
+  // List logs
+  if (req.method === 'GET') {
+    return res.status(200).json({ logs: readLogs(), viewer, release, serverTime: new Date().toISOString() });
+  }
+
+  // Delete logs (staff only)
+  if (req.method === 'DELETE') {
+    const body = parseBody(req.body) || {};
+    if (!viewer.staff) {
+      appendLogs([makeEntry({ level: 'warning', code: 'DELETE_DENIED', reason: `${user.name} tried to delete logs without the Staff role.` }, { user, release })]);
+      return res.status(403).json({ error: 'Only staff can delete logs' });
+    }
+    const payload = {
+      all: body.all === true,
+      level: ['info', 'warning', 'error'].includes(body.level) ? body.level : undefined,
+      ids: Array.isArray(body.ids) ? body.ids.slice(0, 500).map(String) : undefined,
+    };
+    const deleted = deleteLogs(payload);
+    const scope = payload.all ? 'all logs' : payload.level ? `${payload.level} logs` : 'selected logs';
+    appendLogs([makeEntry({ level: 'info', code: 'LOGS_DELETED', reason: `${user.name} deleted ${deleted} log(s) (${scope}).` }, { user, release })]);
+    return res.status(200).json({ deleted });
+  }
+
+  res.setHeader('Allow', 'GET, POST, DELETE');
+  return res.status(405).json({ error: 'Method not allowed' });
+}
