@@ -918,18 +918,78 @@ function useLogCapture() {
     window.__kyriadonLogging = true;
 
     window.addEventListener('error', (event) => {
-      logEvent({ level: 'error', code: 'JS_ERROR', reason: event.message, meta: { source: event.filename, line: event.lineno, column: event.colno, stack: event.error?.stack?.slice(0, 1500) } });
+      logEvent({ level: 'error', code: 'JS_ERROR', reason: event.message || event.error?.message || 'Unknown script error', meta: { source: event.filename, line: event.lineno, column: event.colno, stack: event.error?.stack?.slice(0, 1500) } });
     });
 
     window.addEventListener('unhandledrejection', (event) => {
       logEvent({ level: 'error', code: 'UNHANDLED_REJECTION', reason: event.reason?.message || String(event.reason), meta: { stack: event.reason?.stack?.slice(0, 1500) } });
     });
 
+    // Failed images, scripts, stylesheets and media (these errors do not bubble, so they are caught in the capture phase)
+    window.addEventListener(
+      'error',
+      (event) => {
+        const element = event.target;
+        if (!element || element === window || element === document || !element.tagName) return;
+        const tag = element.tagName.toLowerCase();
+        const url = String([element.currentSrc, element.src, element.href].find((value) => typeof value === 'string' && value) || '').slice(0, 300);
+        const blocking = ['script', 'link', 'iframe'].includes(tag);
+        logEvent({ level: blocking ? 'error' : 'warning', code: 'RESOURCE_ERROR', reason: `Failed to load <${tag}> ${url.slice(0, 160)}`.trim(), meta: { tag, url } });
+      },
+      true,
+    );
+
+    // Content Security Policy blocks
+    document.addEventListener('securitypolicyviolation', (event) => {
+      const directive = event.effectiveDirective || event.violatedDirective || 'policy';
+      const blocked = String(event.blockedURI || 'inline').slice(0, 300);
+      logEvent({ level: 'error', code: 'CSP_VIOLATION', reason: `Blocked by ${directive}: ${blocked.slice(0, 160)}`, meta: { directive, blocked, source: event.sourceFile, line: event.lineNumber } });
+    });
+
+    // Failed page navigations (cancelled ones are normal and skipped)
+    router.events?.on('routeChangeError', (error, url) => {
+      if (error?.cancelled) return;
+      logEvent({ level: 'error', code: 'ROUTE_ERROR', reason: `${error?.message || 'Navigation failed'} (${String(url || '').split(/[?#]/)[0].slice(0, 160)})`, meta: { stack: error?.stack?.slice(0, 1500) } });
+    });
+
+    // Failed XMLHttpRequests (some libraries use these instead of fetch)
+    if (window.XMLHttpRequest) {
+      const xhrOpen = XMLHttpRequest.prototype.open;
+      const xhrSend = XMLHttpRequest.prototype.send;
+      XMLHttpRequest.prototype.open = function patchedOpen(method, url, ...rest) {
+        this.__kyriadonRequest = { method: String(method || 'GET').toUpperCase(), target: String(url || '').slice(0, 160) };
+        return xhrOpen.call(this, method, url, ...rest);
+      };
+      XMLHttpRequest.prototype.send = function patchedSend(...args) {
+        const request = this.__kyriadonRequest;
+        if (request && !request.target.includes(LOG_ENDPOINT)) {
+          let aborted = false;
+          this.addEventListener(
+            'abort',
+            () => {
+              aborted = true;
+            },
+            { once: true },
+          );
+          this.addEventListener(
+            'loadend',
+            () => {
+              if (aborted) return;
+              if (this.status === 0) logEvent({ level: 'error', code: 'XHR_FAILED', reason: `Network error (${request.method} ${request.target})` });
+              else if (this.status >= 400) logEvent({ level: this.status >= 500 ? 'error' : 'warning', code: this.status >= 500 ? 'HTTP_5XX' : 'HTTP_4XX', reason: `${this.status} from ${request.target}` });
+            },
+            { once: true },
+          );
+        }
+        return xhrSend.apply(this, args);
+      };
+    }
+
     // Failed requests (the log endpoint itself is skipped to avoid loops)
     const originalFetch = window.fetch.bind(window);
     window.__kyriadonFetch = originalFetch;
     window.fetch = async (...args) => {
-      const target = String(typeof args[0] === 'string' ? args[0] : args[0]?.url || '');
+      const target = String(typeof args[0] === 'string' ? args[0] : args[0]?.url || args[0] || '');
       try {
         const response = await originalFetch(...args);
         if (!response.ok && !target.includes(LOG_ENDPOINT)) {
