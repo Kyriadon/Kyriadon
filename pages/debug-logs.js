@@ -42,6 +42,9 @@ const levelKeys = ['info', 'warning', 'error'];
 const PAGE_SIZE = 60;
 const VIEW_KEY = 'kyriadon:logView';
 const REFRESH_MS = 20000;
+const CONTROLS_VIEW_KEY = 'kyriadon:controlsView';
+const FAKE_BATCH = 25; // the log API accepts 25 events per request
+const FAKE_MAX = 100;
 
 const exportFields = [
   { id: 'time', label: 'Time' },
@@ -60,7 +63,15 @@ const exportRanges = [
   { id: '7d', label: 'Last 7 days', ms: 7 * 24 * 60 * 60 * 1000 },
   { id: '30d', label: 'Last 30 days', ms: 30 * 24 * 60 * 60 * 1000 },
 ];
-const mimeTypes = { json: 'application/json', csv: 'text/csv', txt: 'text/plain' };
+const mimeTypes = { json: 'application/json', csv: 'text/csv', txt: 'text/plain', jsonl: 'application/x-ndjson' };
+
+// Extra download options for developers in the advanced controls
+const advancedFields = [{ id: 'meta', label: 'Details' }];
+const exportSorts = [
+  { id: 'newest', label: 'Newest first' },
+  { id: 'oldest', label: 'Oldest first' },
+];
+const exportLimits = [0, 25, 100, 500];
 
 // ----------------------------------------------------------------------------
 // Helpers: time, matching, counting, export building and downloads
@@ -115,12 +126,15 @@ const csvCell = (value) => {
   return `"${safe.replace(/"/g, '""')}"`;
 };
 
-const fieldValue = (log, id) => (id === 'user' ? userLabel(log) : log[id] ?? '');
+const fieldValue = (log, id) => (id === 'user' ? userLabel(log) : id === 'meta' ? (Object.keys(log.meta || {}).length ? JSON.stringify(log.meta) : '') : log[id] ?? '');
 
 // Builds the file content for the download editor
-function buildExport(rows, format, fields) {
+function buildExport(rows, format, fields, options = {}) {
   if (format === 'json') {
-    return JSON.stringify(rows.map((log) => Object.fromEntries(fields.map((field) => [field, field === 'user' ? log.user : log[field] ?? '']))), null, 2);
+    return JSON.stringify(rows.map((log) => Object.fromEntries(fields.map((field) => [field, field === 'user' ? log.user : log[field] ?? '']))), null, options.compact ? 0 : 2);
+  }
+  if (format === 'jsonl') {
+    return rows.map((log) => JSON.stringify(Object.fromEntries(fields.map((field) => [field, field === 'user' ? log.user : log[field] ?? ''])))).join('\n');
   }
   if (format === 'csv') {
     return [fields.map(csvCell).join(','), ...rows.map((log) => fields.map((field) => csvCell(fieldValue(log, field))).join(','))].join('\n');
@@ -518,22 +532,32 @@ function LogDetail({ log, viewer, activeView, query, onClose, onDelete }) {
 }
 
 // ----------------------------------------------------------------------------
-// Download editor: choose type, time range, format, fields and file name
+// Download editor: choose type, time range, format, fields and file name.
+// Developers in the advanced controls also get sort order, a row limit, a text
+// filter, the details field, compact JSON and JSON lines.
 // ----------------------------------------------------------------------------
-function DownloadEditor({ logs, counts }) {
+function DownloadEditor({ logs, counts, advanced = false }) {
   const [scope, setScope] = useState('all');
   const [range, setRange] = useState('all');
   const [format, setFormat] = useState('json');
   const [fields, setFields] = useState(['time', 'level', 'code', 'reason', 'fix', 'user']);
   const [name, setName] = useState('kyriadon-logs');
+  const [sort, setSort] = useState('newest');
+  const [maxRows, setMaxRows] = useState(0);
+  const [contains, setContains] = useState('');
+  const [compact, setCompact] = useState(false);
 
   const rows = useMemo(() => {
     const limit = exportRanges.find((item) => item.id === range).ms;
-    return logs.filter((log) => (scope === 'all' || log.level === scope) && Date.now() - new Date(log.time).getTime() <= limit);
-  }, [logs, scope, range]);
+    const list = logs.filter((log) => (scope === 'all' || log.level === scope) && Date.now() - new Date(log.time).getTime() <= limit);
+    // Extra options (advanced controls): text filter, sort order and row limit
+    const found = list.filter((log) => matches(log, contains));
+    if (sort === 'oldest') found.reverse();
+    return maxRows ? found.slice(0, maxRows) : found;
+  }, [logs, scope, range, contains, sort, maxRows]);
 
-  const ordered = useMemo(() => exportFields.map((field) => field.id).filter((id) => fields.includes(id)), [fields]);
-  const content = useMemo(() => buildExport(rows, format, ordered), [rows, format, ordered]);
+  const ordered = useMemo(() => [...exportFields, ...advancedFields].map((field) => field.id).filter((id) => fields.includes(id)), [fields]);
+  const content = useMemo(() => buildExport(rows, format, ordered, { compact }), [rows, format, ordered, compact]);
   const stamp = formatTime(new Date().toISOString()).slice(0, 10);
   const fileName = `${name.trim().replace(/[^a-z0-9-_]+/gi, '-') || 'kyriadon-logs'}${scope === 'all' ? '' : `-${scope}`}-${stamp}.${format}`;
 
@@ -561,7 +585,7 @@ function DownloadEditor({ logs, counts }) {
           ))}
         </div>
         <div className="segmented" role="group" aria-label="File format">
-          {['json', 'csv', 'txt'].map((item) => (
+          {['json', 'csv', 'txt', ...(advanced ? ['jsonl'] : [])].map((item) => (
             <button key={item} type="button" className="segment" aria-pressed={format === item} onClick={() => setFormat(item)}>{item.toUpperCase()}</button>
           ))}
         </div>
@@ -573,7 +597,39 @@ function DownloadEditor({ logs, counts }) {
             {field.label}
           </label>
         ))}
+        {advanced && advancedFields.map((field) => (
+          <label key={field.id} className="fieldOption">
+            <input type="checkbox" checked={fields.includes(field.id)} onChange={() => toggleField(field.id)} />
+            {field.label}
+          </label>
+        ))}
+        {advanced && format === 'json' && (
+          <label className="fieldOption">
+            <input type="checkbox" checked={compact} onChange={() => setCompact((value) => !value)} />
+            Compact JSON
+          </label>
+        )}
       </div>
+      {advanced && (
+        <>
+          <div className="studioRow">
+            <div className="segmented" role="group" aria-label="Sort order">
+              {exportSorts.map((item) => (
+                <button key={item.id} type="button" className="segment" aria-pressed={sort === item.id} onClick={() => setSort(item.id)}>{item.label}</button>
+              ))}
+            </div>
+            <div className="segmented" role="group" aria-label="Maximum number of logs">
+              {exportLimits.map((item) => (
+                <button key={item} type="button" className="segment" aria-pressed={maxRows === item} onClick={() => setMaxRows(item)}>{item ? `Max ${item}` : 'No limit'}</button>
+              ))}
+            </div>
+          </div>
+          <label className="studioField">
+            <span className="studioLabel">Only logs containing</span>
+            <input className="studioInput" type="text" value={contains} maxLength={60} placeholder="Code, reason, user or page" spellCheck={false} autoComplete="off" onChange={(event) => setContains(event.target.value)} />
+          </label>
+        </>
+      )}
       <label className="studioField">
         <span className="studioLabel">File name</span>
         <input className="studioInput" type="text" value={name} maxLength={40} spellCheck={false} autoComplete="off" onChange={(event) => setName(event.target.value)} />
@@ -695,11 +751,477 @@ function RelevantLogs({ logs, release, onPickCode }) {
 }
 
 // ----------------------------------------------------------------------------
-// Controls modal: delete (staff), download editor, relevant logs (developers)
+// Statistics (advanced controls): pie chart by level, bars per day, bars per code
 // ----------------------------------------------------------------------------
-function ControlsModal({ logs, counts, viewer, release, onClose, onDelete, onPickCode }) {
+const dayKey = (date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+// Logs per local day for the last 7 days, split by level
+function lastSevenDays(logs) {
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    return { key: dayKey(date), label: `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`, info: 0, warning: 0, error: 0 };
+  });
+  const byKey = new Map(days.map((day) => [day.key, day]));
+  logs.forEach((log) => {
+    const day = byKey.get(dayKey(new Date(log.time)));
+    if (day && levelKeys.includes(log.level)) day[log.level] += 1;
+  });
+  return days;
+}
+
+// The most common log codes, highest first
+function topCodes(logs, size) {
+  const totals = new Map();
+  logs.forEach((log) => totals.set(log.code, (totals.get(log.code) || 0) + 1));
+  return [...totals.entries()].sort((a, b) => b[1] - a[1]).slice(0, size);
+}
+
+// Pie chart: one slice per level, drawn as thick circle strokes
+function PieChart({ counts, total }) {
+  const circumference = 2 * Math.PI * 8;
+  let offset = 0;
+  return (
+    <svg className="chartPie" viewBox="0 0 32 32" role="img" aria-label={`Logs by level: ${levelKeys.map((key) => `${counts[key]} ${key}`).join(', ')}`}>
+      <g transform="rotate(-90 16 16)">
+        <circle className="chartPieTrack" cx="16" cy="16" r="8" />
+        {levelKeys.map((key) => {
+          if (!total || !counts[key]) return null;
+          const length = (counts[key] / total) * circumference;
+          const slice = <circle key={key} className="chartSlice" data-level={key} cx="16" cy="16" r="8" strokeDasharray={`${length} ${circumference}`} strokeDashoffset={-offset} />;
+          offset += length;
+          return slice;
+        })}
+      </g>
+    </svg>
+  );
+}
+
+// Bar chart: one stacked bar per day (info at the bottom, errors on top)
+function DayBars({ days }) {
+  const base = 90;
+  const max = Math.max(1, ...days.map((day) => day.info + day.warning + day.error));
+  return (
+    <svg className="chartBars" viewBox="0 0 280 118" role="img" aria-label={`Logs per day: ${days.map((day) => `${day.label} ${day.info + day.warning + day.error}`).join(', ')}`}>
+      <line className="chartAxis" x1="4" y1={base} x2="276" y2={base} />
+      {days.map((day, index) => {
+        const x = 10 + index * 38;
+        const total = day.info + day.warning + day.error;
+        let y = base;
+        return (
+          <g key={day.key}>
+            {levelKeys.map((key) => {
+              const height = (day[key] / max) * (base - 14);
+              if (!height) return null;
+              y -= height;
+              return <rect key={key} className="chartBar" data-level={key} x={x} y={y} width="26" height={height} rx="2" />;
+            })}
+            {total > 0 && <text className="chartValue" x={x + 13} y={y - 3} textAnchor="middle">{total}</text>}
+            <text className="chartLabel" x={x + 13} y="108" textAnchor="middle">{day.label}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function StatsSection({ logs, counts }) {
+  const total = logs.length;
+  const days = useMemo(() => lastSevenDays(logs), [logs]);
+  const codes = useMemo(() => topCodes(logs, 6), [logs]);
+  const recent = useMemo(() => logs.filter((log) => Date.now() - new Date(log.time).getTime() <= 24 * 60 * 60 * 1000).length, [logs]);
+  const errorShare = total ? Math.round((counts.error / total) * 100) : 0;
+
+  return (
+    <section className="controlSection" aria-labelledby="statsTitle">
+      <h4 id="statsTitle" className="studioSectionTitle">Statistics</h4>
+      {total === 0 ? (
+        <p className="stateBox">No logs yet, so there is nothing to chart.</p>
+      ) : (
+        <>
+          <div className="chartSummary">
+            <span className="chartChip"><strong>{total}</strong> logs</span>
+            <span className="chartChip"><strong>{errorShare}%</strong> errors</span>
+            <span className="chartChip"><strong>{recent}</strong> in the last 24 hours</span>
+          </div>
+          <div className="chartCard">
+            <h5 className="studioLabel">By level</h5>
+            <div className="chartPieWrap">
+              <PieChart counts={counts} total={total} />
+              <ul className="chartLegend">
+                {levelKeys.map((key) => (
+                  <li key={key}>
+                    <span className="chartDot" data-level={key} />
+                    <span>{levelMeta[key].label}</span>
+                    <strong>{counts[key]}</strong>
+                    <span className="chartPercent">{Math.round((counts[key] / total) * 100)}%</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="chartCard">
+            <h5 className="studioLabel">Last 7 days</h5>
+            <DayBars days={days} />
+            <p className="helperText">Logs per day, stacked by level.</p>
+          </div>
+          <div className="chartCard">
+            <h5 className="studioLabel">Most common codes</h5>
+            <ul className="chartList">
+              {codes.map(([code, count]) => (
+                <li key={code} className="chartRow">
+                  <code className="mdCode">{code}</code>
+                  <span className="chartTrack"><span className="chartFill" style={{ width: `${(count / codes[0][1]) * 100}%` }} /></span>
+                  <span className="chartCount">{count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Delete individual logs (staff, advanced controls): find a log, then delete it
+// with a confirm step. The server still checks the Staff role.
+// ----------------------------------------------------------------------------
+function ManageLogs({ logs, onDelete }) {
+  const [query, setQuery] = useState('');
+  const [scope, setScope] = useState('all');
+  const [limit, setLimit] = useState(10);
+  const [pending, setPending] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [message, setMessage] = useState('');
+
+  // The delete confirmation expires after 4 seconds
+  useEffect(() => {
+    if (!pending) return undefined;
+    const timer = setTimeout(() => setPending(null), 4000);
+    return () => clearTimeout(timer);
+  }, [pending]);
+
+  useEffect(() => setLimit(10), [query, scope]);
+
+  const found = useMemo(() => logs.filter((log) => (scope === 'all' || log.level === scope) && matches(log, query)), [logs, scope, query]);
+  const shown = found.slice(0, limit);
+
+  const remove = async (log) => {
+    if (pending !== log.id) {
+      setPending(log.id);
+      return;
+    }
+    setPending(null);
+    setBusyId(log.id);
+    setMessage('');
+    try {
+      await onDelete({ ids: [log.id] });
+      setMessage(`Deleted ${log.code}.`);
+    } catch {
+      setMessage('Delete failed. Only staff can delete logs.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <section className="controlSection" aria-labelledby="manageTitle">
+      <h4 id="manageTitle" className="studioSectionTitle relevantTitle">
+        Delete individual logs
+        <RoleLabel role="staff" />
+      </h4>
+      <div className="studioRow">
+        <div className="segmented" role="group" aria-label="Level">
+          {['all', ...levelKeys].map((id) => (
+            <button key={id} type="button" className="segment" aria-pressed={scope === id} onClick={() => setScope(id)}>{id === 'all' ? 'All' : levelMeta[id].label}</button>
+          ))}
+        </div>
+      </div>
+      <label className="studioField">
+        <span className="studioLabel">Find a log</span>
+        <input className="studioInput" type="text" value={query} placeholder="Code, reason, user or page" spellCheck={false} autoComplete="off" onChange={(event) => setQuery(event.target.value)} />
+      </label>
+      <p className="helperText">{found.length} of {logs.length} log{logs.length === 1 ? '' : 's'}</p>
+      {found.length === 0 ? (
+        <p className="stateBox">No logs match.</p>
+      ) : (
+        <ul className="manageList">
+          {shown.map((log) => {
+            const { Icon } = levelMeta[log.level];
+            return (
+              <li key={log.id} className="manageRow" data-level={log.level}>
+                <span className="manageIcon"><Icon size={16} /></span>
+                <span className="manageBody">
+                  <span className="manageTop">
+                    <code className="mdCode">{log.code}</code>
+                    <span className="manageTime">{relativeTime(log.time)}</span>
+                  </span>
+                  <span className="manageReason">{log.reason || 'No reason recorded'}</span>
+                </span>
+                <button type="button" className={`btn btnCompact ${pending === log.id ? 'btnDanger' : 'btnSecondary'}`} onClick={() => remove(log)} disabled={busyId === log.id} aria-label={`Delete ${log.code} log`}>
+                  <IconTrash size={16} />
+                  {pending === log.id ? 'Confirm' : 'Delete'}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {found.length > shown.length && (
+        <button type="button" className="btn btnSecondary showMore" onClick={() => setLimit((value) => value + 10)}>
+          Show {Math.min(10, found.length - shown.length)} more
+        </button>
+      )}
+      {message && <p className="helperText" role="status">{message}</p>}
+    </section>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Test logs (developers, advanced controls): fake errors, warnings and info sent
+// to the real log store. Every fake log is tagged meta.fake so it can be found
+// and deleted again. The server accepts 25 events per request.
+// ----------------------------------------------------------------------------
+const fakePresets = [
+  { id: 'script', level: 'error', label: 'Script error', code: 'TEST_JS_ERROR', reason: "Uncaught TypeError: Cannot read properties of undefined (reading 'map')", fix: 'Check that the value exists before calling map on it.' },
+  { id: 'server', level: 'error', label: 'Server error', code: 'TEST_HTTP_5XX', reason: '500 from /api/example', fix: 'Open the server route that returned 500 and fix the error it throws.' },
+  { id: 'network', level: 'error', label: 'Network failure', code: 'TEST_FETCH_FAILED', reason: 'Network error (GET /api/example)', fix: 'Check that the endpoint is reachable, then add a retry or an error state.' },
+  { id: 'missing', level: 'warning', label: 'Missing page', code: 'TEST_HTTP_4XX', reason: '404 from /api/missing' },
+  { id: 'deprecated', level: 'warning', label: 'Console warning', code: 'TEST_CONSOLE_WARN', reason: 'A deprecated prop was passed to a component' },
+  { id: 'action', level: 'info', label: 'Test action', code: 'TEST_ACTION', reason: 'Clicked a test button' },
+];
+
+// One fake log event. With spread on, the time is moved back up to 9 minutes (the server ignores older client times).
+const fakeEvent = ({ level, code, reason, fix, detail }, path, spread) => ({
+  level,
+  code,
+  reason,
+  fix: level === 'error' ? fix || '' : '',
+  path,
+  at: new Date(Date.now() - (spread ? Math.floor(Math.random() * 9 * 60 * 1000) : 0)).toISOString(),
+  meta: { fake: true, ...(detail?.key ? { [detail.key]: detail.value } : {}) },
+});
+
+async function sendFakeLogs(events) {
+  for (let start = 0; start < events.length; start += FAKE_BATCH) {
+    const response = await fetch('/api/logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ events: events.slice(start, start + FAKE_BATCH) }) });
+    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+  }
+}
+
+function FakeLogs({ logs, viewer, onDelete, onReload }) {
+  const [draft, setDraft] = useState({ level: 'error', code: 'TEST_ERROR', reason: 'This is a fake error created from the log controls.', fix: '', path: '', detailKey: '', detailValue: '' });
+  const [count, setCount] = useState('1');
+  const [spread, setSpread] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(0);
+  const [message, setMessage] = useState('');
+  const [confirming, setConfirming] = useState(false);
+
+  const fakeLogs = useMemo(() => logs.filter((log) => log.meta?.fake === true), [logs]);
+  const fakeCounts = useMemo(() => countByLevel(fakeLogs), [fakeLogs]);
+  const amount = Math.min(FAKE_MAX, Math.max(1, Math.round(Number(count)) || 1));
+  const code = draft.code.trim().toUpperCase().replace(/[^A-Z0-9_.:-]/g, '_') || 'TEST_LOG';
+  const detail = { key: draft.detailKey.trim().slice(0, 30), value: draft.detailValue.slice(0, 200) };
+
+  // The delete confirmation expires after 5 seconds
+  useEffect(() => {
+    if (!confirming) return undefined;
+    const timer = setTimeout(() => setConfirming(false), 5000);
+    return () => clearTimeout(timer);
+  }, [confirming]);
+
+  const update = (key) => (event) => setDraft((current) => ({ ...current, [key]: event.target.value }));
+
+  const send = async (events) => {
+    if (busy || !events.length) return;
+    setBusy(true);
+    setMessage('');
+    try {
+      await sendFakeLogs(events);
+      setSent((total) => total + events.length);
+      setMessage(`Created ${events.length} fake log${events.length === 1 ? '' : 's'}.`);
+      logEvent({ code: 'FAKE_LOGS_GENERATED', reason: `Generated ${events.length} fake log(s) from the log controls` });
+      await onReload();
+    } catch {
+      setMessage('Could not create the fake logs. Try again in a moment.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const generate = () => {
+    const path = draft.path.trim() || window.location.pathname;
+    send(Array.from({ length: amount }, () => fakeEvent({ level: draft.level, code, reason: draft.reason, fix: draft.fix, detail }, path, spread)));
+  };
+
+  const randomMix = () => {
+    const path = window.location.pathname;
+    send(Array.from({ length: FAKE_BATCH }, () => fakeEvent(fakePresets[Math.floor(Math.random() * fakePresets.length)], path, true)));
+  };
+
+  const removeFakes = async () => {
+    if (!confirming) {
+      setConfirming(true);
+      return;
+    }
+    setConfirming(false);
+    setBusy(true);
+    try {
+      const ids = fakeLogs.map((log) => log.id);
+      let deleted = 0;
+      for (let start = 0; start < ids.length; start += 500) deleted += (await onDelete({ ids: ids.slice(start, start + 500) })) || 0;
+      setMessage(`Deleted ${deleted} fake log${deleted === 1 ? '' : 's'}.`);
+    } catch {
+      setMessage('Delete failed. Only staff can delete logs.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const preview = { level: draft.level, code, reason: draft.reason, ...(draft.level === 'error' && draft.fix ? { fix: draft.fix } : {}), path: draft.path.trim() || '(this page)', meta: { fake: true, ...(detail.key ? { [detail.key]: detail.value } : {}) } };
+
+  return (
+    <section className="controlSection" aria-labelledby="fakeTitle">
+      <h4 id="fakeTitle" className="studioSectionTitle relevantTitle">
+        Test logs
+        <RoleLabel role="developer" />
+      </h4>
+      <p className="helperText">Creates fake logs in the real log store to test the list, filters, charts and downloads. Each one is tagged <code className="mdCode">fake</code> and shows your name as the user.</p>
+      <div className="chartSummary">
+        <span className="chartChip"><strong>{fakeLogs.length}</strong> fake logs stored</span>
+        <span className="chartChip">{fakeCounts.error} errors · {fakeCounts.warning} warnings · {fakeCounts.info} info</span>
+        <span className="chartChip"><strong>{sent}</strong> sent this session</span>
+      </div>
+
+      <h5 className="studioLabel">Quick generate</h5>
+      <div className="fakePresets">
+        {fakePresets.map((preset) => {
+          const { Icon } = levelMeta[preset.level];
+          return (
+            <button key={preset.id} type="button" className="btn btnSecondary btnCompact fakePreset" data-level={preset.level} disabled={busy} onClick={() => send([fakeEvent(preset, window.location.pathname, false)])}>
+              <Icon size={14} />
+              {preset.label}
+            </button>
+          );
+        })}
+        <button type="button" className="btn btnSecondary btnCompact" disabled={busy} onClick={randomMix}>
+          Random mix ({FAKE_BATCH})
+        </button>
+      </div>
+
+      <h5 className="studioLabel">Editor</h5>
+      <div className="studioRow">
+        <div className="segmented" role="group" aria-label="Level of the fake log">
+          {levelKeys.map((key) => (
+            <button key={key} type="button" className="segment" aria-pressed={draft.level === key} onClick={() => setDraft((current) => ({ ...current, level: key }))}>{levelMeta[key].label}</button>
+          ))}
+        </div>
+      </div>
+      <label className="studioField">
+        <span className="studioLabel">Code</span>
+        <input className="studioInput" type="text" value={draft.code} maxLength={60} spellCheck={false} autoComplete="off" onChange={update('code')} />
+      </label>
+      <label className="studioField">
+        <span className="studioLabel">Reason</span>
+        <input className="studioInput" type="text" value={draft.reason} maxLength={500} spellCheck={false} autoComplete="off" onChange={update('reason')} />
+      </label>
+      {draft.level === 'error' && (
+        <label className="studioField">
+          <span className="studioLabel">Suggested fix</span>
+          <input className="studioInput" type="text" value={draft.fix} maxLength={400} placeholder="Optional" spellCheck={false} autoComplete="off" onChange={update('fix')} />
+        </label>
+      )}
+      <label className="studioField">
+        <span className="studioLabel">Page</span>
+        <input className="studioInput" type="text" value={draft.path} maxLength={120} placeholder="Empty uses the current page" spellCheck={false} autoComplete="off" onChange={update('path')} />
+      </label>
+      <div className="fakeDetail">
+        <label className="studioField">
+          <span className="studioLabel">Detail name</span>
+          <input className="studioInput" type="text" value={draft.detailKey} maxLength={30} placeholder="Optional" spellCheck={false} autoComplete="off" onChange={update('detailKey')} />
+        </label>
+        <label className="studioField">
+          <span className="studioLabel">Detail value</span>
+          <input className="studioInput" type="text" value={draft.detailValue} maxLength={200} spellCheck={false} autoComplete="off" onChange={update('detailValue')} />
+        </label>
+      </div>
+      <div className="fakeDetail">
+        <label className="studioField">
+          <span className="studioLabel">How many (1 to {FAKE_MAX})</span>
+          <input className="studioInput" type="number" min="1" max={FAKE_MAX} value={count} onChange={(event) => setCount(event.target.value)} />
+        </label>
+        <div className="fieldPicker" role="group" aria-label="Options">
+          <label className="fieldOption">
+            <input type="checkbox" checked={spread} onChange={() => setSpread((value) => !value)} />
+            Spread over the last 9 minutes
+          </label>
+        </div>
+      </div>
+      <div className="previewBox">
+        <div className="previewHead">
+          <span>Sent to the log store</span>
+          <span>{amount} log{amount === 1 ? '' : 's'}</span>
+        </div>
+        <pre className="rawJson">{JSON.stringify(preview, null, 2)}</pre>
+      </div>
+      <div className="fakeActions">
+        <button type="button" className="btn btnSecondary" disabled={busy} onClick={generate}>
+          Generate {amount} {draft.level} log{amount === 1 ? '' : 's'}
+        </button>
+        {viewer?.staff ? (
+          <button type="button" className={`btn ${confirming ? 'btnDanger' : 'btnSecondary'}`} disabled={busy || fakeLogs.length === 0} onClick={removeFakes}>
+            <IconTrash size={16} />
+            {confirming ? `Confirm: delete ${fakeLogs.length}` : `Delete fake logs (${fakeLogs.length})`}
+          </button>
+        ) : (
+          <span className="badge" data-tone="neutral"><IconLock size={12} />Deleting is staff only</span>
+        )}
+      </div>
+      {message && <p className="helperText" role="status">{message}</p>}
+    </section>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// Controls modal: delete (staff), download editor, relevant logs (developers).
+// Staff and developers can switch it to the advanced view (developers start
+// there): statistics for both, delete single logs for staff, test logs and a
+// custom download for developers. Everyone else stays on the normal view.
+// ----------------------------------------------------------------------------
+function ControlsModal({ logs, counts, viewer, release, onClose, onDelete, onPickCode, onReload }) {
   const [pending, setPending] = useState(null);
   const [message, setMessage] = useState('');
+
+  // Staff and developers can switch views (developers start on advanced, a saved choice wins)
+  const canSwitch = Boolean(viewer?.staff || viewer?.developer);
+  const [mode, setMode] = useState(() => {
+    if (!canSwitch) return 'normal';
+    let saved = null;
+    try {
+      saved = localStorage.getItem(CONTROLS_VIEW_KEY);
+    } catch {
+      /* storage can be unavailable */
+    }
+    return saved === 'normal' || saved === 'advanced' ? saved : viewer.developer ? 'advanced' : 'normal';
+  });
+  const advanced = canSwitch && mode === 'advanced';
+  const developerTools = advanced && Boolean(viewer?.developer);
+  const ModeIcon = advanced ? IconCode : IconRows;
+  const modeLabel = advanced ? 'Advanced' : 'Normal';
+  const advancedTools = ['statistics', viewer?.staff && 'single-log delete', viewer?.developer && 'test logs', viewer?.developer && 'custom downloads'].filter(Boolean);
+
+  const switchMode = () => {
+    const next = advanced ? 'normal' : 'advanced';
+    setMode(next);
+    logEvent({ code: 'CONTROLS_VIEW_SWITCHED', reason: `Switched the log controls to the ${next} view` });
+    try {
+      localStorage.setItem(CONTROLS_VIEW_KEY, next);
+    } catch {
+      /* storage can be unavailable */
+    }
+  };
 
   // Confirmation expires after 5 seconds
   useEffect(() => {
@@ -735,12 +1257,27 @@ function ControlsModal({ logs, counts, viewer, release, onClose, onDelete, onPic
       title="Log controls"
       subtitle="Delete, download and review logs."
       onClose={onClose}
+      toolbar={
+        <div className="modeBar">
+          <button type="button" className="viewToggle modeToggle" data-tone={advanced ? 'advanced' : 'normal'} onClick={switchMode} disabled={!canSwitch} aria-label={canSwitch ? `Switch to ${advanced ? 'normal' : 'advanced'} view` : 'Normal view (staff and developers can switch)'} data-nolog>
+            <ModeIcon size={18} />
+            {modeLabel}
+          </button>
+          {canSwitch ? (
+            <span className="modeHint">{advanced ? `Advanced: ${advancedTools.join(', ')}.` : 'Switch to advanced for more tools.'}</span>
+          ) : (
+            <span className="badge" data-tone="neutral"><IconLock size={12} />Staff or developer only</span>
+          )}
+        </div>
+      }
       footer={
         <button type="button" className="btn btnSecondary" onClick={onClose} data-autofocus>
           Done
         </button>
       }
     >
+      {advanced && <StatsSection logs={logs} counts={counts} />}
+
       <section className="controlSection" aria-labelledby="deleteTitle">
         <h4 id="deleteTitle" className="studioSectionTitle relevantTitle">
           Delete
@@ -757,7 +1294,11 @@ function ControlsModal({ logs, counts, viewer, release, onClose, onDelete, onPic
         {message && <p className="helperText" role="status">{message}</p>}
       </section>
 
-      <DownloadEditor logs={logs} counts={counts} />
+      {advanced && viewer?.staff && <ManageLogs logs={logs} onDelete={onDelete} />}
+
+      <DownloadEditor key={developerTools ? 'advanced' : 'normal'} logs={logs} counts={counts} advanced={developerTools} />
+
+      {developerTools && <FakeLogs logs={logs} viewer={viewer} onDelete={onDelete} onReload={onReload} />}
 
       {viewer?.developer && release && <RelevantLogs logs={logs} release={release} onPickCode={onPickCode} />}
     </Modal>
@@ -1003,6 +1544,7 @@ export default function DebugLogs() {
           release={release}
           onClose={() => setControlsOpen(false)}
           onDelete={removeLogs}
+          onReload={reload}
           onPickCode={(code) => {
             setQuery(code);
             changeLevel('all');
