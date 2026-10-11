@@ -628,25 +628,37 @@ function RelevantLogs({ logs, release, onPickCode }) {
     };
   }, [logs, release.sha]);
 
-  const renderRow = (item) => (
-    <button key={item.key} type="button" className="relevantRow" onClick={() => onPickCode(item.code)}>
+  const renderRow = (item, tone) => (
+    <button key={item.key} type="button" className="relevantRow" data-tone={tone} onClick={() => onPickCode(item.code)}>
       <span className="relevantTop">
         <LevelBadge level={item.level} />
         <code className="mdCode">{item.code}</code>
         <span className="relevantMeta">
-          {item.current > 0 ? `${item.current}× on this release · last ${relativeTime(item.last)}` : `${item.earlier}× · last on ${shortRelease(item.lastRelease)}`}
+          {item.current > 0 ? (
+            <>
+              <strong className="relevantCount">{item.current}×</strong> on this release
+              {item.earlier > 0 && <> · also {item.earlier}× before</>} · last {relativeTime(item.last)}
+            </>
+          ) : (
+            <>
+              <strong className="relevantCount">{item.earlier}×</strong> · last on <code className="mdCode">{shortRelease(item.lastRelease)}</code>
+            </>
+          )}
         </span>
       </span>
       {item.reason && <span className="relevantReason">{item.reason}</span>}
     </button>
   );
 
-  const renderGroup = (title, hint, items) =>
+  const renderGroup = (tone, title, hint, items) =>
     items.length > 0 && (
-      <div className="relevantGroup">
-        <h5 className="studioLabel">{title} ({items.length})</h5>
+      <div className="relevantGroup" data-tone={tone}>
+        <h5 className="studioLabel relevantGroupTitle">
+          {title}
+          <span className="relevantPill">{items.length}</span>
+        </h5>
         <p className="helperText">{hint}</p>
-        <div className="relevantList">{items.map(renderRow)}</div>
+        <div className="relevantList">{items.map((item) => renderRow(item, tone))}</div>
       </div>
     );
 
@@ -656,14 +668,28 @@ function RelevantLogs({ logs, release, onPickCode }) {
         Relevant to this release
         <RoleLabel role="developer" />
       </h4>
+      <div className="relevantRelease">
+        <span className="relevantReleaseLabel">Running now</span>
+        <code className="mdCode">{shortRelease(release.sha)}</code>
+        {release.message && <strong className="relevantCommit">{release.message}</strong>}
+      </div>
+      <div className="relevantStats">
+        <span className="relevantStat" data-tone="new"><strong>{fresh.length}</strong> new</span>
+        <span className="relevantStat" data-tone="ongoing"><strong>{ongoing.length}</strong> ongoing</span>
+        <span className="relevantStat" data-tone="old"><strong>{old.length}</strong> older</span>
+      </div>
       <p className="helperText relevantNote">
-        Running {shortRelease(release.sha)}{release.message ? `: ${release.message}` : ''}. Start with the problems that are new in this release, they are the likely result of your latest edits. Problems that only exist on older releases are listed last so they are not mistaken for something you just broke.
-        {release.sha === 'local' && ' You are on a local build, so every log shares one release and counts as new. On Vercel each deployment gets its own commit.'}
+        Each problem is matched against the release that is running now. Fix the <strong data-tone="new">new</strong> ones first: they appeared with your latest changes. <strong data-tone="ongoing">Ongoing</strong> ones existed before this release, so check that they still happen. <strong data-tone="old">Older</strong> ones have not shown up on this release and are probably unrelated.
       </p>
-      {fresh.length + ongoing.length === 0 && <p className="stateBox">No errors or warnings have been logged on this release.</p>}
-      {renderGroup('New in this release', 'First seen on this release. Most likely caused by recent changes.', fresh)}
-      {renderGroup('Also on earlier releases', 'Seen before and still happening. Confirm it reproduces before fixing.', ongoing)}
-      {renderGroup('Not seen on this release', 'Only logged on older releases. Probably unrelated to your latest changes.', old)}
+      {release.sha === 'local' && (
+        <p className="relevantLocal">
+          <strong>Local build.</strong> Every log shares one release, so everything counts as new. On Vercel each deployment gets its own commit.
+        </p>
+      )}
+      {fresh.length + ongoing.length === 0 && <p className="stateBox">All clear: no errors or warnings have been logged on this release.</p>}
+      {renderGroup('new', 'New in this release', 'First seen on this release, so most likely caused by your latest changes. Start here.', fresh)}
+      {renderGroup('ongoing', 'Also on earlier releases', 'Happened before this release and is still happening. Check that it reproduces before fixing it.', ongoing)}
+      {renderGroup('old', 'Not seen on this release', 'Only logged on earlier releases. Probably unrelated to your latest changes, so do not chase these.', old)}
     </section>
   );
 }
