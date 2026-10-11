@@ -12,6 +12,9 @@ import '../styles/homeStyles.css';
 // About page styles (guides, server panel, mention chips)
 import '../styles/aboutStyles.css';
 
+// Debug logs page styles (/debug-logs)
+import '../styles/debugStyles.css';
+
 // Design tokens become CSS variables once, at module load
 const tokenCss = buildCssVariables();
 
