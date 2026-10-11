@@ -1,0 +1,764 @@
+/* ==========================================================================
+   debugStyles.css
+   Styles for the Debug logs page (/debug-logs). Everything reuses the design
+   tokens from lib/siteDesign.js and the primitives from homeStyles.css and
+   aboutStyles.css (panels, hero, buttons, badges, chips, modal, inputs).
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Layout: hero top-left, access and release on the left, logs on the right
+   -------------------------------------------------------------------------- */
+.debugGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    'hero hero .'
+    'side main main';
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.debugSide {
+  display: grid;
+  grid-area: side;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.debugMain {
+  display: grid;
+  grid-area: main;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.debugMain > .panelHeader {
+  margin-bottom: 0;
+}
+
+/* Pink hero tone (same component, same animation as home and about) */
+.heroPanel[data-tone='pink'] .heroGlow {
+  background: var(--gradient-holo-hero-pink);
+}
+
+/* --------------------------------------------------------------------------
+   2. Role chips: Staff and Developer
+   -------------------------------------------------------------------------- */
+.mention[data-tone='staff'] {
+  --mention-bg: var(--role-staff-background);
+  --mention-gradient: var(--role-staff-gradient);
+}
+
+.mention[data-tone='developer'] {
+  --mention-bg: var(--role-developer-background);
+  --mention-gradient: var(--role-developer-gradient);
+}
+
+.mention[data-tone='staff']:hover .mentionName,
+.mention[data-tone='developer']:hover .mentionName {
+  animation: roleShimmer 2.4s linear infinite;
+}
+
+/* --------------------------------------------------------------------------
+   3. Buttons: delete uses a danger gradient (staff only)
+   -------------------------------------------------------------------------- */
+.btnDanger {
+  color: var(--color-on-accent);
+  background: var(--gradient-danger);
+  box-shadow: inset 0 1px 0 var(--color-inset);
+}
+
+.btnDanger:hover {
+  filter: brightness(var(--button-hover-brightness));
+}
+
+.btnDanger:active {
+  filter: brightness(0.96);
+}
+
+.footerGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.studioFooter .footerGroup .btn:first-child {
+  margin-right: 0;
+}
+
+/* A footer with one button keeps it on the right */
+.studioFooter > .btn:only-child {
+  margin-left: auto;
+}
+
+/* Log detail modal is narrower than the guide dialogs */
+.sheetDialog[data-size='narrow'] {
+  max-width: 40rem;
+}
+
+/* --------------------------------------------------------------------------
+   4. Left column: access and release panels
+   -------------------------------------------------------------------------- */
+.accessUser {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.accessUser .userAvatar {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.accessName {
+  display: grid;
+  min-width: 0;
+}
+
+.accessName strong {
+  overflow: hidden;
+  font-family: var(--type-label-family);
+  color: var(--color-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accessName span {
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-muted);
+}
+
+.accessRoles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.accessList {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+}
+
+.accessList div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-control);
+}
+
+.accessList dt {
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+}
+
+.accessList dd {
+  margin: 0;
+  font-family: var(--type-label-family);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-label-weight);
+  color: var(--color-text-primary);
+}
+
+.releaseBody {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.releaseMessage {
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   5. Main panel: header, level cards, toolbar and filter
+   -------------------------------------------------------------------------- */
+.logHeader {
+  flex-wrap: wrap;
+}
+
+.logHeaderStart,
+.logHeaderEnd {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.logUpdated {
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Level cards: info (blue), warning (yellow), error (red) */
+.levelCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.levelCard[data-level='info'] { --level-color: var(--level-info-color); --level-bg: var(--level-info-gradient); }
+.levelCard[data-level='warning'] { --level-color: var(--level-warning-color); --level-bg: var(--level-warning-gradient); }
+.levelCard[data-level='error'] { --level-color: var(--level-error-color); --level-bg: var(--level-error-gradient); }
+
+.levelCard {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: start;
+  padding: var(--space-4);
+  text-align: left;
+  background-color: var(--color-bg-raised);
+  background-image: var(--level-bg);
+  border: 1px solid color-mix(in srgb, var(--level-color) 38%, var(--color-border));
+  border-radius: var(--radius-card);
+  transition: border-color var(--motion-base) var(--motion-ease-in-out), box-shadow var(--motion-base) var(--motion-ease-in-out);
+}
+
+.levelCard:hover {
+  border-color: color-mix(in srgb, var(--level-color) 70%, var(--color-border));
+}
+
+.levelCard[aria-pressed='true'] {
+  border-color: var(--level-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--level-color) 35%, transparent);
+}
+
+.levelIcon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: var(--space-1);
+  color: var(--level-color);
+  background: color-mix(in srgb, var(--level-color) 16%, transparent);
+  border-radius: var(--radius-pill);
+}
+
+.levelCount {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.levelLabel {
+  font-family: var(--type-label-family);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-label-weight);
+  color: var(--color-text-primary);
+}
+
+.levelShare {
+  font-family: var(--type-helper-family);
+  font-size: var(--type-helper-size);
+  color: var(--color-text-secondary);
+}
+
+/* Search and filter */
+.logToolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.logSearch {
+  flex: 1;
+  min-width: 0;
+}
+
+.filterWrap {
+  position: relative;
+}
+
+.filterButton[data-active='true'] {
+  color: var(--mention-booster-two-light);
+  border-color: color-mix(in srgb, var(--mention-booster-two-color) 60%, var(--color-border));
+}
+
+.filterMenu {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 20;
+  display: grid;
+  gap: 0.125rem;
+  width: 14rem;
+  padding: var(--space-1);
+  background: var(--color-modal);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-modal);
+  animation: dialogIn var(--motion-fast) var(--motion-ease) both;
+}
+
+.filterItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--type-label-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-subtle);
+}
+
+.filterItem:hover,
+.filterItem[aria-pressed='true'] {
+  color: var(--color-text-primary);
+  background: var(--color-card-hover);
+}
+
+.filterItem span:first-child {
+  flex: 1;
+}
+
+.filterCount {
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+}
+
+/* Purple highlight for search matches */
+.logHl {
+  padding: 0 0.15em;
+  color: var(--mention-booster-two-light);
+  background: color-mix(in srgb, var(--mention-booster-two-color) 28%, transparent);
+  border-radius: 0.25em;
+}
+
+/* --------------------------------------------------------------------------
+   6. Advanced list: one card per log
+   -------------------------------------------------------------------------- */
+.logList,
+.rawBox {
+  margin: 0;
+  list-style: none;
+}
+
+.logList {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+}
+
+.logRow[data-level='info'] { --level-color: var(--level-info-color); }
+.logRow[data-level='warning'] { --level-color: var(--level-warning-color); }
+.logRow[data-level='error'] { --level-color: var(--level-error-color); }
+
+.logRow {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  transition: background-color var(--motion-fast) linear, border-color var(--motion-fast) linear;
+}
+
+.logRow:hover {
+  background: var(--color-card-hover);
+  border-color: color-mix(in srgb, var(--level-color) 45%, var(--color-divider));
+}
+
+.logRowIcon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--level-color);
+  background: color-mix(in srgb, var(--level-color) 16%, transparent);
+  border-radius: var(--radius-pill);
+}
+
+.logRowBody {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.logRowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.logRowTime {
+  flex: none;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+}
+
+.logRowReason {
+  display: -webkit-box;
+  overflow: hidden;
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.45;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.logRowMeta {
+  display: flex;
+  gap: var(--space-2);
+  overflow: hidden;
+  font-family: var(--type-helper-family);
+  font-size: var(--type-helper-size);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.logRowChevron {
+  color: var(--color-text-muted);
+}
+
+.showMore {
+  justify-self: center;
+}
+
+/* --------------------------------------------------------------------------
+   7. Raw view: code box with the code highlighted in purple
+   -------------------------------------------------------------------------- */
+.rawBox {
+  display: grid;
+  gap: 0.125rem;
+  overflow-x: auto;
+  padding: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.rawLine[data-level='info'] { --level-color: var(--level-info-color); }
+.rawLine[data-level='warning'] { --level-color: var(--level-warning-color); }
+.rawLine[data-level='error'] { --level-color: var(--level-error-color); }
+
+.rawLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.125rem var(--space-3);
+  width: 100%;
+  padding: 0.35rem var(--space-3);
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-subtle);
+}
+
+.rawLine:hover {
+  background: var(--color-card-hover);
+}
+
+.rawTime {
+  color: var(--color-text-muted);
+}
+
+.rawLevel {
+  min-width: 4.5rem;
+  font-weight: 600;
+  color: var(--level-color);
+}
+
+.rawCode {
+  font-weight: 600;
+  color: var(--mention-booster-two-light);
+}
+
+.rawReason {
+  flex: 1 1 16rem;
+  min-width: 0;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.rawUser {
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.rawJson {
+  margin: 0;
+  padding: var(--space-4);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.rawKey { color: var(--color-text-muted); }
+.rawString { color: var(--color-text-primary); }
+.rawPlain { color: var(--color-light-blue); }
+.rawCodeValue { font-weight: 600; color: var(--mention-booster-two-light); }
+
+/* --------------------------------------------------------------------------
+   8. Log detail: clean sections
+   -------------------------------------------------------------------------- */
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.detailSection {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+
+.detailFix {
+  border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-divider));
+  background: color-mix(in srgb, var(--color-success) 7%, var(--color-card));
+}
+
+.detailWide {
+  grid-column: 1 / -1;
+}
+
+.detailInline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.detailText {
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.levelBadge {
+  gap: 0.3rem;
+}
+
+/* --------------------------------------------------------------------------
+   9. Controls modal: delete, download editor, relevant logs
+   -------------------------------------------------------------------------- */
+.controlSection {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+
+.deleteGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.fieldPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.fieldOption {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.25rem var(--space-3);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+  background: var(--color-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.fieldOption input {
+  accent-color: var(--mention-booster-two-color);
+}
+
+.previewBox {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.previewHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--type-helper-family);
+  font-size: var(--type-helper-size);
+  color: var(--color-text-muted);
+  background: var(--color-input);
+}
+
+.previewBox .rawJson {
+  max-height: 11rem;
+  border: 0;
+  border-radius: 0;
+}
+
+.relevantTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.relevantList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.relevantNote {
+  margin-top: 0;
+}
+
+.relevantGroup {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.relevantGroup .helperText {
+  margin-top: 0;
+}
+
+.relevantTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.relevantReason {
+  overflow: hidden;
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.relevantRow {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  text-align: left;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  transition: border-color var(--motion-fast) linear;
+}
+
+.relevantRow:hover {
+  border-color: var(--color-border-strong);
+}
+
+.relevantMeta {
+  margin-left: auto;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+}
+
+.lockedBox {
+  justify-items: center;
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
+}
+
+.lockedBox strong {
+  color: var(--color-text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   10. Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 980px) {
+  .debugGrid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'hero'
+      'main'
+      'side';
+    gap: var(--space-4);
+  }
+
+  .debugSide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    align-items: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .levelCards,
+  .deleteGrid,
+  .detailGrid,
+  .debugSide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Level cards become compact rows so the list stays near the top */
+  .levelCard {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'icon label count'
+      'icon share count';
+    align-items: center;
+    column-gap: var(--space-3);
+  }
+
+  .levelIcon { grid-area: icon; margin-bottom: 0; }
+  .levelLabel { grid-area: label; }
+  .levelShare { grid-area: share; }
+  .levelCount { grid-area: count; }
+
+  .logRowTop {
+    flex-wrap: wrap;
+  }
+
+  .logUpdated {
+    display: none;
+  }
+}
