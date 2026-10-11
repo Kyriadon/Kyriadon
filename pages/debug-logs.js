@@ -272,7 +272,11 @@ function ReleasePanel({ release }) {
     <section className="panel panelGlow" aria-labelledby="releaseTitle">
       <div className="panelHeader">
         <h3 id="releaseTitle">Current release</h3>
-        {release && <span className="badge" data-tone="neutral">{release.env}</span>}
+        {release && (
+  <span className="badge" data-tone={release.env === 'production' ? 'info' : 'neutral'} data-env={release.env}>
+    {release.env.charAt(0).toUpperCase() + release.env.slice(1)}
+  </span>
+)}
       </div>
       {release ? (
         <div className="releaseBody">
