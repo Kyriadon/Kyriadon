@@ -637,7 +637,7 @@ function DownloadEditor({ logs, counts, advanced = false }) {
       <div className="previewBox">
         <div className="previewHead">
           <span>Preview</span>
-          <span>{rows.length} log{rows.length === 1 ? '' : 's'} · {Math.max(1, Math.round(content.length / 1024))} KB · {fileName}</span>
+          <span>{rows.length} Log{rows.length === 1 ? '' : 's'} · {Math.max(1, Math.round(content.length / 1024))} KB · {fileName}</span>
         </div>
         <pre className="rawJson">{rows.length && ordered.length ? content.slice(0, 700) + (content.length > 700 ? '\n…' : '') : 'No logs match these settings.'}</pre>
       </div>
@@ -730,9 +730,9 @@ function RelevantLogs({ logs, release, onPickCode }) {
         {release.message && <strong className="relevantCommit">{release.message}</strong>}
       </div>
       <div className="relevantStats">
-        <span className="relevantStat" data-tone="new"><strong>{fresh.length}</strong> new</span>
-        <span className="relevantStat" data-tone="ongoing"><strong>{ongoing.length}</strong> ongoing</span>
-        <span className="relevantStat" data-tone="old"><strong>{old.length}</strong> older</span>
+        <span className="relevantStat" data-tone="new"><strong>{fresh.length}</strong> New</span>
+        <span className="relevantStat" data-tone="ongoing"><strong>{ongoing.length}</strong> Ongoing</span>
+        <span className="relevantStat" data-tone="old"><strong>{old.length}</strong> Older</span>
       </div>
       <p className="helperText relevantNote">
         Each problem is matched against the release that is running now. Fix the <strong data-tone="new">new</strong> ones first: they appeared with your latest changes. <strong data-tone="ongoing">Ongoing</strong> ones existed before this release, so check that they still happen. <strong data-tone="old">Older</strong> ones have not shown up on this release and are probably unrelated.
@@ -840,9 +840,9 @@ function StatsSection({ logs, counts }) {
       ) : (
         <>
           <div className="chartSummary">
-            <span className="chartChip"><strong>{total}</strong> logs</span>
-            <span className="chartChip"><strong>{errorShare}%</strong> errors</span>
-            <span className="chartChip"><strong>{recent}</strong> in the last 24 hours</span>
+            <span className="chartChip"><strong>{total}</strong> Logs</span>
+            <span className="chartChip"><strong>{errorShare}%</strong> Errors</span>
+            <span className="chartChip"><strong>{recent}</strong> Last 24 hours</span>
           </div>
           <div className="chartCard">
             <h5 className="studioLabel">By level</h5>
@@ -959,9 +959,8 @@ function ManageLogs({ logs, onDelete }) {
                   </span>
                   <span className="manageReason">{log.reason || 'No reason recorded'}</span>
                 </span>
-                <button type="button" className={`btn btnCompact ${pending === log.id ? 'btnDanger' : 'btnSecondary'}`} onClick={() => remove(log)} disabled={busyId === log.id} aria-label={`Delete ${log.code} log`}>
+                <button type="button" className={`btn btnCompact btnIcon manageDelete ${pending === log.id ? 'btnDanger' : 'btnSecondary'}`} onClick={() => remove(log)} disabled={busyId === log.id} aria-label={pending === log.id ? `Confirm delete ${log.code} log` : `Delete ${log.code} log`}>
                   <IconTrash size={16} />
-                  {pending === log.id ? 'Confirm' : 'Delete'}
                 </button>
               </li>
             );
@@ -1090,9 +1089,9 @@ function FakeLogs({ logs, viewer, onDelete, onReload }) {
       </h4>
       <p className="helperText">Creates fake logs in the real log store to test the list, filters, charts and downloads. Each one is tagged <code className="mdCode">fake</code> and shows your name as the user.</p>
       <div className="chartSummary">
-        <span className="chartChip"><strong>{fakeLogs.length}</strong> fake logs stored</span>
-        <span className="chartChip">{fakeCounts.error} errors · {fakeCounts.warning} warnings · {fakeCounts.info} info</span>
-        <span className="chartChip"><strong>{sent}</strong> sent this session</span>
+        <span className="chartChip"><strong>{fakeLogs.length}</strong> Fake logs stored</span>
+        <span className="chartChip">{fakeCounts.error} Errors · {fakeCounts.warning} Warnings · {fakeCounts.info} Info</span>
+        <span className="chartChip"><strong>{sent}</strong> Sent this session</span>
       </div>
 
       <h5 className="studioLabel">Quick generate</h5>
@@ -1162,7 +1161,7 @@ function FakeLogs({ logs, viewer, onDelete, onReload }) {
       <div className="previewBox">
         <div className="previewHead">
           <span>Sent to the log store</span>
-          <span>{amount} log{amount === 1 ? '' : 's'}</span>
+          <span>{amount} Log{amount === 1 ? '' : 's'}</span>
         </div>
         <pre className="rawJson">{JSON.stringify(preview, null, 2)}</pre>
       </div>
@@ -1173,10 +1172,10 @@ function FakeLogs({ logs, viewer, onDelete, onReload }) {
         {viewer?.staff ? (
           <button type="button" className={`btn ${confirming ? 'btnDanger' : 'btnSecondary'}`} disabled={busy || fakeLogs.length === 0} onClick={removeFakes}>
             <IconTrash size={16} />
-            {confirming ? `Confirm: delete ${fakeLogs.length}` : `Delete fake logs (${fakeLogs.length})`}
+            {confirming ? 'Confirm delete' : `Delete fake logs (${fakeLogs.length})`}
           </button>
         ) : (
-          <span className="badge" data-tone="neutral"><IconLock size={12} />Deleting is staff only</span>
+          <span className="badge" data-tone="neutral"><IconLock size={12} />Staff only</span>
         )}
       </div>
       {message && <p className="helperText" role="status">{message}</p>}
@@ -1287,7 +1286,7 @@ function ControlsModal({ logs, counts, viewer, release, onClose, onDelete, onPic
           {options.map((option) => (
             <button key={option.key} type="button" className={`btn ${pending === option.key ? 'btnDanger' : 'btnSecondary'}`} disabled={!viewer?.staff || option.count === 0} onClick={() => run(option)}>
               <IconTrash size={16} />
-              {pending === option.key ? `Confirm: delete ${option.count}` : `${option.label} (${option.count})`}
+              {pending === option.key ? 'Confirm delete' : `${option.label} (${option.count})`}
             </button>
           ))}
         </div>
