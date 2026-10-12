@@ -33,7 +33,7 @@ async function handleRequest(req, res) {
     if (rateLimited(ip)) return res.status(429).json({ error: 'Too many log events' });
     const body = parseBody(req.body);
     const events = Array.isArray(body?.events) ? body.events.slice(0, 25) : [];
-    appendLogs(events.map((event) => makeEntry(event, { user, release })));
+    await appendLogs(events.map((event) => makeEntry(event, { user, release })));
     return res.status(202).json({ accepted: events.length });
   }
 
@@ -43,20 +43,20 @@ async function handleRequest(req, res) {
 
   // Optional role gate for viewing (see VIEW_REQUIRES_ROLE in lib/logServer.js)
   if (VIEW_REQUIRES_ROLE && !viewer.staff && !viewer.developer) {
-    if (req.method === 'GET') appendLogs([makeEntry({ level: 'warning', code: 'VIEW_DENIED', reason: `${user.name} tried to open the debug logs without the Staff or Developer role.` }, { user, release })]);
+    if (req.method === 'GET') await appendLogs([makeEntry({ level: 'warning', code: 'VIEW_DENIED', reason: `${user.name} tried to open the debug logs without the Staff or Developer role.` }, { user, release })]);
     return res.status(403).json({ error: 'You do not have access to the debug logs' });
   }
 
   // List logs
   if (req.method === 'GET') {
-    return res.status(200).json({ logs: readLogs(), viewer, release, serverTime: new Date().toISOString() });
+    return res.status(200).json({ logs: await readLogs(), viewer, release, serverTime: new Date().toISOString() });
   }
 
   // Delete logs (staff only)
   if (req.method === 'DELETE') {
     const body = parseBody(req.body) || {};
     if (!viewer.staff) {
-      appendLogs([makeEntry({ level: 'warning', code: 'DELETE_DENIED', reason: `${user.name} tried to delete logs without the Staff role.` }, { user, release })]);
+      await appendLogs([makeEntry({ level: 'warning', code: 'DELETE_DENIED', reason: `${user.name} tried to delete logs without the Staff role.` }, { user, release })]);
       return res.status(403).json({ error: 'Only staff can delete logs' });
     }
     const payload = {
@@ -64,9 +64,9 @@ async function handleRequest(req, res) {
       level: ['info', 'warning', 'error'].includes(body.level) ? body.level : undefined,
       ids: Array.isArray(body.ids) ? body.ids.slice(0, 500).map(String) : undefined,
     };
-    const deleted = deleteLogs(payload);
+    const deleted = await deleteLogs(payload);
     const scope = payload.all ? 'all logs' : payload.level ? `${payload.level} logs` : 'selected logs';
-    appendLogs([makeEntry({ level: 'info', code: 'LOGS_DELETED', reason: `${user.name} deleted ${deleted} log(s) (${scope}).` }, { user, release })]);
+    await appendLogs([makeEntry({ level: 'info', code: 'LOGS_DELETED', reason: `${user.name} deleted ${deleted} log(s) (${scope}).` }, { user, release })]);
     return res.status(200).json({ deleted });
   }
 
@@ -80,7 +80,7 @@ export default async function handler(req, res) {
     return await handleRequest(req, res);
   } catch (error) {
     try {
-      appendLogs([makeEntry({ level: 'error', code: 'API_ERROR', reason: `${req.method} /api/logs failed: ${error?.message || error}`, meta: { stack: String(error?.stack || '').slice(0, 1500) } }, { user: null, release: getRelease() })]);
+      await appendLogs([makeEntry({ level: 'error', code: 'API_ERROR', reason: `${req.method} /api/logs failed: ${error?.message || error}`, meta: { stack: String(error?.stack || '').slice(0, 1500) } }, { user: null, release: getRelease() })]);
     } catch {
       /* logging must never throw */
     }
