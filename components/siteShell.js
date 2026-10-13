@@ -1,6 +1,6 @@
 // ============================================================================
 // siteShell.js
-// Shared page shell used by every page: ambient environment, scroll edge fades,
+// Shared page shell used by every page; ambient environment, scroll edge fades,
 // header (icon, search, login or user menu), footer, and the search palette.
 // Pages only provide their own content; the shell never changes per page.
 // ============================================================================
