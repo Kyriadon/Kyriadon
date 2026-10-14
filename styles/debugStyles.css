@@ -840,6 +840,29 @@
 }
 
 /* --------------------------------------------------------------------------
+   8b. Error and warning logs: the code and the reason take the colour of the
+   log (red for errors, yellow for warnings), the same way info logs have
+   their own. Info logs are not touched here.
+   -------------------------------------------------------------------------- */
+.detailGrid[data-level='warning'],
+.rawJson[data-level='warning'] { --level-color: var(--level-warning-color); }
+.detailGrid[data-level='error'],
+.rawJson[data-level='error'] { --level-color: var(--level-error-color); }
+
+.logRow:is([data-level='warning'], [data-level='error']) .mdCode,
+.logRow:is([data-level='warning'], [data-level='error']) .logRowReason,
+.rawLine:is([data-level='warning'], [data-level='error']) .rawCode,
+.rawLine:is([data-level='warning'], [data-level='error']) .rawReason,
+.detailGrid:is([data-level='warning'], [data-level='error']) .mdCode,
+.detailGrid:is([data-level='warning'], [data-level='error']) .detailReason,
+.rawJson:is([data-level='warning'], [data-level='error']) .rawCodeValue,
+.rawJson:is([data-level='warning'], [data-level='error']) .rawReasonValue,
+.manageRow:is([data-level='warning'], [data-level='error']) .mdCode,
+.manageRow:is([data-level='warning'], [data-level='error']) .manageReason {
+  color: var(--level-color);
+}
+
+/* --------------------------------------------------------------------------
    9b. Advanced controls: mode toggle, statistics, delete list, test logs
    -------------------------------------------------------------------------- */
 .modeBar {
