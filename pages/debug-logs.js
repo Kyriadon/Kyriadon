@@ -385,7 +385,7 @@ function RawBox({ logs, query, onOpen }) {
 function RawJson({ log }) {
   const lines = JSON.stringify(rawShape(log), null, 2).split('\n');
   return (
-    <pre className="rawJson">
+    <pre className="rawJson" data-level={log.level}>
       {lines.map((line, index) => {
         const parts = line.match(/^(\s*)"([^"]+)": (.*?)(,?)$/);
         if (!parts) return <span key={index}>{`${line}\n`}</span>;
@@ -393,7 +393,7 @@ function RawJson({ log }) {
         const valueClass = key === 'code' && indent.length === 2 ? 'rawCodeValue' : value.startsWith('"') ? 'rawString' : 'rawPlain';
         return (
           <span key={index}>
-            {indent}<span className="rawKey">{`"${key}"`}</span>: <span className={valueClass}>{value}</span>{comma}{'\n'}
+            {indent}<span className="rawKey">{`"${key}"`}</span>: <span className={key === 'reason' && indent.length === 2 ? `${valueClass} rawReasonValue` : valueClass}>{value}</span>{comma}{'\n'}
           </span>
         );
       })}
@@ -481,7 +481,7 @@ function LogDetail({ log, viewer, activeView, query, onClose, onDelete }) {
       {activeView === 'raw' ? (
         <RawJson log={log} />
       ) : (
-        <div className="detailGrid">
+        <div className="detailGrid" data-level={log.level}>
           <section className="detailSection">
             <h5 className="studioLabel">Code</h5>
             <div className="detailInline">
@@ -496,7 +496,7 @@ function LogDetail({ log, viewer, activeView, query, onClose, onDelete }) {
           </section>
           <section className="detailSection detailWide">
             <h5 className="studioLabel">Reason</h5>
-            <p className="detailText"><Highlight text={log.reason || 'No reason recorded.'} query={query} /></p>
+            <p className="detailText detailReason"><Highlight text={log.reason || 'No reason recorded.'} query={query} /></p>
           </section>
           {log.level === 'error' && (
             <section className="detailSection detailWide detailFix">
