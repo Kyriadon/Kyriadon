@@ -428,6 +428,11 @@
   animation-duration: 3s;
 }
 
+/* Search highlight inside a command chip keeps the purple look of every other highlight */
+.mention[data-tone='command'] .logHl {
+  -webkit-text-fill-color: var(--mention-booster-two-light);
+}
+
 .mention[data-tone='discord'] .mentionName svg {
   margin: 0 0.25em 0 0.05em;
   color: var(--mention-discord-color);
