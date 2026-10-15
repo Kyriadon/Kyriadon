@@ -45,6 +45,13 @@
   background: var(--gradient-holo-hero-red);
 }
 
+/* Badges keep their pill shape: they never shrink or break onto a second line, the text
+   beside them gives way instead */
+.rulesGrid .badge {
+  flex: none;
+  white-space: nowrap;
+}
+
 /* --------------------------------------------------------------------------
    2. Category families: each category brings its own gradient, and every
    sub-category (slot 1 to 3) takes one accent of that family. Rules inherit both.
@@ -411,6 +418,14 @@
 .mention[data-tone='discord'] {
   --mention-bg: var(--mention-discord-background);
   --mention-gradient: var(--mention-discord-gradient);
+}
+
+/* Live flow (data-flow='live' is set on the chip in pages/rules.js): the gradient keeps moving,
+   and hover keeps the same speed so there is no jump when the pointer arrives */
+.mention[data-tone='discord'][data-flow='live'] .mentionName,
+.mention[data-tone='discord'][href]:hover .mentionName,
+.mention[data-tone='discord'][href]:focus-visible .mentionName {
+  animation-duration: 3s;
 }
 
 .mention[data-tone='discord'] .mentionName svg {
