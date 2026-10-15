@@ -8,9 +8,9 @@ import { useEffect, useRef, useState } from 'react';
 import { behavior, gradientStops } from '../lib/siteDesign';
 import {
   IconChevron,
-  IconDiscord,
   IconInfo,
   IconMegaphone,
+  IconRules,
   IconYouTube,
   SiteShell,
   formatCount,
@@ -257,7 +257,7 @@ function QuickLinksPanel({ onOpenSearch }) {
   const links = [
     { id: 'about', title: 'About Kyriadon', description: 'Guides, registration and testing', icon: <IconInfo />, href: '/about' }, // About page
     { id: 'news', title: 'Latest announcements', description: 'What is new right now', icon: <IconMegaphone />, href: '#announcements' },
-    { id: 'discord', title: 'Join the Discord', description: 'Chat with the community', icon: <IconDiscord />, href: siteLinks.discord, external: true },
+    { id: 'rules', title: 'Community rules', description: 'Fair play on Discord and Minecraft', icon: <IconRules />, href: '/rules' }, // Rules page
     { id: 'youtube', title: 'Watch on YouTube', description: 'Videos and showcases', icon: <IconYouTube />, href: siteLinks.youtube, external: true },
   ];
 
