@@ -214,7 +214,7 @@ const ruleBook = [
           rule('Protect your login', 'Only log in with Discord on the official website address. Staff will never ask for your password or login codes.', true),
           rule('Report compromised accounts', 'If your account is hacked, tell staff right away. Actions taken from a compromised account can still count against you until it is reported.'),
           rule("Respect other people's data", 'Do not collect, leak or misuse member information, usernames or IDs from the website or the Discord server.'),
-          rule('Give accurate information', 'Information you give staff, in forms or in tickets must be accurate. False details can cancel your registration.'),
+          rule('Give accurate information', 'Information you give staff, in forms or in tickets, must be accurate. False details can cancel your registration.'),
         ],
       },
       {
