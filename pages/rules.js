@@ -22,7 +22,7 @@ const content = {
     body: 'These are the rules for the Kyriadon Discord server, our Minecraft servers and the community as a whole. Search for a topic, jump between categories with the sidebar and open any rule to read it in full.',
   },
   search: {
-    placeholder: 'Search rules, categories and topics...',
+    placeholder: 'Search rules and topics...',
   },
   bans: {
     title: 'Exact ban lengths',
