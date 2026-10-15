@@ -142,7 +142,7 @@ const ruleBook = [
         title: 'Tier testing',
         summary: 'How to behave when you are being tested.',
         rules: [
-          rule('Register first', 'Complete registration with /register and verify on the website before you queue for a test.', true),
+          rule('Register first', 'Complete registration with `/register` and verify on the website before you queue for a test.', true),
           rule('Use your own account', 'Test on the account that is linked to you. Never test for someone else, and never let someone else test for you.', true),
           rule('Choose the right options', 'Pick your real region, gamemode and version in the form. Wrong details waste testers\' time and can void the result.'),
           rule('Be ready when called', 'When a tester accepts you, be online and ready. Missing your slot can cost you your place in the queue.'),
@@ -243,6 +243,9 @@ const ruleBook = [
 // Derived data: ids, numbers, counts and a lowercase search haystack per rule.
 // Ids are used for the sidebar, scroll spy and deep links (/rules#discord-respect-1).
 // ----------------------------------------------------------------------------
+// Commands inside a rule text are wrapped in backticks (`/register`). Search ignores the ticks.
+const plainText = (text) => text.replace(/`/g, '');
+
 const categories = ruleBook.map((category) => {
   const subs = category.subs.map((sub, subIndex) => {
     const subId = `${category.id}-${sub.id}`;
@@ -250,8 +253,8 @@ const categories = ruleBook.map((category) => {
       ...item,
       id: `${subId}-${ruleIndex + 1}`,
       number: ruleIndex + 1,
-      textLower: item.text.toLowerCase(),
-      haystack: `${category.name} ${category.title} ${sub.title} ${item.title} ${item.text}`.toLowerCase(),
+      textLower: plainText(item.text).toLowerCase(),
+      haystack: `${category.name} ${category.title} ${sub.title} ${item.title} ${plainText(item.text)}`.toLowerCase(),
     }));
     return { ...sub, id: subId, slot: subIndex + 1, count: rules.length, rules };
   });
@@ -276,6 +279,24 @@ function Highlight({ text, query }) {
   return String(text)
     .split(new RegExp(`(${words.join('|')})`, 'ig'))
     .map((part, index) => (index % 2 ? <mark className="logHl" key={index}>{part}</mark> : part));
+}
+
+// ----------------------------------------------------------------------------
+// RuleText: rule body text. Commands in backticks become the same command chip as the
+// guides on the About page (grey box, mono light blue text); search still highlights them.
+// ----------------------------------------------------------------------------
+function RuleText({ text, query }) {
+  return text.split(/`([^`]+)`/).map((part, index) =>
+    index % 2 ? (
+      <code className="mention" data-tone="command" key={index}>
+        <span className="mentionName">
+          <Highlight text={part} query={query} />
+        </span>
+      </code>
+    ) : (
+      <Highlight text={part} query={query} key={index} />
+    ),
+  );
 }
 
 // ----------------------------------------------------------------------------
@@ -405,7 +426,7 @@ function RuleItem({ item, open, query, onToggle }) {
       <div className="ruleBody" id={`${item.id}-body`} role="region" aria-labelledby={`${item.id}-toggle`}>
         <div className="ruleBodyInner">
           <p className="ruleText">
-            <Highlight text={item.text} query={query} />
+            <RuleText text={item.text} query={query} />
           </p>
         </div>
       </div>
