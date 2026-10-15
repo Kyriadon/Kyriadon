@@ -25,6 +25,15 @@
 .areaSearch { grid-area: search; }
 .areaBans { grid-area: bans; }
 
+/* The search bar and the ban lengths panel sit centred above the grid at a readable width
+   instead of stretching across all three columns on large screens */
+.areaSearch,
+.areaBans {
+  justify-self: center;
+  width: 100%;
+  max-width: var(--layout-centered-width);
+}
+
 /* The sidebar stays in view while the long rule lists scroll */
 .rulesSide {
   grid-area: side;
@@ -310,8 +319,10 @@
   scroll-margin-top: var(--space-6);
 }
 
+/* Taller than a standard panel: more room above and below, so the category art and glow show */
 .ruleHead {
   isolation: isolate;
+  padding-block: var(--space-10);
   background: var(--color-bg-raised);
   border-color: var(--color-border-strong);
 }
@@ -605,6 +616,12 @@
     gap: var(--space-4);
   }
 
+  /* One column: the centred strips line up with the full-width panels below them */
+  .areaSearch,
+  .areaBans {
+    max-width: none;
+  }
+
   .rulesSide {
     position: static;
   }
@@ -632,6 +649,10 @@
 
   .rulesBan .badge {
     margin-left: calc(3.5rem + var(--space-4));
+  }
+
+  .ruleHead {
+    padding-block: var(--space-8);
   }
 
   .ruleHeadBody {
