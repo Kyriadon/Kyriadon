@@ -1,0 +1,644 @@
+/* ==========================================================================
+   rulesStyles.css
+   Styles for the Rules page (/rules). Everything reuses the design tokens
+   from lib/siteDesign.js and the primitives from homeStyles.css, aboutStyles.css
+   and debugStyles.css (panels, hero, badges, chips, link rows, topic icons,
+   search field, purple search highlight). Only what is new lives here.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Layout: hero, search and ban lengths on top, sidebar on the left, rules on
+   the right
+   -------------------------------------------------------------------------- */
+.rulesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    'hero   hero   .'
+    'search search search'
+    'bans   bans   bans'
+    'side   main   main';
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.areaSearch { grid-area: search; }
+.areaBans { grid-area: bans; }
+
+/* The sidebar stays in view while the long rule lists scroll */
+.rulesSide {
+  grid-area: side;
+  position: sticky;
+  top: var(--space-5);
+  min-width: 0;
+}
+
+.rulesMain {
+  display: grid;
+  grid-area: main;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* Red hero tone (same component, same animation as home, about and debug) */
+.heroPanel[data-tone='red'] .heroGlow {
+  background: var(--gradient-holo-hero-red);
+}
+
+/* --------------------------------------------------------------------------
+   2. Category families: each category brings its own gradient, and every
+   sub-category (slot 1 to 3) takes one accent of that family. Rules inherit both.
+   -------------------------------------------------------------------------- */
+[data-category='discord'] {
+  --cat: var(--rule-discord-color);
+  --cat-light: var(--rule-discord-light);
+  --cat-deep: var(--rule-discord-deep);
+  --cat-gradient: var(--rule-discord-gradient);
+  --cat-line: var(--rule-discord-line);
+  --cat-one: var(--rule-discord-accent-one);
+  --cat-two: var(--rule-discord-accent-two);
+  --cat-three: var(--rule-discord-accent-three);
+}
+
+[data-category='minecraft'] {
+  --cat: var(--rule-minecraft-color);
+  --cat-light: var(--rule-minecraft-light);
+  --cat-deep: var(--rule-minecraft-deep);
+  --cat-gradient: var(--rule-minecraft-gradient);
+  --cat-line: var(--rule-minecraft-line);
+  --cat-one: var(--rule-minecraft-accent-one);
+  --cat-two: var(--rule-minecraft-accent-two);
+  --cat-three: var(--rule-minecraft-accent-three);
+}
+
+[data-category='general'] {
+  --cat: var(--rule-general-color);
+  --cat-light: var(--rule-general-light);
+  --cat-deep: var(--rule-general-deep);
+  --cat-gradient: var(--rule-general-gradient);
+  --cat-line: var(--rule-general-line);
+  --cat-one: var(--rule-general-accent-one);
+  --cat-two: var(--rule-general-accent-two);
+  --cat-three: var(--rule-general-accent-three);
+}
+
+[data-slot='1'] { --accent: var(--cat-one); }
+[data-slot='2'] { --accent: var(--cat-two); }
+[data-slot='3'] { --accent: var(--cat-three); }
+
+/* --------------------------------------------------------------------------
+   3. Search: the shared search field, with the surface of the header search
+   -------------------------------------------------------------------------- */
+.rulesSearch {
+  width: 100%;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+/* --------------------------------------------------------------------------
+   4. Exact ban lengths: hammer tile on the left, title in the middle, status
+   -------------------------------------------------------------------------- */
+.rulesBan {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.rulesBan .topicIcon {
+  --topic-color: var(--color-danger);
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+.rulesBanText {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.rulesBan .badge {
+  flex: none;
+}
+
+/* --------------------------------------------------------------------------
+   5. Sidebar: categories, sub-categories and single rules
+   -------------------------------------------------------------------------- */
+.rulesNav {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 2 * var(--space-5));
+}
+
+.rulesNav .panelHeader {
+  flex: none;
+}
+
+/* Only the list scrolls, so the panel ring and header never move */
+.navScroll {
+  flex: 1;
+  min-height: 0;
+  margin: 0 calc(-1 * var(--space-2)) calc(-1 * var(--space-2));
+  padding: 0 var(--space-2) var(--space-2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+.navCats,
+.navSubs,
+.navRules {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navCats {
+  gap: var(--space-2);
+}
+
+/* Category row: the shared link row, tinted with its own family */
+.navCatIcon {
+  color: var(--cat-light);
+  background: color-mix(in srgb, var(--cat) 16%, var(--color-input));
+}
+
+.navCats > li[data-active='true'] > .navCat {
+  background: color-mix(in srgb, var(--cat) 8%, var(--color-card));
+  border-color: color-mix(in srgb, var(--cat) 45%, var(--color-border));
+}
+
+.navChevron svg {
+  display: block;
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.navCats > li[data-active='true'] .navChevron svg {
+  transform: rotate(90deg);
+}
+
+/* Sub-categories hang from a connector line that starts under the category icon */
+.navSubs {
+  gap: 0.125rem;
+  margin: var(--space-2) 0 var(--space-1) calc(var(--space-3) + 1.125rem);
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--color-border);
+  animation: itemIn var(--motion-base) var(--motion-ease) both;
+}
+
+.navSub {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--type-label-family);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-label-weight);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  border-radius: var(--radius-subtle);
+  transition: color var(--motion-fast) linear, background-color var(--motion-fast) linear;
+}
+
+/* Dot on the connector line, in the sub-category's accent once it is current */
+.navSub::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * (var(--space-3) + 0.1875rem + 0.5px));
+  width: 0.375rem;
+  height: 0.375rem;
+  background: var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  transform: translateY(-50%);
+  transition: background-color var(--motion-fast) linear;
+}
+
+.navSub:hover,
+.navSub:focus-visible {
+  color: var(--color-text-primary);
+  background: var(--color-card-hover);
+}
+
+.navSubs > li[data-active='true'] > .navSub {
+  color: var(--color-text-primary);
+  background: var(--color-card-hover);
+}
+
+.navSubs > li[data-active='true'] > .navSub::before {
+  background: var(--accent);
+}
+
+.navLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navCount {
+  flex: none;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  font-weight: var(--type-meta-weight);
+  color: var(--color-text-muted);
+}
+
+/* Single rules of the current sub-category */
+.navRules {
+  gap: 0.0625rem;
+  margin: 0.125rem 0 var(--space-1) var(--space-3);
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--color-divider);
+  animation: itemIn var(--motion-base) var(--motion-ease) both;
+}
+
+.navRule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-radius: var(--radius-subtle);
+  transition: color var(--motion-fast) linear, background-color var(--motion-fast) linear;
+}
+
+.navRuleNumber {
+  flex: none;
+  min-width: 1.25rem;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  font-weight: var(--type-meta-weight);
+}
+
+.navRule:hover,
+.navRule:focus-visible {
+  color: var(--color-text-primary);
+  background: var(--color-card-hover);
+}
+
+.navRule[aria-current='location'] {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.navRule[aria-current='location'] .navRuleNumber {
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   6. Category panel: the category gradient with its enlarged art in the lower right
+   The backdrop clips the glow and the art to the panel shape, like the Discord panel
+   on the About page, so the hover ring keeps the normal stacking of every other panel.
+   -------------------------------------------------------------------------- */
+.ruleCategory {
+  display: grid;
+  gap: var(--space-5);
+  scroll-margin-top: var(--space-6);
+}
+
+.ruleHead {
+  isolation: isolate;
+  background: var(--color-bg-raised);
+  border-color: var(--color-border-strong);
+}
+
+/* The flow animation is always attached but paused, so on unhover the ring fades out from
+   where it is instead of snapping back to its start (same fix as the Discord panel). */
+.ruleHead.panelGlow::before {
+  animation: holoFlow var(--motion-flow) linear infinite paused;
+}
+
+.ruleHead.panelGlow:hover::before,
+.ruleHead.panelGlow:focus-within::before {
+  animation-play-state: running;
+}
+
+.ruleBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Holographic gradient: the category's named gradient, blurred for the creamy look */
+.ruleGlow {
+  position: absolute;
+  inset: -20%;
+  background: var(--cat-gradient);
+  filter: blur(36px);
+}
+
+/* Enlarged art: bigger than the panel, so the lower right edge crops it */
+.ruleArt {
+  position: absolute;
+  right: -2.75rem;
+  bottom: -3.5rem;
+  width: 15rem;
+  height: 15rem;
+  color: var(--cat-light);
+  opacity: 0.26;
+  -webkit-mask-image: linear-gradient(150deg, transparent 8%, #000 70%);
+  mask-image: linear-gradient(150deg, transparent 8%, #000 70%);
+}
+
+.ruleArt svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ruleHeadBody {
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+  max-width: 34rem;
+}
+
+.ruleHeadTop {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.ruleHead .topicIcon {
+  --topic-color: var(--cat-light);
+}
+
+.ruleHeadText {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.ruleHeadText h2 {
+  color: var(--color-text-primary);
+}
+
+.ruleHeadSummary {
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: var(--type-body-secondary-line-height);
+  color: var(--color-text-on-holo-soft);
+}
+
+.ruleHeadMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ruleNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-on-holo-soft);
+}
+
+/* Discord terms of service chip: holographic in Discord's colours (tokens in siteDesign.js) */
+.mention[data-tone='discord'] {
+  --mention-bg: var(--mention-discord-background);
+  --mention-gradient: var(--mention-discord-gradient);
+}
+
+.mention[data-tone='discord'] .mentionName svg {
+  margin: 0 0.25em 0 0.05em;
+  color: var(--mention-discord-color);
+  vertical-align: -0.15em;
+}
+
+/* --------------------------------------------------------------------------
+   7. Sub-category panel: the category family in the sub-category's own accent
+   -------------------------------------------------------------------------- */
+.ruleGroup {
+  scroll-margin-top: var(--space-6);
+  background-image: radial-gradient(55% 90% at 0% 0%, color-mix(in srgb, var(--accent) 14%, transparent) 0%, transparent 70%);
+}
+
+.ruleGroup .panelHeader {
+  align-items: center;
+}
+
+.ruleGroupHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.ruleGroup .topicIcon {
+  --topic-color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   8. Rules: expandable cards. Key rules carry the category gradient.
+   -------------------------------------------------------------------------- */
+.ruleList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ruleItem {
+  scroll-margin-top: var(--space-6);
+  background-color: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+  transition: background-color var(--motion-fast) linear, border-color var(--motion-fast) linear;
+}
+
+.ruleItem:hover {
+  background-color: var(--color-card-hover);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--color-divider));
+}
+
+.ruleItem[data-open='true'] {
+  background-color: color-mix(in srgb, var(--accent) 6%, var(--color-card));
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--color-divider));
+}
+
+/* Key rules: raised surface with the category gradient, like the log level cards */
+.ruleItem[data-key='true'] {
+  background-color: var(--color-bg-raised);
+  background-image: linear-gradient(135deg, color-mix(in srgb, var(--accent) 22%, transparent), color-mix(in srgb, var(--cat-deep) 20%, transparent));
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--color-border));
+}
+
+.ruleItem[data-key='true']:hover,
+.ruleItem[data-key='true'][data-open='true'] {
+  background-color: var(--color-bg-raised);
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--color-border));
+}
+
+.ruleToggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-card);
+}
+
+.ruleNumber {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  font-weight: var(--type-meta-weight);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-radius: var(--radius-pill);
+}
+
+.ruleItem[data-key='true'] .ruleNumber {
+  color: var(--color-bg-page);
+  background: var(--accent);
+}
+
+.ruleTitle {
+  min-width: 0;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.ruleKey {
+  --badge-fg: var(--accent);
+  --badge-bg: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.ruleChevron {
+  display: grid;
+  color: var(--color-text-muted);
+}
+
+.ruleChevron svg {
+  display: block;
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.ruleItem[data-open='true'] .ruleChevron svg {
+  transform: rotate(90deg);
+}
+
+/* Expanding: the row grows from zero to its content height, hidden content is unreachable */
+.ruleBody {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows var(--motion-base) var(--motion-ease), visibility 0s linear var(--motion-base);
+}
+
+.ruleItem[data-open='true'] .ruleBody {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.ruleBodyInner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Text lines up with the rule title: padding + number pill + gap */
+.ruleText {
+  padding: 0 var(--space-4) var(--space-4) calc(var(--space-4) + 2rem + var(--space-3));
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   9. Responsive: the sidebar moves above the rules when the columns stop working
+   -------------------------------------------------------------------------- */
+@media (max-width: 980px) {
+  .rulesGrid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'hero'
+      'search'
+      'bans'
+      'side'
+      'main';
+    gap: var(--space-4);
+  }
+
+  .rulesSide {
+    position: static;
+  }
+
+  .rulesNav {
+    max-height: none;
+  }
+
+  /* Single rules are reached by scrolling or search on narrow screens */
+  .navRules {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .rulesBan {
+    flex-wrap: wrap;
+  }
+
+  .rulesBan .badge {
+    margin-left: calc(3.5rem + var(--space-4));
+  }
+
+  .ruleHeadBody {
+    max-width: none;
+  }
+
+  .ruleArt {
+    right: -3.5rem;
+    bottom: -4rem;
+    width: 12rem;
+    height: 12rem;
+  }
+
+  .ruleGroup .panelHeader {
+    align-items: flex-start;
+  }
+
+  .ruleToggle {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: var(--space-3);
+  }
+
+  /* The key badge moves under the title instead of squeezing it */
+  .ruleToggle .ruleKey {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .ruleToggle .ruleChevron {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .ruleText {
+    padding-left: var(--space-4);
+  }
+}
