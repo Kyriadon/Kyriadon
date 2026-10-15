@@ -13,12 +13,12 @@ import { IconChevron, IconClose, IconDiscord, IconSearch, SiteShell } from '../c
 // Content: everything the page says lives here so copy is easy to edit
 // ----------------------------------------------------------------------------
 const content = {
-  title: 'Rules | Kyriadon',
+  title: 'Rules - Kyriadon',
   description:
-    'The Kyriadon rules for Discord, Minecraft and the community in general: search them, jump between categories and open any rule for the full detail.',
+    'The official rules for Discord, Minecraft and the community in general; search them, jump between categories and open any rule for the full detail.',
   hero: {
     title: 'Community rules',
-    subtitle: 'Keep Kyriadon fair, safe and fun for everyone.',
+    subtitle: 'Keep everything fair, safe and fun for everyone.',
     body: 'These are the rules for the Kyriadon Discord server, our Minecraft servers and the community as a whole. Search for a topic, jump between categories with the sidebar and open any rule to read it in full.',
   },
   search: {
@@ -487,7 +487,7 @@ function RuleCategory({ category, filtering, isOpen, query, onToggle }) {
           {category.id === 'discord' && (
             <p className="ruleNote">
               Discord&apos;s own rules always apply too:
-              <a className="mention" data-tone="discord" href={discordTermsUrl} target="_blank" rel="noopener noreferrer">
+              <a className="mention" data-tone="discord" data-flow="live" href={discordTermsUrl} target="_blank" rel="noopener noreferrer">
                 <span className="mentionName">
                   <IconDiscord size={14} />
                   Discord terms of service
