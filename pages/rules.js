@@ -13,12 +13,12 @@ import { IconChevron, IconClose, IconDiscord, IconSearch, SiteShell } from '../c
 // Content: everything the page says lives here so copy is easy to edit
 // ----------------------------------------------------------------------------
 const content = {
-  title: 'Rules - Kyriadon',
+  title: 'Rules | Kyriadon',
   description:
-    'The official rules for Discord, Minecraft and the community in general; search them, jump between categories and open any rule for the full detail.',
+    'The Kyriadon rules for Discord, Minecraft and the community in general: search them, jump between categories and open any rule for the full detail.',
   hero: {
     title: 'Community rules',
-    subtitle: 'Keep everything fair, safe and fun for everyone.',
+    subtitle: 'Keep Kyriadon fair, safe and fun for everyone.',
     body: 'These are the rules for the Kyriadon Discord server, our Minecraft servers and the community as a whole. Search for a topic, jump between categories with the sidebar and open any rule to read it in full.',
   },
   search: {
@@ -284,6 +284,7 @@ function Highlight({ text, query }) {
 // ----------------------------------------------------------------------------
 function RuleIcon({ name, size = 22 }) {
   if (name === 'discord') return <IconDiscord size={size} />;
+  if (name === 'gavel') return <GavelIcon size={size} />;
   const props = { viewBox: '0 0 24 24', width: size, height: size, fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, focusable: false };
   const icons = {
     users: (<><circle cx="9" cy="8" r="3.2" /><path d="M3.5 19c.5-3 2.8-4.7 5.5-4.7s5 1.7 5.5 4.7" /><path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 14.6c1.9.5 3.1 2 3.5 4.4" /></>),
@@ -294,19 +295,22 @@ function RuleIcon({ name, size = 22 }) {
     cube: (<><path d="M12 3.5 19.5 7.7v8.6L12 20.5l-7.5-4.2V7.7L12 3.5Z" /><path d="M12 12v8.5M4.5 7.7 12 12l7.5-4.3" /></>),
     scale: (<><path d="M12 4v16M8 20h8M5 7.5h14" /><path d="m5 7.5-2.5 6a3 3 0 0 0 5 0L5 7.5ZM19 7.5l-2.5 6a3 3 0 0 0 5 0L19 7.5Z" /></>),
     usercheck: (<><circle cx="10" cy="8" r="3.2" /><path d="M4 19.5c.5-3.2 2.9-5 6-5 1.3 0 2.4.3 3.4.8" /><path d="m15.5 17.5 2 2 3.5-3.8" /></>),
-    gavel: <GavelShapes />,
   };
   return <svg {...props}>{icons[name]}</svg>;
 }
 
-// Ban hammer (gavel): head, handle and the sound block
-function GavelShapes() {
+// Ban hammer (gavel), a solid glyph: a block between two caps with the handle running out
+// of the block. The shapes are drawn upright, then turned 45 degrees and centred in the box.
+function GavelIcon({ size = 28 }) {
   return (
-    <>
-      <rect x="8.6" y="3.4" width="11.6" height="6.2" rx="1.8" transform="rotate(45 14.4 6.5)" />
-      <path d="m11.2 10.8-7 7a1.7 1.7 0 0 0 2.4 2.4l7-7" />
-      <path d="M14.5 20.5h6" />
-    </>
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true" focusable="false">
+      <g transform="translate(-1.32 1.32) rotate(45 12 12)">
+        <rect x="8.11" y="5.11" width="7.78" height="7.78" rx="0.75" />
+        <rect x="3.41" y="3.87" width="2.59" height="10.26" rx="1.3" />
+        <rect x="17.99" y="3.87" width="2.59" height="10.26" rx="1.3" />
+        <rect x="10.7" y="11.89" width="2.59" height="11.8" rx="1.3" />
+      </g>
+    </svg>
   );
 }
 
@@ -367,9 +371,7 @@ function BanLengthsPanel() {
   return (
     <section className="panel panelGlow areaBans rulesBan" aria-labelledby="bansTitle">
       <span className="topicIcon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" focusable="false">
-          <GavelShapes />
-        </svg>
+        <GavelIcon size={30} />
       </span>
       <div className="rulesBanText">
         <h3 id="bansTitle">{content.bans.title}</h3>
