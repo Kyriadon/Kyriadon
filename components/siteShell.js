@@ -170,6 +170,17 @@ export function IconBook({ size = 18 }) {
   );
 }
 
+// Rule sheet with a check mark (rules page link)
+export function IconRules({ size = 18 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" {...strokeProps}>
+      <path d="M14 3.5H7.5A1.5 1.5 0 0 0 6 5v14a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 18 19V7.5L14 3.5Z" />
+      <path d="M14 3.5v4h4" />
+      <path d="m9.5 13.8 1.9 1.9 3.6-3.8" />
+    </svg>
+  );
+}
+
 // Downward chevron (select fields)
 export function IconChevronDown({ size = 16 }) {
   return (
