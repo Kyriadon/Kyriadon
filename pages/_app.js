@@ -18,6 +18,9 @@ import '../styles/debugStyles.css';
 // Rules page styles (/rules)
 import '../styles/rulesStyles.css';
 
+// Punishments page styles (/rules/punishments)
+import '../styles/punishmentsStyles.css';
+
 // Design tokens become CSS variables once, at module load
 const tokenCss = buildCssVariables();
 
