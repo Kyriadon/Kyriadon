@@ -1,0 +1,481 @@
+/* ==========================================================================
+   punishmentsStyles.css
+   Styles for the Punishments page (/rules/punishments). Everything reuses the design
+   tokens from lib/siteDesign.js and the primitives from homeStyles.css, aboutStyles.css,
+   debugStyles.css and rulesStyles.css (hero, panels, category heads with art, embeds,
+   badges, chips, guide steps, sidebar, search). Only what is new lives here.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Layout: hero and search on top, sidebar on the left, sections on the right
+   (the sidebar, main column and search strip come from rulesStyles.css)
+   -------------------------------------------------------------------------- */
+.punishGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    'hero   hero   .'
+    'search search search'
+    'side   main   main';
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* Green hero tone (same component, same animation as home, about, debug and rules) */
+.heroPanel[data-tone='green'] .heroGlow {
+  background: var(--gradient-holo-hero-green);
+}
+
+.punishBack {
+  justify-self: start;
+  margin-top: var(--space-4);
+}
+
+/* The shared chevron points right, "back" points left */
+.punishBack svg {
+  transform: rotate(180deg);
+}
+
+/* Badges keep their pill shape: they never shrink or break onto a second line */
+.punishGrid .badge {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   2. Category families added by this page. Discord, Minecraft and General come from
+   rulesStyles.css. The Screenshare procedure (charter) is golden, Cheating is emerald.
+   -------------------------------------------------------------------------- */
+[data-category='charter'] {
+  --cat: var(--rule-charter-color);
+  --cat-light: var(--rule-charter-light);
+  --cat-deep: var(--rule-charter-deep);
+  --cat-gradient: var(--rule-charter-gradient);
+  --cat-line: var(--rule-charter-line);
+  --cat-one: var(--rule-charter-accent-one);
+  --cat-two: var(--rule-charter-accent-two);
+  --cat-three: var(--rule-charter-accent-three);
+}
+
+[data-category='cheating'] {
+  --cat: var(--rule-cheating-color);
+  --cat-light: var(--rule-cheating-light);
+  --cat-deep: var(--rule-cheating-deep);
+  --cat-gradient: var(--rule-cheating-gradient);
+  --cat-line: var(--rule-cheating-line);
+  --cat-one: var(--rule-cheating-accent-one);
+  --cat-two: var(--rule-cheating-accent-two);
+  --cat-three: var(--rule-cheating-accent-three);
+}
+
+/* --------------------------------------------------------------------------
+   3. Sections: the head panel is the shared category panel. The charter panel is the
+   golden one and carries the "Charter by Kyriadon" chip in its lower left corner.
+   -------------------------------------------------------------------------- */
+.punishSection[data-category='charter'] .ruleHead {
+  border-color: color-mix(in srgb, var(--cat) 42%, var(--color-border-strong));
+}
+
+.punishCharterChip {
+  justify-self: start;
+  margin-top: var(--space-1);
+}
+
+/* --------------------------------------------------------------------------
+   4. Embeds: one offense (or one part of the charter) per embed. The left line is the
+   category family ending in the embed's own accent, like the rules in a sub-category.
+   -------------------------------------------------------------------------- */
+.punishEmbed {
+  scroll-margin-top: var(--space-6);
+  transition: border-color var(--motion-fast) linear;
+}
+
+.punishEmbed:hover,
+.punishEmbed:target {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--color-divider));
+}
+
+.punishEmbed .embedBar {
+  background: linear-gradient(180deg, var(--cat-light), var(--accent));
+}
+
+/* The severity of an offense tints its edge a little, never more than that */
+.punishEmbed[data-level='severe'] {
+  border-color: color-mix(in srgb, var(--color-danger) 18%, var(--color-divider));
+}
+
+.punishEmbed[data-level='critical'] {
+  border-color: color-mix(in srgb, var(--color-danger) 32%, var(--color-divider));
+}
+
+.punishEmbedHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.punishEmbedHead .embedTitle {
+  flex: 1 1 14rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Number pill: the rules page pill (class ruleNumber), in the embed's accent */
+.punishNumber {
+  flex: none;
+}
+
+/* Small caps label used above details: "In practice", "Staff look for", fact labels */
+.punishLabel,
+.punishFact dt {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: var(--type-overline-size);
+  font-weight: var(--type-overline-weight);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* --------------------------------------------------------------------------
+   5. Punishment ladder: one row per offense, the left edge grows with every repeat
+   -------------------------------------------------------------------------- */
+.punishLadder {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.punishStep {
+  display: grid;
+  grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-left: 3px solid color-mix(in srgb, var(--accent) var(--rise, 30%), transparent);
+  border-radius: var(--radius-card);
+}
+
+.punishStep:nth-child(1) { --rise: 22%; }
+.punishStep:nth-child(2) { --rise: 40%; }
+.punishStep:nth-child(3) { --rise: 62%; }
+.punishStep:nth-child(n + 4) { --rise: 88%; }
+
+.punishStepLabel {
+  font-family: var(--type-label-family);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-label-weight);
+  color: var(--color-text-primary);
+}
+
+.punishStepKinds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.punishStepNote {
+  grid-column: 2;
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  line-height: var(--type-caption-line-height);
+  color: var(--color-text-muted);
+}
+
+/* A punishment: the kind and, set apart by a thin rule, its exact length */
+.punishLadder .badge {
+  height: 1.75rem;
+  padding: 0 var(--space-3);
+  font-size: var(--type-caption-size);
+}
+
+.punishBadge {
+  gap: var(--space-2);
+}
+
+.punishLength {
+  padding-left: var(--space-2);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  border-left: 1px solid color-mix(in srgb, var(--badge-fg) 38%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   6. Facts, terms: quiet cards that match the guide cards on the About page
+   -------------------------------------------------------------------------- */
+.punishFacts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.punishFact {
+  display: grid;
+  align-content: start;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+
+.punishFact dd {
+  margin: 0;
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.punishTerms {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.punishTerm {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+
+.punishTerm .badge {
+  justify-self: start;
+}
+
+.punishTermText {
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* Numbered steps are the guide steps of the About page, a little tighter inside an embed */
+.punishSteps {
+  padding: var(--space-5);
+}
+
+/* --------------------------------------------------------------------------
+   7. Tools: one card per tool, with what it is and what it looks like in practice
+   -------------------------------------------------------------------------- */
+.punishTools {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.punishTool {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+
+.punishToolHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.punishToolName {
+  color: var(--color-text-primary);
+}
+
+.punishDetail {
+  display: block;
+  padding-top: var(--space-3);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  border-top: 1px solid var(--color-divider);
+}
+
+.punishDetail .punishLabel {
+  margin-bottom: var(--space-1);
+}
+
+/* --------------------------------------------------------------------------
+   8. Commands: grouped, each with its copy button, what it does and what staff read
+   -------------------------------------------------------------------------- */
+.punishCommands {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.punishCmdGroup {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.punishCmdGroupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.punishCmdGroupHead h4 {
+  color: var(--color-text-primary);
+}
+
+.punishCmdList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.punishCmd {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-card);
+}
+
+.punishCmdTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+/* Long commands wrap inside their chip instead of pushing the copy button away */
+.punishCmdTop .mention {
+  display: flex;
+  min-width: 0;
+}
+
+.punishCmdTop .mentionName {
+  overflow-wrap: anywhere;
+}
+
+.punishCmdTop .copyButton {
+  flex: none;
+}
+
+.punishCmdText {
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.punishCmdFlags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* --------------------------------------------------------------------------
+   9. Shared markdown additions (components/guideKit.js): code blocks with a copy
+   button and numbered lists
+   -------------------------------------------------------------------------- */
+.mdCodeBlock {
+  position: relative;
+}
+
+.mdCodeBlock .mdPre {
+  padding-right: 3.5rem;
+}
+
+.mdCodeBlock .copyButton {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+}
+
+.mdOrdered {
+  counter-reset: md;
+}
+
+.mdOrdered li {
+  counter-increment: md;
+  padding-left: 1.75rem;
+}
+
+.mdOrdered li::before {
+  content: counter(md) '.';
+  top: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8125em;
+  color: var(--mention-booster-two-light);
+  background: none;
+  border-radius: 0;
+}
+
+/* --------------------------------------------------------------------------
+   10. Responsive: same breakpoints as the rules page
+   -------------------------------------------------------------------------- */
+@media (max-width: 980px) {
+  .punishGrid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'hero'
+      'search'
+      'side'
+      'main';
+    gap: var(--space-4);
+  }
+
+  /* Single offenses are reached by scrolling or search on narrow screens */
+  .punishNav .navSubs {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .punishStep {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .punishStepNote {
+    grid-column: 1;
+  }
+
+  .punishTerm {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .punishTools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .punishSteps {
+    padding: var(--space-4);
+  }
+}
