@@ -136,6 +136,59 @@
   flex: none;
 }
 
+/* The panel is a link to /rules/punishments: it keeps the panel look and its hover ring,
+   and the hammer tile and the chevron answer the pointer like the topic cards on About */
+.rulesBanLink {
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--motion-base) linear;
+}
+
+.rulesBanLink:hover,
+.rulesBanLink:focus-visible {
+  border-color: color-mix(in srgb, var(--color-danger) 40%, var(--color-border-strong));
+}
+
+.rulesBanLink:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.rulesBanLink .topicIcon {
+  transition: background-color var(--motion-base) linear;
+}
+
+.rulesBanLink:hover .topicIcon,
+.rulesBanLink:focus-visible .topicIcon {
+  background: color-mix(in srgb, var(--topic-color) 24%, var(--color-bg-raised));
+}
+
+.rulesBanChevron {
+  display: grid;
+  transition: color var(--motion-fast) linear, transform var(--motion-base) var(--motion-ease);
+}
+
+.rulesBanChevron svg {
+  display: block;
+}
+
+.rulesBanLink:hover .rulesBanChevron,
+.rulesBanLink:focus-visible .rulesBanChevron {
+  color: var(--color-text-primary);
+  transform: translateX(0.25rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rulesBanChevron {
+    transition: color var(--motion-fast) linear;
+  }
+
+  .rulesBanLink:hover .rulesBanChevron,
+  .rulesBanLink:focus-visible .rulesBanChevron {
+    transform: none;
+  }
+}
+
 /* --------------------------------------------------------------------------
    5. Sidebar: categories, sub-categories and single rules
    -------------------------------------------------------------------------- */
