@@ -1,12 +1,18 @@
 // ============================================================================
 // rules.js
-// Rules page (/rules): red hero, search, exact ban lengths panel, a quick-scroll
-// sidebar and three rule categories (Discord, Minecraft and General). Every
-// category has three sub-categories with ten expandable rules each.
-// The header, footer and search palette come from components/siteShell.js.
+// Rules page (/rules): red hero, search, exact ban lengths panel (a link to
+// /rules/punishments), a quick-scroll sidebar and three rule categories (Discord,
+// Minecraft and General). Every category has three sub-categories with ten expandable
+// rules each.
+// The header, footer and search palette come from components/siteShell.js. The icons and
+// panel art come from components/ruleArt.js and the search highlight from
+// components/guideKit.js, both shared with the Punishments page.
 // All visual values live in lib/siteDesign.js and styles/rulesStyles.css.
 // ============================================================================
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { BlockArt, GavelIcon, RuleIcon, ShieldArt } from '../components/ruleArt';
+import { Highlight } from '../components/guideKit';
 import { IconChevron, IconClose, IconDiscord, IconSearch, SiteShell } from '../components/siteShell';
 
 // ----------------------------------------------------------------------------
@@ -27,7 +33,8 @@ const content = {
   bans: {
     title: 'View exact ban lengths',
     description: 'How each punishment is triggered per infraction.',
-    status: 'Coming soon',
+    // Where the panel leads
+    href: '/rules/punishments',
   },
   nav: {
     title: 'Jump to',
@@ -266,20 +273,8 @@ const totalRules = categories.reduce((total, category) => total + category.count
 const ruleIds = new Set(categories.flatMap((category) => category.subs.flatMap((sub) => sub.rules.map((item) => item.id))));
 
 const pad = (value) => String(value).padStart(2, '0');
-const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const splitWords = (query) => query.trim().toLowerCase().split(/\s+/).filter(Boolean);
 const plural = (count, word, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
-
-// ----------------------------------------------------------------------------
-// Highlight: wraps search matches in the same purple highlight as the debug logs
-// ----------------------------------------------------------------------------
-function Highlight({ text, query }) {
-  const words = query.trim().split(/\s+/).filter(Boolean).map(escapeRegExp);
-  if (!words.length || !text) return text || null;
-  return String(text)
-    .split(new RegExp(`(${words.join('|')})`, 'ig'))
-    .map((part, index) => (index % 2 ? <mark className="logHl" key={index}>{part}</mark> : part));
-}
 
 // ----------------------------------------------------------------------------
 // RuleText: rule body text. Commands in backticks become the same command chip as the
@@ -300,85 +295,10 @@ function RuleText({ text, query }) {
 }
 
 // ----------------------------------------------------------------------------
-// Icons (stroke style, same as the topic icons on the About page). The Discord mark
-// comes from the shared shell.
-// ----------------------------------------------------------------------------
-function RuleIcon({ name, size = 22 }) {
-  if (name === 'discord') return <IconDiscord size={size} />;
-  if (name === 'gavel') return <GavelIcon size={size} />;
-  const props = { viewBox: '0 0 24 24', width: size, height: size, fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true, focusable: false };
-  const icons = {
-    users: (<><circle cx="9" cy="8" r="3.2" /><path d="M3.5 19c.5-3 2.8-4.7 5.5-4.7s5 1.7 5.5 4.7" /><path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 14.6c1.9.5 3.1 2 3.5 4.4" /></>),
-    hash: (<path d="M9.5 4 8 20M16 4l-1.5 16M4.5 9h15M4 15h15" />),
-    idcard: (<><rect x="3.5" y="5.5" width="17" height="13" rx="2.5" /><circle cx="9" cy="11" r="2" /><path d="M6 16.2c.4-1.5 1.6-2.2 3-2.2s2.6.7 3 2.2M14.5 10.5H18M14.5 14H18" /></>),
-    shield: (<><path d="M12 3.5 5 6v5.5c0 4.2 3 7.5 7 9 4-1.5 7-4.8 7-9V6l-7-2.5Z" /><path d="m9 12 2.2 2.2L15.2 10" /></>),
-    layers: (<><path d="m12 3.5 8.5 4.5-8.5 4.5L3.5 8 12 3.5Z" /><path d="m3.5 12 8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5" /></>),
-    cube: (<><path d="M12 3.5 19.5 7.7v8.6L12 20.5l-7.5-4.2V7.7L12 3.5Z" /><path d="M12 12v8.5M4.5 7.7 12 12l7.5-4.3" /></>),
-    scale: (<><path d="M12 4v16M8 20h8M5 7.5h14" /><path d="m5 7.5-2.5 6a3 3 0 0 0 5 0L5 7.5ZM19 7.5l-2.5 6a3 3 0 0 0 5 0L19 7.5Z" /></>),
-    usercheck: (<><circle cx="10" cy="8" r="3.2" /><path d="M4 19.5c.5-3.2 2.9-5 6-5 1.3 0 2.4.3 3.4.8" /><path d="m15.5 17.5 2 2 3.5-3.8" /></>),
-  };
-  return <svg {...props}>{icons[name]}</svg>;
-}
-
-// Ban hammer (gavel), a solid glyph: a block between two caps with the handle running out
-// of the block. The shapes are drawn upright, then turned 45 degrees and centred in the box.
-function GavelIcon({ size = 28 }) {
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true" focusable="false">
-      <g transform="translate(-1.32 1.32) rotate(45 12 12)">
-        <rect x="8.11" y="5.11" width="7.78" height="7.78" rx="0.75" />
-        <rect x="3.41" y="3.87" width="2.59" height="10.26" rx="1.3" />
-        <rect x="17.99" y="3.87" width="2.59" height="10.26" rx="1.3" />
-        <rect x="10.7" y="11.89" width="2.59" height="11.8" rx="1.3" />
-      </g>
-    </svg>
-  );
-}
-
-// ----------------------------------------------------------------------------
 // Panel art: one enlarged illustration per category, drawn in the category colours
-// and cropped by the lower right edge of its panel (decorative).
+// and cropped by the lower right edge of its panel (decorative). The drawings come from
+// components/ruleArt.js, the Discord mark from the shared shell.
 // ----------------------------------------------------------------------------
-
-// Minecraft: an isometric block built from small tiles, lighter on top, darker on the right
-const BLOCK_FACES = [
-  { origin: [12, 33], u: [48, -27], v: [48, 27], base: 0.6 },
-  { origin: [12, 33], u: [48, 27], v: [0, 54], base: 0.36 },
-  { origin: [60, 60], u: [48, -27], v: [0, 54], base: 0.2 },
-];
-const BLOCK_TILES = 4;
-
-function BlockArt() {
-  const step = 1 / BLOCK_TILES;
-  const tiles = BLOCK_FACES.flatMap((face, faceIndex) =>
-    Array.from({ length: BLOCK_TILES * BLOCK_TILES }, (_, index) => {
-      const column = index % BLOCK_TILES;
-      const row = Math.floor(index / BLOCK_TILES);
-      const point = (a, b) => [face.origin[0] + face.u[0] * a + face.v[0] * b, face.origin[1] + face.u[1] * a + face.v[1] * b].map((value) => value.toFixed(2)).join(' ');
-      const a = column * step;
-      const b = row * step;
-      const shade = ((column * 5 + row * 3 + column * row + faceIndex * 2) % 4) * 0.09;
-      return <polygon key={`${faceIndex}-${index}`} points={[point(a, b), point(a + step, b), point(a + step, b + step), point(a, b + step)].join(' ')} fill="currentColor" fillOpacity={(face.base + shade).toFixed(2)} stroke="currentColor" strokeOpacity="0.35" strokeWidth="0.8" strokeLinejoin="round" />;
-    }),
-  );
-  return (
-    <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-      {tiles}
-    </svg>
-  );
-}
-
-// General: a shield with a check, two outlines deep
-function ShieldArt() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      <path d="M12 3.5 5 6v5.5c0 4.2 3 7.5 7 9 4-1.5 7-4.8 7-9V6l-7-2.5Z" fill="currentColor" fillOpacity="0.16" strokeWidth="0.8" />
-      <path d="M12 6 7.5 7.6v3.9c0 2.8 1.9 4.9 4.5 6 2.6-1.1 4.5-3.2 4.5-6V7.6L12 6Z" strokeWidth="0.6" strokeOpacity="0.7" />
-      <path d="m9.2 11.9 2 2 3.8-3.9" strokeWidth="1.1" />
-    </svg>
-  );
-}
-
 function CategoryArt({ id }) {
   if (id === 'discord') return <IconDiscord size={240} />;
   if (id === 'minecraft') return <BlockArt />;
@@ -386,11 +306,13 @@ function CategoryArt({ id }) {
 }
 
 // ----------------------------------------------------------------------------
-// Ban hammer panel: placeholder for the exact ban lengths (does nothing for now)
+// Ban hammer panel: the whole panel is a link to the exact ban lengths
+// (/rules/punishments). Same panel and hover ring as before, with a chevron that says it
+// leads somewhere.
 // ----------------------------------------------------------------------------
 function BanLengthsPanel() {
   return (
-    <section className="panel panelGlow areaBans rulesBan" aria-labelledby="bansTitle">
+    <Link className="panel panelGlow areaBans rulesBan rulesBanLink" href={content.bans.href} aria-labelledby="bansTitle">
       <span className="topicIcon" aria-hidden="true">
         <GavelIcon size={30} />
       </span>
@@ -398,10 +320,10 @@ function BanLengthsPanel() {
         <h3 id="bansTitle">{content.bans.title}</h3>
         <p className="guideSubtitle">{content.bans.description}</p>
       </div>
-      <span className="badge" data-tone="neutral">
-        {content.bans.status}
+      <span className="linkChevron rulesBanChevron" aria-hidden="true">
+        <IconChevron />
       </span>
-    </section>
+    </Link>
   );
 }
 
