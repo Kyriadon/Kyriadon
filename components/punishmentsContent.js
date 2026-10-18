@@ -10,6 +10,7 @@
 // lib/punishmentsOffenses.js. Change a length there and the ladder, the search and the
 // sidebar follow. Small helpers for writing entries live in lib/punishmentsKit.js.
 // ============================================================================
+import { punishmentRoles } from '../lib/siteDesign';
 import { charter } from './punishmentsCharter';
 import { categories } from './punishmentsOffenses';
 
@@ -26,11 +27,13 @@ export const content = {
     body: 'Every offense lists what counts, what happens on each repeat and how it can be appealed. The Screenshare procedure explains the tools, the commands and your rights as a player. Search for an offense, a tool or a command, or jump with the sidebar.',
   },
   back: { href: '/rules', label: 'Back to the rules' },
-  search: { placeholder: 'Search offenses, tools and commands...' },
+  search: { placeholder: 'Search offences, tools...' },
   nav: { title: 'Jump to' },
-  // Shown on the golden Screenshare procedure panel (bottom left chip)
+  // Shown on the golden Screenshare procedure panel (bottom left): "Charter by" is plain text,
+  // the author is the same chip as the footer credit
   charter: {
-    label: 'Charter by Kyriadon',
+    by: 'Charter by',
+    author: 'Kyriadon',
     version: '1.0',
     effective: '2026-10-17',
   },
@@ -48,19 +51,25 @@ export const directory = {
     rules: { label: 'Rules', tone: 'rules', icon: 'book', id: '1475510046388650126' },
     register: { label: 'Register', tone: 'register', id: '1479437622970679386' },
     testing: { label: 'Testing', tone: 'testing', id: '1511301888375652522' },
-    support: { label: 'Support', tone: 'site', id: '1479414074176700426' },
-    // Paste these channel IDs when the channels exist
+    // Support is yellow, Appeals pink and Announcements red. A report is a type of ticket opened
+    // in Support, so there is no separate Reports channel.
+    support: { label: 'Support', tone: 'gold', id: '1479414074176700426' },
+    // Paste these channel IDs when you have them (until then the chip opens the Discord invite)
     screenshare: { label: 'Screenshare', tone: 'holo', id: '' },
-    reports: { label: 'Reports', tone: 'testing', id: '' },
-    appeals: { label: 'Appeals', tone: 'supporters', id: '' },
+    announcements: { label: 'Announcements', tone: 'announcements', id: '' },
+    appeals: { label: 'Appeals', tone: 'boosterOne', id: '' },
   },
   roles: {
-    creator: { label: 'Creator', color: '#19c3f5' },
+    // Roles with a gradient take it from punishmentRoles in lib/siteDesign.js (the chips and the
+    // badges in the Definitions use the same colours)
+    creator: { label: 'Creator', ...punishmentRoles.creator },
     developer: { label: 'Developer', color: '#7c7c7c' },
     staff: { label: 'Staff', color: '#a9a9ab' },
-    screensharer: { label: 'Screensharer', color: '#4ade80' },
-    'ss-manager': { label: 'Screenshare Manager', color: '#f5b301' },
-    frozen: { label: 'Frozen', color: '#7cc4ff' },
+    member: { label: 'Member', ...punishmentRoles.member },
+    reporter: { label: 'Reporter', ...punishmentRoles.reporter },
+    screensharer: { label: 'Screensharer', ...punishmentRoles.screensharer },
+    'ss-manager': { label: 'Screenshare Manager', ...punishmentRoles.ssManager },
+    frozen: { label: 'Frozen', ...punishmentRoles.frozen },
   },
 };
 
