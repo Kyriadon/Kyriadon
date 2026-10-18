@@ -21,9 +21,10 @@
   align-items: start;
 }
 
-/* Green hero tone (same component, same animation as home, about, debug and rules) */
-.heroPanel[data-tone='green'] .heroGlow {
-  background: var(--gradient-holo-hero-green);
+/* Crimson hero tone: a deeper red than the rules page, because this is a sub page of it
+   (same component, same animation as home, about, debug and rules) */
+.heroPanel[data-tone='crimson'] .heroGlow {
+  background: var(--gradient-holo-hero-crimson);
 }
 
 .punishBack {
@@ -76,9 +77,26 @@
   border-color: color-mix(in srgb, var(--cat) 42%, var(--color-border-strong));
 }
 
-.punishCharterChip {
+/* "Charter by" in plain text, then the same Kyriadon chip as the footer credit (the chip
+   itself comes from homeStyles.css), in a golden pill at the lower left of the panel */
+.punishCharterBy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   justify-self: start;
-  margin-top: var(--space-1);
+  margin: var(--space-1) 0 0;
+  padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-on-holo);
+  background: color-mix(in srgb, var(--cat) 12%, var(--color-bg-raised));
+  border: 1px solid color-mix(in srgb, var(--cat) 40%, var(--color-border));
+  border-radius: var(--radius-pill);
+}
+
+.punishCharterBy svg {
+  flex: none;
+  color: var(--cat-light);
 }
 
 /* --------------------------------------------------------------------------
@@ -126,15 +144,15 @@
   flex: none;
 }
 
-/* Small caps label used above details: "In practice", "Staff look for", fact labels */
+/* Label used above details: "In practice", "What staff look for", fact labels. Sentence case,
+   the accent colour and the weight carry the hierarchy (Doctrine 4.4) */
 .punishLabel,
 .punishFact dt {
   display: block;
-  font-family: var(--font-ui);
-  font-size: var(--type-overline-size);
-  font-weight: var(--type-overline-weight);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-family: var(--type-label-family);
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  letter-spacing: 0.01em;
   color: var(--accent);
 }
 
@@ -395,6 +413,43 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+/* --------------------------------------------------------------------------
+   8b. Chips and badges added by this page. Role chips with their own gradient (set in
+   components/guideKit.js), role badges in the Definitions and the red Announcements channel.
+   -------------------------------------------------------------------------- */
+.mention[data-tone='role'][data-kind='gradient'] {
+  --mention-gradient: var(--role-gradient);
+}
+
+.mention[data-tone='announcements'] {
+  --mention-bg: var(--mention-announcements-background);
+  --mention-gradient: var(--mention-announcements-gradient);
+}
+
+/* Role badge: the shared pill in the role's colour, the text carries its gradient */
+.badge[data-tone='role'] {
+  --badge-fg: var(--role-color);
+  --badge-bg: color-mix(in srgb, var(--role-color) 14%, var(--mention-role-background));
+}
+
+.badgeRoleText {
+  background: var(--role-gradient);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.badge[data-tone='role']:hover .badgeRoleText {
+  animation: roleShimmer 2.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .badge[data-tone='role']:hover .badgeRoleText {
+    animation: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
