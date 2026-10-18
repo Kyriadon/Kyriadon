@@ -1,9 +1,9 @@
 # Kyriadon Website — Design Doctrine
 
 > **Status:** Foundational  
-> **Role:** Source Of Truth For Design And Implementation  
-> **Scope:** Visual Language, Interaction Language, Responsive Behavior, Component Architecture, And Presentation Standards  
-> **Principle:** No Implementation Decision May Silently Redefine The Visual Identity
+> **Role:** Source of truth for Design and Implementation  
+> **Scope:** Visual language, interaction language, responsive behavior, component architecture, and presentation standards  
+> **Principle:** No implementation decision may silently redefine the visual identity
 
 ---
 
@@ -438,9 +438,6 @@ Each role must have:
 - Light-surface behavior if applicable
 
 Role gradients must be visually related while remaining distinguishable.
-
-
-```
 
 The role system should feel like one family, not a collection of unrelated colors.
 
