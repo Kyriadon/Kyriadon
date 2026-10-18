@@ -1,6 +1,6 @@
 // ============================================================================
 // punishments.js
-// Punishments page (/rules/punishments): green hero, search, a quick-scroll sidebar,
+// Punishments page (/rules/punishments): crimson hero (a deeper red, it is a sub page of Rules), search, a quick-scroll sidebar,
 // the golden Screenshare procedure charter and four main categories, every offense
 // as a full embed with its exact punishment ladder.
 // The header, footer and search palette come from components/siteShell.js. The
@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BlockArt, CrosshairArt, GavelIcon, MonitorArt, RuleIcon, ShieldArt } from '../../components/ruleArt';
 import { CopyButton, Highlight, Inline, Md, Mention, useScrollSpy } from '../../components/guideKit';
-import { IconChevron, IconClose, IconDiscord, IconSearch, SiteShell, useFetch } from '../../components/siteShell';
+import { IconChevron, IconClose, IconDiscord, IconSearch, SiteShell, siteLinks, useFetch } from '../../components/siteShell';
 import { content, directory, kinds, levels, sections } from '../../components/punishmentsContent';
 
 // How far from the top of the window an entry counts as "current" in the sidebar (px).
@@ -147,14 +147,28 @@ function Facts({ items, ctx, query }) {
   );
 }
 
+// A role badge: the pill of every other badge, painted with the role's own gradient, so the
+// badges in the Definitions match the role chips in the text (colours: punishmentRoles in siteDesign.js)
+function RoleBadge({ role, label }) {
+  return (
+    <span className="badge" data-tone="role" style={{ '--role-color': role.color, '--role-gradient': role.gradient }}>
+      <span className="badgeRoleText">{label}</span>
+    </span>
+  );
+}
+
 function Terms({ items, ctx, query }) {
   return (
     <ul className="punishTerms" role="list">
       {items.map((item) => (
         <li className="punishTerm" key={item.badge.label}>
-          <span className="badge" data-tone={item.badge.tone}>
-            {item.badge.label}
-          </span>
+          {directory.roles[item.badge.tone] ? (
+            <RoleBadge role={directory.roles[item.badge.tone]} label={item.badge.label} />
+          ) : (
+            <span className="badge" data-tone={item.badge.tone}>
+              {item.badge.label}
+            </span>
+          )}
           <span className="punishTermText">
             <Inline text={item.text} ctx={ctx} query={query} />
           </span>
@@ -198,7 +212,7 @@ function Tools({ items, ctx, query }) {
               {tool.kind}
             </span>
             {tool.href && (
-              <Mention tone="site" href={tool.href}>
+              <Mention tone={tool.tone || 'site'} href={tool.href}>
                 {hostOf(tool.href)}
               </Mention>
             )}
@@ -240,7 +254,7 @@ function Commands({ groups, ctx, query }) {
                   <Inline text={item.does} ctx={ctx} query={query} />
                 </p>
                 <p className="punishDetail">
-                  <span className="punishLabel">Staff look for</span>
+                  <span className="punishLabel">What staff look for</span>
                   <Inline text={item.looks} ctx={ctx} query={query} />
                 </p>
                 <div className="punishCmdFlags">
@@ -349,11 +363,13 @@ function PunishSection({ section, filtering, ctx, query }) {
           </div>
 
           {isCharter && (
-            <span className="mention punishCharterChip" data-tone="gold" data-flow="live">
-              <span className="mentionName">
-                <RuleIcon name="scroll" size={15} /> {content.charter.label}
-              </span>
-            </span>
+            <p className="punishCharterBy">
+              <RuleIcon name="scroll" size={16} />
+              <span>{content.charter.by}</span>
+              <a className="roleChip" href={siteLinks.credit} target="_blank" rel="noopener noreferrer">
+                <span className="roleName">{content.charter.author}</span>
+              </a>
+            </p>
           )}
         </div>
       </div>
@@ -486,9 +502,9 @@ export default function Punishments() {
   return (
     <SiteShell title={content.title} description={content.description}>
       <div className="punishGrid">
-        {/* Hero: same component as the home, about, debug and rules pages, green tone */}
+        {/* Hero: same component as the home, about, debug and rules pages, crimson tone */}
         <section className="heroShell areaHero" aria-labelledby="heroTitle">
-          <div className="heroPanel" data-tone="green">
+          <div className="heroPanel" data-tone="crimson">
             <div className="heroGlow" aria-hidden="true" />
             <div className="heroContent">
               <h1 id="heroTitle">{content.hero.title}</h1>
