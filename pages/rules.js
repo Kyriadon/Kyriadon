@@ -168,8 +168,8 @@ const ruleBook = [
         summary: 'Behavior on the Minecraft servers themselves.',
         rules: [
           rule('Keep chat clean', 'The Discord respect rules apply to in-game chat, signs, books, names and skins too.', true),
-          rule('No griefing', "Do not destroy, steal from or ruin other players' builds, items or matches."),
-          rule('No spawn camping', 'Do not repeatedly kill players who are respawning or entering a match.'),
+          rule('No griefing', "Do not destroy, steal from or ruin other players' builds, items or matches. SMP-based gamemodes are the exception, griefing is allowed there."),
+          rule('No spawn camping', 'Do not repeatedly kill players who are respawning or entering a match. SMP-based gamemodes are the exception, spawn camping is allowed there.'),
           rule('Team only when allowed', 'Only team up in modes that allow it. Do not work with opponents to farm kills or wins.'),
           rule('No leaderboard abuse', 'Do not farm kills, wins or points with alternate accounts or friends.'),
           rule('Do not waste staff time', 'No fake reports, spam commands or false alarms to staff in game.'),
