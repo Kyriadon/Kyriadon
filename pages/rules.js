@@ -106,7 +106,7 @@ const ruleBook = [
         rules: [
           rule("Follow Discord's terms", "You must follow Discord's terms of service and community guidelines at all times. You must be at least 13 years old, or the minimum age in your country.", true),
           rule('Keep your profile appropriate', 'Usernames, display names, avatars, banners and bios must follow the rules above. Staff may ask you to change them.'),
-          rule('No impersonation', 'Do not pretend to be staff, a creator or another member, and do not copy anyone else\'s name or avatar.', true),
+          rule('No impersonation', 'Do not pretend to be staff, an owner or another member, and do not copy anyone else\'s name or avatar.', true),
           rule('One account each', 'Use one Discord account. Alternate accounts used to dodge a punishment or inflate numbers are not allowed.'),
           rule('Follow staff instructions', 'Do what staff ask in the moment. If you disagree, comply first and open a ticket afterwards.', true),
           rule('Use tickets for support', 'Need help or want to report something? Open a ticket or contact a staff member instead of posting it in public channels.'),
@@ -230,7 +230,7 @@ const ruleBook = [
         title: 'Enforcement and appeals',
         summary: 'What happens when a rule is broken.',
         rules: [
-          rule('Rules apply to everyone', 'Staff, boosters, creators and long-time members follow the same rules as new members.', true),
+          rule('Rules apply to everyone', 'Staff, boosters, owners and long-time members follow the same rules as new members.', true),
           rule('Punishments scale', 'Staff choose a warning, mute, kick or ban based on severity, intent and history. Serious offenses can skip warnings.', true),
           rule('Ban evasion is serious', 'Joining on another account to get around a ban extends or upgrades the original punishment.', true),
           rule('Ignorance is no excuse', 'By joining Kyriadon you agree to read and follow these rules, including any updates.'),
