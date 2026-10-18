@@ -211,18 +211,24 @@ const minecraft = {
 
     // ------------------------------------------------------------------------
     offense('griefing', 'Griefing', 'moderate', {
-      what: 'Destroying, stealing from or ruining what belongs to another player or to a match.',
+      what: 'Destroying, stealing from or ruining what belongs to another player or to a match. This applies in normal gamemodes. **In an SMP-based gamemode griefing is allowed** and is never punished.',
       points: ['Breaking builds and taking items that are not yours', 'Ruining a match on purpose, for example by trapping or blocking', 'Helping someone else do it'],
       ladder: ladderOf(['warn'], ['ban', '3 days'], ['ban', '14 days'], ['ban', '30 days']),
-      facts: [['Restitution', 'Staff can ask you to give back what you took, if the server can restore it']],
+      facts: [
+        ['Where it applies', 'Every normal gamemode. SMP-based gamemodes are the exception'],
+        ['Restitution', 'Staff can ask you to give back what you took, if the server can restore it'],
+      ],
     }),
 
     // ------------------------------------------------------------------------
     offense('spawn-camping', 'Spawn camping', 'minor', {
-      what: 'Repeatedly killing players while they respawn or enter a match.',
+      what: 'Repeatedly killing players while they respawn or enter a match. This applies in normal gamemodes. **In an SMP-based gamemode spawn camping is allowed** and is never punished.',
       points: ['Standing at a spawn only to kill', 'Following a player back to their spawn on purpose'],
       ladder: ladderOf(['warn'], ['mute', '1 hour'], ['ban', '1 day']),
-      facts: [['What is allowed', 'Winning a fight next to a spawn is fine, waiting there is not']],
+      facts: [
+        ['Where it applies', 'Every normal gamemode. SMP-based gamemodes are the exception'],
+        ['What is allowed', 'Winning a fight next to a spawn is fine, waiting there is not'],
+      ],
     }),
 
     // ------------------------------------------------------------------------
@@ -505,7 +511,7 @@ const cheating = {
         'Reusing a screenshot from an expired report to get around a limit',
       ],
       ladder: ladderOf(['warn', undefined, 'No reports for 24 hours'], ['ban', '3 days', 'Reports are blocked for the same length'], ['ban', '7 days'], ['ban', '14 days']),
-      facts: [['Where reports go', 'Only through a ticket in <#reports>, see Reporting a suspect']],
+      facts: [['Where reports go', 'Only through a report ticket in <#support>, see Reporting a suspect']],
     }),
   ],
 };
