@@ -56,8 +56,8 @@ export const directory = {
     support: { label: 'Support', tone: 'gold', id: '1479414074176700426' },
     // Paste these channel IDs when you have them (until then the chip opens the Discord invite)
     screenshare: { label: 'Screenshare', tone: 'holo', id: '' },
-    announcements: { label: 'Announcements', tone: 'announcements', id: '' },
-    appeals: { label: 'Appeals', tone: 'boosterOne', id: '' },
+    announcements: { label: 'Announcements', tone: 'announcements', id: '1479413573443911743' },
+    appeals: { label: 'Appeals', tone: 'boosterOne', id: '1493196620676988958' },
   },
   roles: {
     // Roles with a gradient take it from punishmentRoles in lib/siteDesign.js (the chips and the
