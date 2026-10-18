@@ -11,6 +11,7 @@
 import Link from 'next/link';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { roleChipPaint } from '../lib/siteDesign';
+import { RuleIcon } from './ruleArt';
 import { IconBook, IconCheck, IconCopy, siteLinks } from './siteShell';
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -76,6 +77,14 @@ function RoleMention({ role }) {
       </span>
     );
   }
+  // A role with its own gradient (punishmentRoles in lib/siteDesign.js) paints that gradient
+  if (role.gradient) {
+    return (
+      <span className="mention" data-tone="role" data-kind="gradient" style={{ '--role-color': role.color, '--role-gradient': role.gradient }}>
+        <span className="mentionName">@{role.label}</span>
+      </span>
+    );
+  }
   const paint = roleChipPaint(role.color);
   return (
     <span className="mention" data-tone="role" style={{ '--role-color': paint.color, '--role-light': paint.light }}>
@@ -86,7 +95,7 @@ function RoleMention({ role }) {
 
 // ----------------------------------------------------------------------------
 // Mini markdown
-//   Inline: **bold**  __underline__  ==highlight==  `command`  [label](url)
+//   Inline: **bold**  __underline__  ==highlight==  `command`  [label](url)  [label](#section)
 //           <#channel>  <@&role>   (channel and role keys come from ctx)
 //   Blocks: ## heading   -# small   > quote   - list   1. numbered list   ```text fence```
 // `ctx` is { guildId, channels, roles }; `query` is the page search (matches stay purple).
@@ -110,11 +119,17 @@ function renderInline(text, ctx, query, prefix = '') {
         </code>
       );
     }
-    // Links become website chips
+    // Links become website chips. A link to a section of the same page (#section) carries the
+    // charter scroll icon, so it reads as a jump to that section
     if (part.startsWith('[')) {
       const [, label, href] = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       return (
         <Mention key={key} tone="site" href={href}>
+          {href.startsWith('#') && (
+            <>
+              <RuleIcon name="scroll" size={15} />{' '}
+            </>
+          )}
           {label}
         </Mention>
       );
