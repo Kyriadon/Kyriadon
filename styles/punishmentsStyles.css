@@ -45,7 +45,7 @@
 
 /* --------------------------------------------------------------------------
    2. Category families added by this page. Discord, Minecraft and General come from
-   rulesStyles.css. The Screenshare procedure (charter) is golden, Cheating is emerald.
+   rulesStyles.css. The Screenshare procedure (charter) is golden, Cheating is a lighter crimson.
    -------------------------------------------------------------------------- */
 [data-category='charter'] {
   --cat: var(--rule-charter-color);
@@ -123,7 +123,7 @@
 }
 
 .punishEmbed[data-level='critical'] {
-  border-color: color-mix(in srgb, var(--color-danger) 32%, var(--color-divider));
+  border-color: color-mix(in srgb, var(--color-critical) 42%, var(--color-divider));
 }
 
 .punishEmbedHead {
@@ -423,9 +423,21 @@
   --mention-gradient: var(--role-gradient);
 }
 
+.mention[data-tone='tools'] {
+  --mention-bg: var(--mention-tools-background);
+  --mention-gradient: var(--mention-tools-gradient);
+}
+
 .mention[data-tone='announcements'] {
   --mention-bg: var(--mention-announcements-background);
   --mention-gradient: var(--mention-announcements-gradient);
+}
+
+/* Critical and Permanent ban: a deep red fill, darker than the light red of Severe and Ban */
+.badge[data-tone='critical'] {
+  --badge-fg: var(--color-critical-text);
+  --badge-bg: var(--color-critical-soft);
+  border-color: var(--color-critical);
 }
 
 /* Role badge: the shared pill in the role's colour, the text carries its gradient */
