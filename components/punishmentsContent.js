@@ -54,7 +54,7 @@ export const directory = {
     // Support is yellow, Appeals pink and Announcements red. A report is a type of ticket opened
     // in Support, so there is no separate Reports channel.
     support: { label: 'Support', tone: 'gold', id: '1479414074176700426' },
-    // Paste these channel IDs when you have them (until then the chip opens the Discord invite)
+    // Paste the Screenshare channel ID when it exists (until then the chip opens the Discord invite)
     screenshare: { label: 'Screenshare', tone: 'holo', id: '' },
     announcements: { label: 'Announcements', tone: 'announcements', id: '1479413573443911743' },
     appeals: { label: 'Appeals', tone: 'boosterOne', id: '1493196620676988958' },
@@ -62,7 +62,7 @@ export const directory = {
   roles: {
     // Roles with a gradient take it from punishmentRoles in lib/siteDesign.js (the chips and the
     // badges in the Definitions use the same colours)
-    creator: { label: 'Creator', ...punishmentRoles.creator },
+    owner: { label: 'Owner', ...punishmentRoles.owner },
     developer: { label: 'Developer', color: '#7c7c7c' },
     staff: { label: 'Staff', color: '#a9a9ab' },
     member: { label: 'Member', ...punishmentRoles.member },
@@ -75,7 +75,8 @@ export const directory = {
 
 // ----------------------------------------------------------------------------
 // Punishment kinds: always shown with a text label and, where it applies, an exact length.
-// Tones are the shared badge tones (info, warning, danger, neutral, success).
+// Tones are the shared badge tones (info, warning, danger, neutral, success) plus critical, a
+// darker red than danger that marks the permanent ban and critical offenses.
 // ----------------------------------------------------------------------------
 export const kinds = {
   warn: { label: 'Warning', tone: 'warning' },
@@ -85,7 +86,7 @@ export const kinds = {
   serverban: { label: 'Server ban', tone: 'danger' },
   testban: { label: 'Testing ban', tone: 'danger' },
   tierreset: { label: 'Tier removed', tone: 'warning' },
-  perm: { label: 'Permanent ban', tone: 'danger' },
+  perm: { label: 'Permanent ban', tone: 'critical' },
   none: { label: 'No punishment', tone: 'success' },
 };
 
@@ -96,7 +97,7 @@ export const levels = {
   minor: { label: 'Minor', tone: 'info' },
   moderate: { label: 'Moderate', tone: 'warning' },
   severe: { label: 'Severe', tone: 'danger' },
-  critical: { label: 'Critical', tone: 'danger' },
+  critical: { label: 'Critical', tone: 'critical' },
 };
 
 // ----------------------------------------------------------------------------
