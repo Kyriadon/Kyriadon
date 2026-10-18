@@ -212,7 +212,7 @@ function Tools({ items, ctx, query }) {
               {tool.kind}
             </span>
             {tool.href && (
-              <Mention tone={tool.tone || 'site'} href={tool.href}>
+              <Mention tone="tools" href={tool.href}>
                 {hostOf(tool.href)}
               </Mention>
             )}
