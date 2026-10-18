@@ -164,10 +164,10 @@ const discord = {
 
     // ------------------------------------------------------------------------
     offense('impersonation', 'Impersonation', 'severe', {
-      what: 'Pretending to be a staff member, a creator or another member.',
+      what: 'Pretending to be a staff member, an owner or another member.',
       points: ['Copying a name or avatar to look like someone else', 'Claiming a role you do not have', 'Claiming to speak for Kyriadon or its staff'],
       ladder: ladderOf(['serverban', '7 days'], ['serverban', '30 days'], ['perm']),
-      facts: [['Roles', 'The only real roles are shown by the role itself, like <@&staff> or <@&creator>']],
+      facts: [['Roles', 'The only real roles are shown by the role itself, like <@&staff> or <@&owner>']],
     }),
 
     // ------------------------------------------------------------------------
@@ -542,7 +542,7 @@ const general = {
         term('Server ban', 'danger', 'You are banned from the Kyriadon Discord server for the length shown.'),
         term('Testing ban', 'danger', 'You cannot queue or take tier tests for the length shown. You can still play and chat.'),
         term('Tier removed', 'warning', 'The tier results connected to the offense are removed, with or without a ban.'),
-        term('Permanent ban', 'danger', 'The ban has no end date. Only management can lift it, and only after an appeal that succeeds.'),
+        term('Permanent ban', 'critical', 'The ban has no end date. Only management can lift it, and only after an appeal that succeeds.'),
       ),
     ),
 
