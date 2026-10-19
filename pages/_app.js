@@ -5,6 +5,7 @@
 import Head from 'next/head';
 import { SessionProvider } from 'next-auth/react';
 import { buildCssVariables, fonts } from '../lib/siteDesign';
+import { AccountProvider } from '../lib/accountClient';
 
 // Global CSS must be imported here (Next.js pages router rule)
 import '../styles/homeStyles.css';
@@ -20,6 +21,9 @@ import '../styles/rulesStyles.css';
 
 // Punishments page styles (/rules/punishments)
 import '../styles/punishmentsStyles.css';
+
+// Account modal and staff login review styles
+import '../styles/accountStyles.css';
 
 // Design tokens become CSS variables once, at module load
 const tokenCss = buildCssVariables();
@@ -38,7 +42,11 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
         {/* Design tokens as :root variables */}
         <style id="siteTokens" dangerouslySetInnerHTML={{ __html: tokenCss }} />
       </Head>
-      <Component {...pageProps} />
+      {/* Profile, roles and staff login state of the signed-in user */}
+      <AccountProvider>
+        <Component {...pageProps} />
+      </AccountProvider>
     </SessionProvider>
   );
 }
+
