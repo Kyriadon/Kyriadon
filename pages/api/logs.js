@@ -7,6 +7,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from './auth/[...nextauth]';
 import { VIEW_REQUIRES_ROLE, appendLogs, deleteLogs, getRelease, getViewerRoles, makeEntry, rateLimited, readLogs } from '../../lib/logServer';
+import { STAFF_ACTIONS_REQUIRE_LOGIN, getStaffSession, listApprovals } from '../../lib/staffServer';
 
 export const config = { api: { bodyParser: { sizeLimit: '64kb' } } };
 
@@ -33,7 +34,9 @@ async function handleRequest(req, res) {
     if (rateLimited(ip)) return res.status(429).json({ error: 'Too many log events' });
     const body = parseBody(req.body);
     const events = Array.isArray(body?.events) ? body.events.slice(0, 25) : [];
-    await appendLogs(events.map((event) => makeEntry(event, { user, release })));
+    // STAFF_ codes belong to the server (staff login and review). A browser cannot create look-alikes.
+    const fromBrowser = (event) => (/^\s*STAFF_/i.test(String(event?.code ?? '')) ? { ...event, code: `CLIENT_${String(event.code).trim()}` } : event);
+    await appendLogs(events.map((event) => makeEntry(fromBrowser(event), { user, release })));
     return res.status(202).json({ accepted: events.length });
   }
 
@@ -49,7 +52,16 @@ async function handleRequest(req, res) {
 
   // List logs
   if (req.method === 'GET') {
-    return res.status(200).json({ logs: await readLogs(), viewer, release, serverTime: new Date().toISOString() });
+    let logs = await readLogs();
+    // Staff logins and reviews are only for staff and admins
+    if (!viewer.staff && !viewer.admin) logs = logs.filter((log) => !log.staffOnly);
+    // Only admins see where a staff login came from, and which ones still wait for a review
+    if (!viewer.admin) logs = logs.map((log) => (log.staffOnly && log.meta?.ip ? { ...log, meta: { ...log.meta, ip: undefined } } : log));
+    else {
+      const approvals = await listApprovals(100);
+      logs = logs.map((log) => (approvals[log.id] ? { ...log, approval: approvals[log.id] } : log));
+    }
+    return res.status(200).json({ logs, viewer, release, serverTime: new Date().toISOString() });
   }
 
   // Delete logs (staff only)
@@ -59,10 +71,16 @@ async function handleRequest(req, res) {
       await appendLogs([makeEntry({ level: 'warning', code: 'DELETE_DENIED', reason: `${user.name} tried to delete logs without the Staff role.` }, { user, release })]);
       return res.status(403).json({ error: 'Only staff can delete logs' });
     }
+    // Optional: deleting also needs an active staff session (see STAFF_ACTIONS_REQUIRE_LOGIN)
+    if (STAFF_ACTIONS_REQUIRE_LOGIN && !viewer.admin && !(await getStaffSession(userId, req))) {
+      return res.status(403).json({ error: 'Log in as staff from the Account menu to delete logs' });
+    }
     const payload = {
       all: body.all === true,
       level: ['info', 'warning', 'error'].includes(body.level) ? body.level : undefined,
       ids: Array.isArray(body.ids) ? body.ids.slice(0, 500).map(String) : undefined,
+      // Staff logins and reviews can only be deleted by admins, so nobody can erase their own trace
+      keep: viewer.admin ? undefined : (log) => Boolean(log.staffOnly),
     };
     const deleted = await deleteLogs(payload);
     const scope = payload.all ? 'all logs' : payload.level ? `${payload.level} logs` : 'selected logs';
@@ -88,3 +106,4 @@ export default async function handler(req, res) {
     return undefined;
   }
 }
+
