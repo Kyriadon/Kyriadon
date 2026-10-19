@@ -1,0 +1,295 @@
+/* ============================================================================
+   accountStyles.css
+   Account modal (avatar, username, display name, staff login) and the admin
+   review of staff logins in the debug logs. Everything is built from the
+   existing tokens, modal, button, input, chip and panel styles of the site.
+   ============================================================================ */
+
+/* --------------------------------------------------------------------------
+   1. Avatar section
+   -------------------------------------------------------------------------- */
+.acctAvatarRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.acctAvatar {
+  flex: none;
+  width: 6rem;
+  height: 6rem;
+  object-fit: cover;
+  background: var(--color-card-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.acctAvatarActions {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  min-width: 0;
+}
+
+/* The real file input stays out of sight; its button is the visible control */
+.acctFileInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   2. Drawing and adjusting pads
+   -------------------------------------------------------------------------- */
+.acctEditor {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  min-width: 0;
+}
+
+.acctCanvasFrame {
+  position: relative;
+  width: min(100%, 18rem);
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+}
+
+.acctCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.acctCanvas[data-tool='eraser'] {
+  cursor: cell;
+}
+
+.acctCanvas[data-tool='move'] {
+  cursor: grab;
+}
+
+.acctCanvas[data-tool='move']:active {
+  cursor: grabbing;
+}
+
+/* Dims the corners: the avatar is shown as a circle everywhere on the site */
+.acctCanvasMask {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle closest-side, transparent calc(100% - 1px), var(--color-backdrop) 100%);
+}
+
+.acctSegment {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.acctSwatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.acctSwatch {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: var(--swatch);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.acctSwatch[aria-pressed='true'] {
+  box-shadow: 0 0 0 2px var(--color-modal), 0 0 0 4px var(--color-focus);
+}
+
+.acctSwatch:focus-visible,
+.acctSwatchCustom:focus-within {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Custom colour: the native colour picker sits invisibly on top of a holographic dot */
+.acctSwatchCustom {
+  overflow: hidden;
+  background: var(--gradient-holo-flow);
+}
+
+.acctSwatchCustom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.acctRange {
+  width: 100%;
+  accent-color: var(--mention-booster-two-color);
+}
+
+/* --------------------------------------------------------------------------
+   3. Name fields, session and messages
+   -------------------------------------------------------------------------- */
+.acctInlineForm {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.acctGrow {
+  flex: 1;
+  min-width: 0;
+}
+
+.acctSave {
+  flex: none;
+}
+
+.acctInputWrap {
+  position: relative;
+  display: block;
+}
+
+.acctPrefix {
+  position: absolute;
+  top: 50%;
+  left: var(--space-3);
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.acctInputWrap .studioInput[data-prefixed='true'] {
+  padding-left: 1.75rem;
+}
+
+.acctGrow .studioInput:disabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.acctNote {
+  margin: 0;
+}
+
+.acctNote[data-tone='error'] {
+  color: var(--color-danger);
+}
+
+.acctNote[data-tone='success'] {
+  color: var(--color-success);
+}
+
+.acctInline {
+  margin: 0;
+}
+
+.acctSession {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.acctBlocked {
+  border-color: color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
+}
+
+.acctQuote {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-primary);
+  background: var(--color-card);
+  border-left: 3px solid var(--color-danger);
+  border-radius: var(--radius-subtle);
+  overflow-wrap: anywhere;
+}
+
+.acctAmount {
+  width: 7rem;
+}
+
+.acctTextarea {
+  height: auto;
+  min-height: 5rem;
+  padding: var(--space-3);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+/* --------------------------------------------------------------------------
+   4. Admin review of staff logins: the red ! and the review panel
+   -------------------------------------------------------------------------- */
+.approvalBang {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  line-height: 0;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-critical) 55%, transparent));
+  animation: bangBob 1.1s ease-in-out infinite;
+}
+
+/* The global reduced-motion rule (homeStyles.css) stops this for people who ask for less motion */
+@keyframes bangBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* A log row with a ! gets a fourth column for it, before the chevron */
+.logRow[data-flagged='true'] {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.logRowFlag {
+  display: grid;
+  place-items: center;
+}
+
+.rawFlag {
+  display: inline-grid;
+  align-self: center;
+  place-items: center;
+}
+
+.acctReview[data-status='pending'] {
+  background: color-mix(in srgb, var(--color-critical) 7%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-critical) 45%, var(--color-divider));
+}
+
+@media (max-width: 480px) {
+  .acctInlineForm {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .acctAvatar {
+    width: 5rem;
+    height: 5rem;
+  }
+}
