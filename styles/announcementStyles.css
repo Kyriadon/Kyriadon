@@ -115,18 +115,18 @@
   height: 2px;
   background: var(--anno-chip, var(--color-divider));
   border-radius: var(--radius-pill);
-  opacity: 0.7;
+  opacity: 0.45;
 }
 
 .annoSectionIcon {
   display: grid;
   flex: none;
   place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  color: var(--color-on-accent);
-  background: var(--anno-gradient);
-  border: 1px solid var(--color-border-strong);
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--anno-light);
+  background: color-mix(in srgb, var(--anno-color) 14%, var(--color-bg-raised));
+  border: 1px solid color-mix(in srgb, var(--anno-color) 32%, transparent);
   border-radius: var(--radius-control);
 }
 
@@ -1022,13 +1022,11 @@ a.annoGalleryItem:hover img {
 }
 
 .annoEditorActions {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
   display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3) 0 0;
-  background: linear-gradient(180deg, transparent, var(--color-modal) 0.75rem);
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding: var(--space-4) 0 var(--space-2);
+  border-top: 1px solid var(--color-divider);
 }
 
 .annoBackArrow {
@@ -1184,5 +1182,326 @@ a.annoGalleryItem:hover img {
 
   .annoArticle {
     padding: var(--space-4);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   12. Phones: roomier spacing, larger touch targets, stacked controls.
+   Inputs are 16px so iOS does not zoom in when one is focused.
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  /* Dialogs: tighter edges, more room for the content */
+  .sheetDialog:is([data-size='wide'], :has(.annoModalBody)) .studioHeader {
+    padding: var(--space-4) var(--space-4) var(--space-3);
+  }
+
+  .sheetDialog:is([data-size='wide'], :has(.annoModalBody)) .sheetToolbar {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .sheetDialog:is([data-size='wide'], :has(.annoModalBody)) .sheetBody {
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-4) var(--space-6);
+  }
+
+  .sheetDialog:is([data-size='wide'], :has(.annoModalBody)) .studioFooter {
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* One button in the footer fills the width */
+  .sheetDialog[data-size='wide'] .studioFooter > .btn:only-child {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* The home dialog footer: favourite on top, then Open page and Done side by side */
+  .studioFooter:has(.annoFavButton) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .studioFooter .annoFavButton {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .studioFooter:has(.annoFavButton) .footerGroup {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .studioFooter:has(.annoFavButton) .footerGroup .btn {
+    width: 100%;
+  }
+
+  /* Touch targets */
+  .annoToolbar .btn,
+  .annoEditor .btn,
+  .annoRowActions .btn,
+  .annoCardFoot .btn,
+  .annoArticleHead .btn,
+  .annoImageRow .btn {
+    height: 2.75rem;
+  }
+
+  .annoToolbar .btnIcon,
+  .annoEditor .btnIcon,
+  .annoRowActions .btnIcon {
+    width: 2.75rem;
+  }
+
+  .annoFav {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .annoControls .segment,
+  .annoToolbar .segment,
+  .annoListTools .segment,
+  .annoEditor .segment {
+    flex: 1 0 auto;
+    height: 2.5rem;
+    padding: 0 var(--space-3);
+    white-space: nowrap;
+  }
+
+  .annoControls .segmented,
+  .annoToolbar .segmented,
+  .annoListTools .segmented,
+  .annoEditor .segmented {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .viewToggle.modeToggle {
+    min-height: 2.75rem;
+  }
+
+  /* Inputs: 16px, taller */
+  .annoEditor :is(input, textarea),
+  .annoListTools input,
+  .annoControls input {
+    font-size: 1rem;
+  }
+
+  .annoEditor .studioInput:not(textarea) {
+    height: 2.75rem;
+  }
+
+  /* Page */
+  .annoGrid {
+    gap: var(--space-4);
+  }
+
+  .annoSection,
+  .annoArticle {
+    padding: var(--space-4);
+  }
+
+  .annoControls {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-3);
+  }
+
+  .annoControls .logSearch {
+    flex: none;
+  }
+
+  .annoSectionHead {
+    gap: var(--space-2);
+  }
+
+  .annoSectionBlurb {
+    display: none;
+  }
+
+  /* Cards: the picture on top, then the text with the heart beside it */
+  .annoCard {
+    padding: var(--space-4);
+    padding-left: calc(var(--space-4) + 4px);
+  }
+
+  .annoCardHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-3);
+  }
+
+  .annoThumb {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .annoCardActions {
+    align-self: start;
+  }
+
+  .annoCardFoot {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .annoCardFoot .studioRow,
+  .annoArticleHead .studioRow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .annoCardFoot .studioRow .btn,
+  .annoArticleHead .studioRow .btn {
+    width: 100%;
+  }
+
+  .annoGallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Manager list: the actions get a row of their own */
+  .annoRow {
+    padding: var(--space-4);
+  }
+
+  .annoRowActions {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .annoListTools {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .annoToolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .annoToolbar > .studioRow {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  /* Editor */
+  .annoEditor,
+  .annoForm {
+    gap: var(--space-5);
+  }
+
+  .annoForm .studioField {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .annoEditorBar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .annoEditorBar > :first-child {
+    justify-self: start;
+  }
+
+  .annoEditorBar .modeBar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .annoEditorBar .modeBar .viewToggle {
+    width: 100%;
+  }
+
+  .annoUrlWrap {
+    flex-direction: column;
+  }
+
+  .annoUrlPrefix {
+    min-height: 2.25rem;
+    border-right: 1px solid var(--color-border);
+    border-bottom: 0;
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
+  }
+
+  .annoUrlInput {
+    border-radius: 0 0 var(--radius-control) var(--radius-control);
+  }
+
+  .annoImageRow .studioInput {
+    flex: 1 1 100%;
+  }
+
+  .annoImageRow .btn {
+    flex: 1 1 8rem;
+  }
+
+  /* The text snippets scroll sideways in one row instead of piling up */
+  .annoSnippets {
+    flex-wrap: nowrap;
+    padding-bottom: var(--space-1);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .annoSnippet {
+    flex: none;
+    min-height: 2.25rem;
+    padding: 0.25rem 0.8rem;
+  }
+
+  .annoRawArea {
+    min-height: 22rem;
+    font-size: 1rem;
+  }
+
+  .annoResourceRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background: var(--color-card);
+    border: 1px solid var(--color-divider);
+    border-radius: var(--radius-control);
+  }
+
+  .annoResourceKind {
+    grid-column: auto;
+    justify-self: start;
+  }
+
+  .annoResourceTools {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .annoResourceTools .btn {
+    width: 100%;
+  }
+
+  /* Publish and Cancel: stacked, full width, in their own space under the form */
+  .annoEditorActions {
+    padding-top: var(--space-5);
+  }
+
+  .annoEditorActions .studioRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .annoEditorActions .btn {
+    width: 100%;
+  }
+
+  /* Statistics and guide */
+  .annoChartRow {
+    grid-template-columns: minmax(0, 6.5rem) minmax(0, 1fr) auto;
+  }
+
+  .annoGuideRow {
+    padding: var(--space-3);
   }
 }
