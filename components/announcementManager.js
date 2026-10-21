@@ -128,14 +128,15 @@ const GUIDE_MARKDOWN = [
   ['> A quote', 'Quote'],
   ['[Discord](https://discord.gg/B6czYB7wa7)', 'Link'],
   ['![A picture](https://)', 'Image or video from a link'],
-  ['`/command`  or a fenced block of code', 'Code'],
+  ['`/command`', 'Inline code'],
+  ['```\nA block of code\n```', 'Block of code, with its own copy button'],
   ['| Name | Value |\n| --- | ---: |\n| Speed | 10 |', 'Table'],
   ['---', 'Divider'],
   ['-# Small grey text', 'Small text'],
 ];
 
 const GUIDE_COLOURS = [
-  [':colr:blue/Colour/', 'One colour. Use a name (gold, golden, blue ...) or a #hex value.'],
+  [':colr:blue/Colour/', 'One colour. Use a name or a #hex value.'],
   [':colrs:blue,red,green/Gradient text/', 'A smooth gradient through two or more colours.'],
   [':chip:blue/Chip/:chip:', 'A chip in one colour.'],
   [':chip:blue,red,purple/Flowing chip/:chip:', 'A chip whose colours flow on hover, like the other chips.'],
@@ -150,18 +151,17 @@ const GUIDE_RAW = [
   [':description: "A short summary."', 'The text on the card before it is opened.'],
   [':image: "https://..."', 'The picture on the card and in the full view.'],
   [':resource: "Patch notes" | "https://..." | "link"', 'One line per resource. The last part is image, video or link.'],
-  ['Everything else you type', 'Is the main announcement, shown when the card is opened. Markdown works.', true],
+  ['Everything else you type', 'Is the main announcement, shown when the card is opened. Markdown works.', false],
 ];
 
 function GuideTable({ rows }) {
   return (
     <div className="annoGuideRows">
-      {rows.map(([code, note, plain]) => (
+      {rows.map(([code, note, copyable = true]) => (
         <div className="annoGuideRow" key={code}>
-          {/* Every code has a copy button in its corner (a plain description has none) */}
-          <div className="mdCodeBlock annoGuideBlock">
+          <div className="mdCodeBlock annoGuideCodeBlock">
             <pre className="mdPre annoGuideCode">{code}</pre>
-            {!plain && <CopyButton text={code} label="Copy code" />}
+            {copyable && <CopyButton text={code} label="Copy code" />}
           </div>
           <p className="annoGuideNote">{note}</p>
           <div className="annoGuideResult"><AnnoMarkup text={code} /></div>
