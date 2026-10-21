@@ -18,6 +18,7 @@ import { announceChange, formatDate, formatWhen, uploadMedia } from '../lib/anno
 import { LIMITS, TYPE_META, TYPE_ORDER, excerptOf, findMarkupProblems, guessKind, parseRaw, safeUrl, serializeRaw, stripMarkup } from '../lib/announcementMarkup';
 import { announcementColors } from '../lib/siteDesign';
 import { AnnoInline, AnnoMarkup } from './announcementMarkup';
+import { CopyButton } from './guideKit';
 import { AnnouncementCard, IconBars, IconEye, IconExternal, IconFavourite, IconPlus, TypeBadge } from './announcementCards';
 
 const API = '/api/staff/announcements';
@@ -134,7 +135,7 @@ const GUIDE_MARKDOWN = [
 ];
 
 const GUIDE_COLOURS = [
-  [':colr:blue/Colour/', 'One colour. Use a name or a #hex value.'],
+  [':colr:blue/Colour/', 'One colour. Use a name (gold, golden, blue ...) or a #hex value.'],
   [':colrs:blue,red,green/Gradient text/', 'A smooth gradient through two or more colours.'],
   [':chip:blue/Chip/:chip:', 'A chip in one colour.'],
   [':chip:blue,red,purple/Flowing chip/:chip:', 'A chip whose colours flow on hover, like the other chips.'],
@@ -149,15 +150,19 @@ const GUIDE_RAW = [
   [':description: "A short summary."', 'The text on the card before it is opened.'],
   [':image: "https://..."', 'The picture on the card and in the full view.'],
   [':resource: "Patch notes" | "https://..." | "link"', 'One line per resource. The last part is image, video or link.'],
-  ['Everything else you type', 'Is the main announcement, shown when the card is opened. Markdown works.'],
+  ['Everything else you type', 'Is the main announcement, shown when the card is opened. Markdown works.', true],
 ];
 
 function GuideTable({ rows }) {
   return (
     <div className="annoGuideRows">
-      {rows.map(([code, note]) => (
+      {rows.map(([code, note, plain]) => (
         <div className="annoGuideRow" key={code}>
-          <pre className="mdPre annoGuideCode">{code}</pre>
+          {/* Every code has a copy button in its corner (a plain description has none) */}
+          <div className="mdCodeBlock annoGuideBlock">
+            <pre className="mdPre annoGuideCode">{code}</pre>
+            {!plain && <CopyButton text={code} label="Copy code" />}
+          </div>
           <p className="annoGuideNote">{note}</p>
           <div className="annoGuideResult"><AnnoMarkup text={code} /></div>
         </div>
