@@ -88,7 +88,7 @@ export function TypeBadge({ type }) {
 export function FavouriteButton({ active, onToggle, labelled = false }) {
   const label = active ? 'Remove from favourites' : 'Add to favourites';
   return (
-    <button type="button" className={labelled ? 'btn btnSecondary annoFavButton' : 'annoFav'} data-active={active} aria-pressed={active} aria-label={label} title={label} onClick={onToggle}>
+    <button type="button" className={labelled ? 'btn btnSecondary annoFavButton' : 'annoFav'} data-active={active} aria-pressed={active} aria-label={label} onClick={onToggle}>
       <IconFavourite size={labelled ? 16 : 18} filled={active} />
       {labelled && (active ? 'Favourited' : 'Favourite')}
     </button>
