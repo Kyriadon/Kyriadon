@@ -220,6 +220,10 @@ export function AnnouncementCard({ item, index = 0, expanded, onToggle, detail, 
             <TypeBadge type={item.type} />
             <time className="newsDate" dateTime={item.date}>{formatDate(item.createdAt)}</time>
             {item.deleted && <span className="badge" data-tone="warning">Deleted, {timeLeft(item.expiresAt)} left</span>}
+            <div className="annoCardActions">
+              <FavouriteButton active={item.favourited} onToggle={() => onFavourite(item)} />
+              <span className="annoChevron" data-open={expanded} aria-hidden="true"><IconChevron size={18} /></span>
+            </div>
           </div>
           <h4 className="annoCardTitle">
             <button type="button" className="annoTitleButton" onClick={onToggle} aria-expanded={expanded} aria-controls={expanded ? bodyId : undefined}>
@@ -227,10 +231,6 @@ export function AnnouncementCard({ item, index = 0, expanded, onToggle, detail, 
             </button>
           </h4>
           {item.description && <p className="annoCardDesc"><AnnoInline text={item.description} /></p>}
-        </div>
-        <div className="annoCardActions">
-          <FavouriteButton active={item.favourited} onToggle={() => onFavourite(item)} />
-          <span className="annoChevron" data-open={expanded} aria-hidden="true"><IconChevron size={18} /></span>
         </div>
       </div>
 
