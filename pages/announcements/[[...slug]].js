@@ -5,8 +5,9 @@
 //                                       yellow, announcements red, updates blue), favourites on top
 //   /announcements/<url of one>         one announcement, for example
 //                                       /announcements/changelogs/changelog-1
-// The header, footer and search palette come from components/siteShell.js. The page theme is
-// a shade of blue (dark azure and baby blue). All visual values live in lib/siteDesign.js and
+// The header, footer and search palette come from components/siteShell.js. The layout is the one
+// of the rules page (hero, centred search, a sidebar on the left and the content on the right) and
+// the page theme is cyan. All visual values live in lib/siteDesign.js and
 // styles/announcementStyles.css.
 // ============================================================================
 import Link from 'next/link';
@@ -58,6 +59,38 @@ function CategorySection({ id, type, title, blurb, icon, items, expandedId, deta
         </div>
       )}
     </section>
+  );
+}
+
+// ----------------------------------------------------------------------------
+// The sidebar: one row per section with its count, like the navigation of the rules page. On
+// narrow screens it becomes one row of chips that scrolls sideways.
+// ----------------------------------------------------------------------------
+function CategoryNav({ entries }) {
+  return (
+    <aside className="annoSide">
+      <nav className="panel panelGlow annoNav" aria-labelledby="annoNavTitle" data-nolog>
+        <div className="panelHeader">
+          <h3 id="annoNavTitle">Browse</h3>
+        </div>
+        <ul className="annoNavList" role="list">
+          {entries.map((entry) => {
+            const Icon = entry.icon || TYPE_ICON[entry.type];
+            return (
+              <li key={entry.id}>
+                <a className="annoNavRow" data-type={entry.type} href={`#${entry.id}`}>
+                  <span className="annoNavIcon" aria-hidden="true">
+                    <Icon size={16} />
+                  </span>
+                  <span className="annoNavLabel">{entry.title}</span>
+                  <span className="annoNavCount">{entry.count}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </aside>
   );
 }
 
@@ -129,12 +162,21 @@ function AnnouncementsIndex() {
   const counts = TYPE_ORDER.reduce((totals, type) => ({ ...totals, [type]: feed.items.filter((item) => item.type === type).length }), {});
   const shared = { expandedId, details, onToggle: toggle, onFavourite: favourite, onRetry: loadDetail };
 
+  // The sections shown, in order: favourites first, then the categories of the current filter
+  const sections = TYPE_ORDER.filter((type) => filter === 'all' || filter === type).map((type) => ({
+    id: `${type}s`,
+    type,
+    title: TYPE_META[type].plural,
+    count: visible.filter((item) => item.type === type && !item.favourited).length,
+  }));
+  const navEntries = [...(favourites.length ? [{ id: 'favourites', type: 'favourite', title: 'Favourites', count: favourites.length, icon: IconFavourite }] : []), ...sections];
+
   return (
     <SiteShell title="Announcements | Kyriadon" description={description}>
-      <div className="annoGrid">
-        {/* Hero: same component as the other pages, in dark azure and baby blue */}
+      <div className="annoLayout annoPage">
+        {/* Hero: same component as the other pages, in cyan */}
         <section className="heroShell areaHero" aria-labelledby="heroTitle">
-          <div className="heroPanel" data-tone="azure">
+          <div className="heroPanel" data-tone="cyan">
             <div className="heroGlow" aria-hidden="true" />
             <div className="heroContent">
               <h1 id="heroTitle">Announcements</h1>
@@ -144,66 +186,77 @@ function AnnouncementsIndex() {
           </div>
         </section>
 
-        {feed.status === 'loading' && (
-          <section className="panel annoSection" aria-busy="true">
-            {[0, 1, 2].map((item) => <div key={item} className="skeleton skeletonCard" />)}
-          </section>
-        )}
-
-        {feed.status === 'error' && (
-          <section className="panel annoSection" role="alert">
-            <div className="stateBox">
-              <span>Announcements could not be loaded.</span>
-              <button type="button" className="btn btnSecondary btnCompact" onClick={feed.reload}>Try again</button>
-            </div>
-          </section>
-        )}
-
-        {feed.status === 'ready' && (
-          <>
-            {/* Search and the type filter */}
-            <section className="panel annoControls" aria-label="Search and filter">
-              <label className="boostField logSearch">
-                <IconSearch size={18} />
-                <input className="searchInput" type="text" value={query} placeholder="Search announcements..." aria-label="Search announcements" autoComplete="off" spellCheck={false} data-nolog onChange={(event) => setQuery(event.target.value)} />
-                {query && (
-                  <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => setQuery('')} aria-label="Clear search" data-nolog>
-                    <IconClose size={16} />
-                  </button>
-                )}
-              </label>
-              <div className="segmented" role="group" aria-label="Type">
-                <button type="button" className="segment" aria-pressed={filter === 'all'} onClick={() => setFilter('all')} data-nolog>
-                  All {feed.items.length}
+        {/* Search and the type filter: centred above the content, like the search of the rules page */}
+        <div className="areaSearch annoSearch">
+          <label className="boostField rulesSearch logSearch">
+            <IconSearch size={18} />
+            <input className="searchInput" type="text" value={query} placeholder="Search announcements..." aria-label="Search announcements" autoComplete="off" spellCheck={false} maxLength={80} data-nolog onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Escape' && query) setQuery(''); }} />
+            {feed.status === 'ready' && (
+              <span className="boostCount" role="status">
+                {visible.length} of {feed.items.length}
+              </span>
+            )}
+            {query && (
+              <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => setQuery('')} aria-label="Clear search" data-nolog>
+                <IconClose size={16} />
+              </button>
+            )}
+          </label>
+          {feed.status === 'ready' && (
+            <div className="segmented" role="group" aria-label="Type">
+              <button type="button" className="segment" aria-pressed={filter === 'all'} onClick={() => setFilter('all')} data-nolog>
+                All {feed.items.length}
+              </button>
+              {TYPE_ORDER.map((type) => (
+                <button key={type} type="button" className="segment annoSegment" data-type={type} aria-pressed={filter === type} onClick={() => { setFilter(type); logEvent({ code: 'ANNOUNCEMENTS_FILTERED', reason: `Filtered announcements: ${TYPE_META[type].plural}` }); }} data-nolog>
+                  {TYPE_META[type].plural} {counts[type]}
                 </button>
-                {TYPE_ORDER.map((type) => (
-                  <button key={type} type="button" className="segment annoSegment" data-type={type} aria-pressed={filter === type} onClick={() => { setFilter(type); logEvent({ code: 'ANNOUNCEMENTS_FILTERED', reason: `Filtered announcements: ${TYPE_META[type].plural}` }); }} data-nolog>
-                    {TYPE_META[type].plural} {counts[type]}
-                  </button>
-                ))}
+              ))}
+            </div>
+          )}
+        </div>
+
+        {feed.status === 'ready' && <CategoryNav entries={navEntries} />}
+
+        <div className="annoMain" data-wide={feed.status === 'ready' ? undefined : 'true'}>
+          {feed.status === 'loading' && (
+            <section className="panel annoSection" aria-busy="true">
+              {[0, 1, 2].map((item) => <div key={item} className="skeleton skeletonCard" />)}
+            </section>
+          )}
+
+          {feed.status === 'error' && (
+            <section className="panel annoSection" role="alert">
+              <div className="stateBox">
+                <span>Announcements could not be loaded.</span>
+                <button type="button" className="btn btnSecondary btnCompact" onClick={feed.reload}>Try again</button>
               </div>
             </section>
+          )}
 
-            {/* Favourites stay on top */}
-            {favourites.length > 0 && (
-              <CategorySection id="favourites" type="favourite" title="Favourites" blurb="The ones you saved. They stay for 3 days after staff delete them." icon={IconFavourite} items={favourites} {...shared} emptyText="" />
-            )}
+          {feed.status === 'ready' && (
+            <>
+              {/* Favourites stay on top */}
+              {favourites.length > 0 && (
+                <CategorySection id="favourites" type="favourite" title="Favourites" blurb="The ones you saved. They stay for 3 days after staff delete them." icon={IconFavourite} items={favourites} {...shared} emptyText="" />
+              )}
 
-            {/* The three categories: the rest of the announcements, each in its own colour */}
-            {TYPE_ORDER.filter((type) => filter === 'all' || filter === type).map((type) => (
-              <CategorySection
-                key={type}
-                id={`${type}s`}
-                type={type}
-                title={TYPE_META[type].plural}
-                blurb={TYPE_META[type].blurb}
-                items={visible.filter((item) => item.type === type && !item.favourited)}
-                emptyText={words.length ? `No ${TYPE_META[type].plural.toLowerCase()} match your search.` : `No ${TYPE_META[type].plural.toLowerCase()} yet. Check back soon.`}
-                {...shared}
-              />
-            ))}
-          </>
-        )}
+              {/* The three categories: the rest of the announcements, each in its own colour */}
+              {sections.map((section) => (
+                <CategorySection
+                  key={section.type}
+                  id={section.id}
+                  type={section.type}
+                  title={section.title}
+                  blurb={TYPE_META[section.type].blurb}
+                  items={visible.filter((item) => item.type === section.type && !item.favourited)}
+                  emptyText={words.length ? `No ${section.title.toLowerCase()} match your search.` : `No ${section.title.toLowerCase()} yet. Check back soon.`}
+                  {...shared}
+                />
+              ))}
+            </>
+          )}
+        </div>
       </div>
     </SiteShell>
   );
@@ -248,7 +301,7 @@ function AnnouncementDetail({ slug }) {
 
   return (
     <SiteShell title={title} description={item ? stripMarkup(item.description) || description : description}>
-      <div className="annoGrid annoDetailGrid">
+      <div className="annoGrid annoDetailGrid annoPage">
         <div className="annoBackRow">
           <Link className="btn btnGhost btnCompact" href="/announcements">
             <IconBack size={16} />
@@ -333,7 +386,7 @@ export default function AnnouncementsRoute() {
   if (!router.isReady) {
     return (
       <SiteShell title="Announcements | Kyriadon" description={description}>
-        <div className="annoGrid" aria-busy="true">
+        <div className="annoGrid annoPage" aria-busy="true">
           <div className="skeleton skeletonCard" />
         </div>
       </SiteShell>
