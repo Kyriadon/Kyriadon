@@ -228,7 +228,7 @@ export function CopyButton({ text, label = 'Copy' }) {
   };
 
   return (
-    <button type="button" className="btn btnGhost btnIcon btnCompact copyButton" onClick={copy} aria-label={copied ? 'Copied' : label} title={copied ? 'Copied' : label} data-nolog>
+    <button type="button" className="btn btnGhost btnIcon btnCompact copyButton" onClick={copy} aria-label={copied ? 'Copied' : label} data-nolog>
       {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
     </button>
   );
