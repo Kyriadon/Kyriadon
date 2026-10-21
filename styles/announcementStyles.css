@@ -995,6 +995,11 @@ a.annoGalleryItem:hover img {
   width: auto;
 }
 
+.annoTabShort,
+.annoOpenLabel {
+  display: none;
+}
+
 .annoSnippets {
   display: flex;
   flex-wrap: wrap;
@@ -1376,6 +1381,51 @@ a.annoGalleryItem:hover img {
     margin-left: 0;
   }
 
+  /* The manager takes the whole screen, like a page of an app */
+  .studioBackdrop:has(.sheetDialog[data-size='wide']) {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .sheetDialog[data-size='wide'] {
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .sheetDialog[data-size='wide'] .studioHeader {
+    gap: var(--space-3);
+    padding-top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
+  }
+
+  .sheetDialog[data-size='wide'] .studioHeader .btnIcon {
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .sheetDialog[data-size='wide'] .guideSubtitle {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .sheetDialog[data-size='wide'] .studioFooter > .btn:only-child {
+    height: 2.75rem;
+  }
+
+  /* The editor has its own Publish and Cancel bar, so the Done footer steps aside */
+  .sheetDialog[data-size='wide']:has(.annoEditor) .studioFooter {
+    display: none;
+  }
+
+  .sheetDialog[data-size='wide']:has(.annoEditor) .sheetBody {
+    padding-bottom: 0;
+  }
+
   /* The home dialog footer: favourite on top, then Open page and Done side by side */
   .studioFooter:has(.annoFavButton) {
     flex-direction: column;
@@ -1436,6 +1486,15 @@ a.annoGalleryItem:hover img {
 
   .viewToggle.modeToggle {
     min-height: 2.75rem;
+  }
+
+  /* Manager tabs: "List" instead of "Announcements" so the three tabs fit */
+  .annoTabLong {
+    display: none;
+  }
+
+  .annoTabShort {
+    display: inline;
   }
 
   /* Inputs: 16px, taller */
@@ -1569,8 +1628,29 @@ a.annoGalleryItem:hover img {
 
   .annoRowActions {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr);
     width: 100%;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-divider);
+  }
+
+  .annoRowActions .btn {
+    white-space: nowrap;
+  }
+
+  .annoRowActions .annoOpenBtn {
+    width: auto;
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
+  }
+
+  .annoOpenLabel {
+    display: inline;
+  }
+
+  .annoRowUrl .mdCode {
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
 
   .annoListTools {
@@ -1599,19 +1679,37 @@ a.annoGalleryItem:hover img {
     gap: var(--space-2);
   }
 
+  /* Back and Guide share the first row, the Advanced and Raw switch gets the second */
   .annoEditorBar {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'back guide'
+      'mode mode';
+    gap: var(--space-2) var(--space-3);
   }
 
   .annoEditorBar > :first-child {
+    grid-area: back;
     justify-self: start;
+  }
+
+  .annoEditorBar > :last-child {
+    grid-area: guide;
   }
 
   .annoEditorBar .modeBar {
     display: grid;
+    grid-area: mode;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* The type buttons wrap instead of scrolling sideways */
+  .annoForm .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    overflow: visible;
   }
 
   .annoEditorBar .modeBar .viewToggle {
@@ -1683,24 +1781,56 @@ a.annoGalleryItem:hover img {
     width: 100%;
   }
 
-  /* Publish and Cancel: stacked, full width, in their own space under the form */
+  /* Publish and Cancel: one bar that stays at the bottom of the screen while the form scrolls */
   .annoEditorActions {
-    padding-top: var(--space-5);
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    gap: var(--space-2);
+    margin: var(--space-2) calc(-1 * var(--space-4)) 0;
+    padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    background: var(--color-modal);
+    border-top: 1px solid var(--color-divider);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
 
   .annoEditorActions .studioRow {
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: var(--space-2);
   }
 
   .annoEditorActions .btn {
     width: 100%;
   }
 
-  /* Statistics and guide */
+  /* Statistics: the title gets a line of its own, the bar and the number sit under it */
   .annoChartRow {
-    grid-template-columns: minmax(0, 6.5rem) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-1) var(--space-3);
   }
+
+  .annoChartLabel {
+    display: -webkit-box;
+    grid-column: 1 / -1;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .annoStats .chartPieWrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+  }
+
+  .annoStats .chartPie {
+    align-self: center;
+  }
+
+  /* Guide */
 
   .annoGuideRow {
     padding: var(--space-3);
