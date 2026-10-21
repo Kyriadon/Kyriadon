@@ -637,7 +637,7 @@ function TopList({ rows, empty, suffix }) {
     <ul className="chartList">
       {rows.map((row) => (
         <li key={row.id} className="chartRow annoChartRow" data-type={row.type}>
-          <span className="annoChartLabel" title={stripMarkup(row.title)}>{stripMarkup(row.title)}</span>
+          <span className="annoChartLabel">{stripMarkup(row.title)}</span>
           <span className="chartTrack"><span className="chartFill annoChartFill" style={{ width: `${(row.value / rows[0].value) * 100}%` }} /></span>
           <span className="chartCount">{row.value} {suffix}</span>
         </li>
@@ -737,7 +737,7 @@ function ListView({ items, query, filter, pending, busyId, onEdit, onDelete }) {
               <span className="annoRowAuthor">{item.authorName}</span>
               <time className="newsDate" dateTime={new Date(item.createdAt).toISOString()}>{formatDate(item.createdAt)}</time>
               {!item.canEdit && (
-                <span className="badge" data-tone="neutral" title="Only the author or an admin can change this announcement.">
+                <span className="badge" data-tone="neutral">
                   <IconLock size={12} />
                   Locked
                 </span>
@@ -746,14 +746,15 @@ function ListView({ items, query, filter, pending, busyId, onEdit, onDelete }) {
             <p className="annoRowTitle"><AnnoInline text={item.title} /></p>
             <p className="annoRowUrl"><code className="mdCode">{item.url}</code></p>
             <div className="annoRowStats">
-              <span title="Views"><IconEye size={14} /> {item.views}</span>
-              <span title="Favourites"><IconFavourite size={14} /> {item.favourites}</span>
+              <span role="img" aria-label={`${item.views} ${item.views === 1 ? 'view' : 'views'}`}><IconEye size={14} /> {item.views}</span>
+              <span role="img" aria-label={`${item.favourites} ${item.favourites === 1 ? 'favourite' : 'favourites'}`}><IconFavourite size={14} /> {item.favourites}</span>
               {item.updatedAt - item.createdAt > 60 * 1000 && <span>Edited {formatWhen(item.updatedAt)}</span>}
             </div>
           </div>
           <div className="annoRowActions">
-            <Link className="btn btnGhost btnIcon btnCompact" href={item.url} aria-label="Open the announcement page" title="Open the page">
+            <Link className="btn btnGhost btnIcon btnCompact annoOpenBtn" href={item.url} aria-label="Open the announcement page">
               <IconExternal size={16} />
+              <span className="annoOpenLabel">Open</span>
             </Link>
             <button type="button" className="btn btnSecondary btnCompact" onClick={() => onEdit(item)} disabled={!item.canEdit || busyId === item.id}>
               <IconPencil size={16} />
@@ -878,12 +879,12 @@ export default function AnnouncementManager({ onClose }) {
   const toolbar = editing ? null : (
     <div className="annoToolbar">
       <div className="segmented" role="group" aria-label="Manager view">
-        <button type="button" className="segment" aria-pressed={view === 'list'} onClick={() => changeView('list')}>Announcements</button>
+        <button type="button" className="segment" aria-pressed={view === 'list'} onClick={() => changeView('list')}><span className="annoTabLong">Announcements</span><span className="annoTabShort">List</span></button>
         <button type="button" className="segment annoSegmentIcon" aria-pressed={view === 'stats'} onClick={() => changeView('stats')}><IconBars size={15} />Statistics</button>
         <button type="button" className="segment annoSegmentIcon" aria-pressed={view === 'guide'} onClick={() => changeView('guide')}><IconBook size={15} />Guide</button>
       </div>
       <div className="studioRow">
-        <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={reload} aria-label="Refresh" title="Refresh" data-nolog>
+        <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={reload} aria-label="Refresh" data-nolog>
           <IconRefresh size={16} />
         </button>
         <button type="button" className="btn btnPrimary btnCompact" onClick={() => openEditor(null)} disabled={load.status !== 'ready'}>
