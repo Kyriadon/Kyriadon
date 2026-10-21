@@ -4,7 +4,7 @@
    the custom markup (:colr:, :colrs:, :chip:) and the Announcements manager.
    Every value comes from the design tokens (lib/siteDesign.js): the three types use the
    --anno-* families (change-log yellow, announcement red, update blue) and the page theme is
-   dark azure with baby blue.
+   cyan (--anno-theme-*). The page is built like the other pages: hero, side panel, content.
    Contents: 1 type colours, 2 page, 3 sections, 4 cards, 5 opened view, 6 markup,
              7 home panel, 8 manager, 9 editor, 10 statistics, 11 guide
    ========================================================================== */
@@ -12,7 +12,7 @@
 /* --------------------------------------------------------------------------
    1. Type colours: every element that has a data-type gets its own family
    -------------------------------------------------------------------------- */
-:is(.annoCard, .annoBadge, .annoSection, .annoArticle, .annoRow, .annoSegment, .annoModalBody, .annoCount, .annoMoreRow, .annoNavRow, .annoChartRow, .chartSlice, .chartDot, .chartBar)[data-type='changelog'] {
+:is(.annoCard, .annoBadge, .annoSection, .annoArticle, .annoRow, .annoSegment, .annoFilter, .annoModalBody, .annoCount, .annoMoreRow, .annoChartRow, .chartSlice, .chartDot, .chartBar)[data-type='changelog'] {
   --anno-color: var(--anno-changelog-color);
   --anno-light: var(--anno-changelog-light);
   --anno-bg: var(--anno-changelog-background);
@@ -22,7 +22,7 @@
   --level-color: var(--anno-changelog-color);
 }
 
-:is(.annoCard, .annoBadge, .annoSection, .annoArticle, .annoRow, .annoSegment, .annoModalBody, .annoCount, .annoMoreRow, .annoNavRow, .annoChartRow, .chartSlice, .chartDot, .chartBar)[data-type='announcement'] {
+:is(.annoCard, .annoBadge, .annoSection, .annoArticle, .annoRow, .annoSegment, .annoFilter, .annoModalBody, .annoCount, .annoMoreRow, .annoChartRow, .chartSlice, .chartDot, .chartBar)[data-type='announcement'] {
   --anno-color: var(--anno-announcement-color);
   --anno-light: var(--anno-announcement-light);
   --anno-bg: var(--anno-announcement-background);
@@ -32,7 +32,7 @@
   --level-color: var(--anno-announcement-color);
 }
 
-:is(.annoCard, .annoBadge, .annoSection, .annoArticle, .annoRow, .annoSegment, .annoModalBody, .annoCount, .annoMoreRow, .annoNavRow, .annoChartRow, .chartSlice, .chartDot, .chartBar)[data-type='update'] {
+:is(.annoCard, .annoBadge, .annoSection, .annoArticle, .annoRow, .annoSegment, .annoFilter, .annoModalBody, .annoCount, .annoMoreRow, .annoChartRow, .chartSlice, .chartDot, .chartBar)[data-type='update'] {
   --anno-color: var(--anno-update-color);
   --anno-light: var(--anno-update-light);
   --anno-bg: var(--anno-update-background);
@@ -43,8 +43,7 @@
 }
 
 /* Favourites use the pink of the heart */
-.annoSection[data-type='favourite'],
-.annoNavRow[data-type='favourite'] {
+.annoSection[data-type='favourite'] {
   --anno-color: var(--color-heart);
   --anno-light: var(--color-heart);
   --anno-bg: rgba(92, 24, 60, 0.6);
@@ -53,68 +52,46 @@
 }
 
 /* --------------------------------------------------------------------------
-   2. Page
+   2. Page: the same grid as the rules and debug pages (hero on top, a side panel on the
+   left, the content on the right). The page theme is cyan: the blue accent tokens are
+   re-pointed here, so everything inside the page that uses them (links, focus rings, the
+   hero title on hover) turns cyan while the rest of the site stays azure.
    -------------------------------------------------------------------------- */
 .annoGrid {
-  display: grid;
-  gap: var(--space-5);
-  min-width: 0;
-}
-
-/* The hero is the same component as on the other pages, in dark azure and baby blue */
-.heroPanel[data-tone='cyan'] .heroGlow {
-  background: var(--gradient-holo-hero-cyan);
-}
-
-/* Cyan page theme: inside the announcements pages the blue accent family is the cyan family.
-   Links, focus rings, the hero title and every shared component that uses the accent follow. */
-.annoPage {
-  --color-azure: var(--color-cyan);
-  --color-light-blue: var(--color-light-cyan);
-  --color-baby-blue: var(--color-baby-cyan);
-  --color-focus: var(--color-light-cyan);
-}
-
-/* Layout of the other pages (the rules page): hero, centred search, sidebar left, content right */
-.annoLayout {
+  --color-azure: var(--anno-theme-main);
+  --color-light-blue: var(--anno-theme-light);
+  --color-baby-blue: var(--anno-theme-soft);
+  --color-focus: var(--anno-theme-light);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-areas:
-    'hero   hero   .'
-    'search search search'
-    'side   main   main';
+    'hero hero .'
+    'side main main';
   gap: var(--space-5);
   align-items: start;
   min-width: 0;
 }
 
-.annoSearch {
-  grid-area: search;
-  display: grid;
-  gap: var(--space-3);
-  justify-self: center;
-  width: 100%;
-  max-width: var(--layout-centered-width);
+/* While the list loads there is no side panel yet */
+.annoGrid[data-ready='false'] {
+  grid-template-areas:
+    'hero hero .'
+    'main main main';
 }
 
-.annoSearch .segmented {
-  justify-self: start;
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
+/* Cyan hero tone (same component, same animation as home, about, debug and rules) */
+.heroPanel[data-tone='cyan'] .heroGlow {
+  background: var(--gradient-holo-hero-cyan);
 }
 
-.annoSearch .segment {
-  flex: none;
-  white-space: nowrap;
-}
-
-/* The sidebar stays in view while the sections scroll */
+/* The side panel stays in view while the long lists scroll */
 .annoSide {
+  display: grid;
   grid-area: side;
+  gap: var(--space-5);
+  min-width: 0;
   position: sticky;
   top: var(--space-5);
-  min-width: 0;
 }
 
 .annoMain {
@@ -124,88 +101,107 @@
   min-width: 0;
 }
 
-/* While loading or after an error there is no sidebar, so the content takes the full row */
-.annoMain[data-wide='true'] {
-  grid-area: auto;
-  grid-column: 1 / -1;
-  grid-row: 3;
-}
-
-.annoSection {
-  scroll-margin-top: var(--space-5);
-}
-
-/* Sidebar rows: icon, name and count, in the colour of the section */
-.annoNavList {
+/* Search and the type filter */
+.annoFind {
   display: grid;
-  gap: var(--space-1);
-  margin: 0;
-  padding: 0 var(--space-3) var(--space-3);
-  list-style: none;
+  gap: var(--space-4);
 }
 
-.annoNavRow {
+.annoFind > .panelHeader {
+  margin-bottom: 0;
+}
+
+.annoSearch {
+  width: 100%;
+  min-width: 0;
+}
+
+.annoFilters {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.annoFilter {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0 var(--space-3);
+  font-family: var(--type-label-family);
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
   color: var(--color-text-secondary);
-  text-decoration: none;
-  background: transparent;
-  border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
   border-radius: var(--radius-control);
-  transition: background var(--motion-fast) linear, border-color var(--motion-fast) linear, color var(--motion-fast) linear;
+  transition: color var(--motion-fast) linear, background-color var(--motion-fast) linear, border-color var(--motion-fast) linear;
 }
 
-.annoNavRow:hover {
+.annoFilter::before {
+  content: '';
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--anno-color, var(--color-azure));
+  border-radius: var(--radius-pill);
+}
+
+.annoFilter:hover {
   color: var(--color-text-primary);
   background: var(--color-card-hover);
-  border-color: color-mix(in srgb, var(--anno-color) 40%, transparent);
+  border-color: var(--color-border);
 }
 
-.annoNavRow:focus-visible {
+.annoFilter:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 
-.annoNavIcon {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  color: var(--anno-light);
-  background: color-mix(in srgb, var(--anno-color) 14%, var(--color-bg-raised));
-  border: 1px solid color-mix(in srgb, var(--anno-color) 32%, transparent);
-  border-radius: var(--radius-control);
+.annoFilter[aria-pressed='true'] {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--anno-color, var(--color-azure)) 14%, var(--color-card));
+  border-color: color-mix(in srgb, var(--anno-color, var(--color-azure)) 45%, transparent);
 }
 
-.annoNavLabel {
+.annoFilterName {
   flex: 1;
   min-width: 0;
-  font-family: var(--type-label-family);
-  font-weight: 600;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.annoNavCount {
+.annoFilterCount {
   flex: none;
-  padding: 0.05rem 0.5rem;
   font-family: var(--type-meta-family);
   font-size: var(--type-meta-size);
-  font-weight: 700;
-  color: var(--anno-light);
-  background: var(--anno-bg);
-  border-radius: var(--radius-pill);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+/* One announcement: back link on top, the other announcements on the left, the text on the right */
+.annoDetailGrid {
+  grid-template-areas:
+    'back back back'
+    'side main main';
 }
 
 .annoBackRow {
   display: flex;
+  grid-area: back;
 }
 
-.annoDetailGrid {
-  max-width: var(--layout-centered-width);
+/* Without other announcements the text is centred at a readable width */
+.annoDetailGrid[data-solo='true'] {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'back'
+    'main';
   width: 100%;
+  max-width: var(--layout-centered-width);
   margin-inline: auto;
 }
 
@@ -277,7 +273,7 @@
 
 .annoList {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
   gap: var(--space-3);
   align-items: start;
 }
@@ -457,6 +453,7 @@
   flex: none;
   align-items: center;
   gap: var(--space-1);
+  margin-left: auto;
 }
 
 .annoChevron {
@@ -593,6 +590,7 @@ a.annoGalleryItem:hover img {
 }
 
 .annoArticleTitle {
+  line-height: 1.2;
   overflow-wrap: anywhere;
 }
 
@@ -1204,7 +1202,7 @@ a.annoGalleryItem:hover img {
   border-radius: var(--radius-control);
 }
 
-.annoGuideBlock {
+.annoGuideCodeBlock {
   min-width: 0;
 }
 
@@ -1260,6 +1258,48 @@ a.annoGalleryItem:hover img {
 /* --------------------------------------------------------------------------
    Small screens
    -------------------------------------------------------------------------- */
+@media (max-width: 980px) {
+  .annoGrid,
+  .annoGrid[data-ready='false'] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .annoGrid {
+    grid-template-areas:
+      'hero'
+      'side'
+      'main';
+  }
+
+  .annoGrid[data-ready='false'] {
+    grid-template-areas:
+      'hero'
+      'main';
+  }
+
+  .annoDetailGrid {
+    grid-template-areas:
+      'back'
+      'main'
+      'side';
+  }
+
+  .annoSide {
+    position: static;
+  }
+
+  /* Side panel on a wide small screen: the filters sit in one wrapping row */
+  .annoFilters {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .annoFilter {
+    width: auto;
+  }
+}
+
 @media (max-width: 900px) {
   .annoEditorGrid {
     grid-template-columns: minmax(0, 1fr);
@@ -1377,7 +1417,6 @@ a.annoGalleryItem:hover img {
     height: 2.75rem;
   }
 
-  .annoSearch .segment,
   .annoToolbar .segment,
   .annoListTools .segment,
   .annoEditor .segment {
@@ -1387,7 +1426,6 @@ a.annoGalleryItem:hover img {
     white-space: nowrap;
   }
 
-  .annoSearch .segmented,
   .annoToolbar .segmented,
   .annoListTools .segmented,
   .annoEditor .segmented {
@@ -1402,8 +1440,7 @@ a.annoGalleryItem:hover img {
 
   /* Inputs: 16px, taller */
   .annoEditor :is(input, textarea),
-  .annoListTools input,
-  .annoSearch input {
+  .annoListTools input {
     font-size: 1rem;
   }
 
@@ -1411,45 +1448,98 @@ a.annoGalleryItem:hover img {
     height: 2.75rem;
   }
 
-  /* Page */
-  .annoGrid {
+  /* Page: less nesting, so the text gets the width */
+  .annoGrid,
+  .annoMain,
+  .annoSide {
     gap: var(--space-4);
   }
 
-  .annoSection,
+  .annoFind,
   .annoArticle {
     padding: var(--space-4);
   }
 
+  .annoFind {
+    gap: var(--space-3);
+  }
+
+  .annoArticle {
+    gap: var(--space-4);
+    border-left-width: 3px;
+  }
+
+  .annoArticleTitle {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+  }
+
+  /* The type filter is one row that scrolls sideways */
+  .annoFilters {
+    flex-wrap: nowrap;
+    padding-bottom: var(--space-1);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .annoFilters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .annoFilter {
+    flex: none;
+    min-height: 2.75rem;
+    padding: 0 var(--space-4);
+  }
+
+  .annoFilterName {
+    flex: none;
+  }
+
+  .annoSearch {
+    height: 3rem;
+  }
+
+  /* Sections: a slim panel around the cards */
+  .annoSection {
+    gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
   .annoSectionHead {
-    gap: var(--space-2);
+    gap: var(--space-3);
+    padding: var(--space-1) var(--space-1) var(--space-3);
+  }
+
+  .annoSectionIcon {
+    width: 2rem;
+    height: 2rem;
   }
 
   .annoSectionBlurb {
     display: none;
   }
 
-  /* Cards: the picture on top, then the text with the heart beside it */
+  /* Cards: the picture on top, then the badge row with the heart, the title and the text */
   .annoCard {
-    padding: var(--space-4);
-    padding-left: calc(var(--space-4) + 4px);
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-3) var(--space-3) calc(var(--space-3) + 4px);
   }
 
   .annoCardHead {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
   }
 
   .annoThumb {
-    grid-column: 1 / -1;
     width: 100%;
     height: auto;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 2 / 1;
   }
 
   .annoCardActions {
-    align-self: start;
+    gap: 0;
+    margin-block: -0.35rem;
   }
 
   .annoCardFoot {
@@ -1614,127 +1704,5 @@ a.annoGalleryItem:hover img {
 
   .annoGuideRow {
     padding: var(--space-3);
-  }
-}
-
-/* --------------------------------------------------------------------------
-   13. Layout on narrow screens and phones (the sidebar moves above the content,
-   the cards lose their nested boxes and the actions sit beside the type badge)
-   -------------------------------------------------------------------------- */
-@media (max-width: 980px) {
-  .annoLayout {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'hero'
-      'search'
-      'side'
-      'main';
-    gap: var(--space-4);
-  }
-
-  .annoSearch {
-    max-width: none;
-  }
-
-  .annoSide {
-    position: static;
-  }
-
-  .annoMain[data-wide='true'] {
-    grid-row: auto;
-  }
-
-  /* The sidebar becomes one row of chips that scrolls sideways */
-  .annoNav .panelHeader {
-    display: none;
-  }
-
-  .annoNavList {
-    display: flex;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .annoNavRow {
-    min-height: 2.75rem;
-    padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
-    white-space: nowrap;
-    border-color: var(--color-border);
-  }
-}
-
-@media (max-width: 760px) {
-  /* Card: picture, then the badge row with the heart and chevron, then title and summary */
-  .annoCardHead {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'thumb thumb'
-      'top   actions'
-      'title title'
-      'desc  desc';
-    gap: 0 var(--space-3);
-    align-items: center;
-  }
-
-  .annoCardText {
-    display: contents;
-  }
-
-  .annoThumb {
-    grid-area: thumb;
-    margin-bottom: var(--space-3);
-  }
-
-  .annoCardTop {
-    grid-area: top;
-  }
-
-  .annoCardActions {
-    grid-area: actions;
-    justify-self: end;
-    align-self: center;
-  }
-
-  .annoCardTitle {
-    grid-area: title;
-    margin-top: var(--space-2);
-  }
-
-  .annoCardDesc {
-    grid-area: desc;
-    margin-top: var(--space-2);
-  }
-}
-
-@media (max-width: 640px) {
-  /* Less boxes inside boxes: the section keeps a slim edge and the cards use the width */
-  .annoSection {
-    padding: var(--space-3);
-  }
-
-  .annoList {
-    gap: var(--space-3);
-  }
-
-  .annoCard {
-    padding: var(--space-4);
-    padding-left: calc(var(--space-4) + 4px);
-  }
-
-  .annoArticleTitle {
-    font-size: var(--type-h2-size);
-    line-height: var(--type-h2-line-height);
-  }
-
-  .annoNavLabel {
-    flex: none;
-  }
-
-  .annoGuideBlock .copyButton {
-    width: 2.75rem;
-    height: 2.75rem;
   }
 }
