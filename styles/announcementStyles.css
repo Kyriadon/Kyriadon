@@ -812,6 +812,12 @@ a.annoGalleryItem:hover img {
   max-width: 72rem;
 }
 
+/* The dialog body is a one-column grid: minmax(0, 1fr) lets wide content (a long url, the filter
+   row) shrink and scroll inside the screen instead of stretching the column past its edge */
+.sheetDialog[data-size='wide'] .sheetBody {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .annoToolbar {
   display: flex;
   flex: 1;
@@ -1628,7 +1634,7 @@ a.annoGalleryItem:hover img {
 
   .annoRowActions {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.4fr);
+    grid-template-columns: auto minmax(0, 1fr) minmax(max-content, 1.4fr);
     width: 100%;
     padding-top: var(--space-3);
     border-top: 1px solid var(--color-divider);
@@ -1834,5 +1840,17 @@ a.annoGalleryItem:hover img {
 
   .annoGuideRow {
     padding: var(--space-3);
+  }
+}
+
+/* Very narrow phones: the Open button keeps only its icon so "Confirm delete" always fits */
+@media (max-width: 380px) {
+  .annoRowActions .annoOpenBtn {
+    width: 2.75rem;
+    padding: 0;
+  }
+
+  .annoRowActions .annoOpenLabel {
+    display: none;
   }
 }
