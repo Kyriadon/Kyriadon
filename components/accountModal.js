@@ -670,7 +670,7 @@ function StaffSection({ account }) {
             </span>
             <span className="helperText acctInline">Since {formatDate(staff.since)}. Ends {formatDate(staff.expiresAt)}.</span>
           </div>
-          <button type="button" className="btn btnSecondary" onClick={logout} disabled={busy}>
+          <button type="button" className="btn btnSecondary acctLogout" onClick={logout} disabled={busy}>
             Log out
           </button>
         </div>
