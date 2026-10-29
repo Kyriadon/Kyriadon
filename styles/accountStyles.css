@@ -211,6 +211,13 @@
   gap: var(--space-3);
 }
 
+/* Staff Log out: red overlay and red text on hover, like the Log out item of the user menu */
+.btn.acctLogout:hover {
+  color: var(--color-danger);
+  background: color-mix(in srgb, var(--color-danger) 20%, transparent);
+  border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-border));
+}
+
 .acctBlocked {
   border-color: color-mix(in srgb, var(--color-danger) 35%, var(--color-border));
 }
