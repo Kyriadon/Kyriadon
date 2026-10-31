@@ -152,7 +152,8 @@ export default function ResourcesPage() {
       <div className="resPage">
         {/* Hero: the same component as the other pages */}
         <section className="heroShell areaHero" aria-labelledby="heroTitle">
-          <div className="heroPanel">
+          {/* Hero in the emerald tone */}
+          <div className="heroPanel" data-tone="emerald">
             <div className="heroGlow" aria-hidden="true" />
             <div className="heroContent">
               <h1 id="heroTitle">{content.hero.title}</h1>
