@@ -28,6 +28,9 @@ import '../styles/accountStyles.css';
 // Announcements page, cards, manager and custom markup styles
 import '../styles/announcementStyles.css';
 
+// Resources page styles (/resources)
+import '../styles/resourcesStyles.css';
+
 // Design tokens become CSS variables once, at module load
 const tokenCss = buildCssVariables();
 
@@ -52,4 +55,3 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
     </SessionProvider>
   );
 }
-
