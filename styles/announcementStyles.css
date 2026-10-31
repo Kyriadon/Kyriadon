@@ -1854,3 +1854,68 @@ a.annoGalleryItem:hover img {
     display: none;
   }
 }
+
+/* --------------------------------------------------------------------------
+   14. Manager list on phones: a search field of the normal site height, a filter that wraps
+   instead of scrolling away, and slimmer rows
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  /* Search: in the column layout the field's flex-basis of 0 squashed its height. It now keeps
+     the 2.75rem of the other search bars and the full width of the list */
+  .annoListTools {
+    gap: var(--space-3);
+  }
+
+  .annoListTools .logSearch {
+    flex: none;
+    width: 100%;
+  }
+
+  /* Filter: the buttons wrap onto two rows and share the width, so none is cut off */
+  .annoListTools .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    overflow: visible;
+  }
+
+  .annoListTools .segment {
+    flex: 1 1 auto;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Rows: tighter padding and spacing, smaller url chip, no divider above the buttons */
+  .annoRows {
+    gap: var(--space-2);
+  }
+
+  .annoRow {
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .annoRowMain {
+    gap: 0.2rem;
+  }
+
+  .annoRowUrl .mdCode {
+    font-size: var(--type-meta-size);
+  }
+
+  .annoRowActions {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .annoRowActions .btn {
+    height: 2.5rem;
+  }
+}
+
+/* Very narrow phones: the icon-only Open button matches the new button height */
+@media (max-width: 380px) {
+  .annoRowActions .annoOpenBtn {
+    width: 2.5rem;
+  }
+}
