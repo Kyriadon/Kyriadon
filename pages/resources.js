@@ -3,7 +3,7 @@
 // Resources page (/resources): a hero and four panels that lead to the Projects,
 // Announcements, Appeals and Applications pages. Every panel has its own art in its lower
 // right corner, which zooms in on hover. For now only the Announcements panel is a link
-// (to /announcements); the other three do nothing until their pages exist: give a panel an
+// (to /resources/announcements); the other three do nothing until their pages exist: give a panel an
 // href below to turn it into a link.
 // The header, footer and search palette come from components/siteShell.js. All visual values
 // live in lib/siteDesign.js and styles/resourcesStyles.css.
@@ -25,66 +25,82 @@ const content = {
 };
 
 // ----------------------------------------------------------------------------
-// Panel art: one enlarged illustration per panel, drawn in the colour of the panel.
-// The same stroke style as the art of the rules page.
+// Panel art: one enlarged illustration per panel. The strokes run through a gradient of the
+// two colours of the panel (the same stroke style as the art of the rules page).
 // ----------------------------------------------------------------------------
-const artProps = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true', focusable: 'false' };
+function Art({ id, children }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke={`url(#${id})`} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id={id} gradientUnits="userSpaceOnUse" x1="3" y1="3" x2="21" y2="21">
+          <stop offset="0" style={{ stopColor: 'var(--res-light)' }} />
+          <stop offset="1" style={{ stopColor: 'var(--res-light-2)' }} />
+        </linearGradient>
+      </defs>
+      {children}
+    </svg>
+  );
+}
 
 // Projects: three stacked layers
 function ProjectsArt() {
   return (
-    <svg {...artProps}>
+    <Art id="resArtProjects">
       <path d="M12 3.5 3.5 8l8.5 4.5L20.5 8 12 3.5Z" fill="currentColor" fillOpacity="0.16" strokeWidth="0.8" />
       <path d="m3.5 12 8.5 4.5 8.5-4.5" strokeWidth="0.8" />
       <path d="m3.5 16 8.5 4.5 8.5-4.5" strokeWidth="0.8" strokeOpacity="0.7" />
-    </svg>
+    </Art>
   );
 }
 
 // Announcements: a megaphone with two sound waves
 function AnnouncementsArt() {
   return (
-    <svg {...artProps}>
+    <Art id="resArtAnnouncements">
       <path d="M4 10v4a1 1 0 0 0 1 1h2.5l7 4V5l-7 4H5a1 1 0 0 0-1 1Z" fill="currentColor" fillOpacity="0.16" strokeWidth="0.8" />
       <path d="m8.5 15 1.3 4.5" strokeWidth="0.8" />
       <path d="M17.5 9.5a3.5 3.5 0 0 1 0 5" strokeWidth="0.8" />
       <path d="M20 7.2a7 7 0 0 1 0 9.6" strokeWidth="0.6" strokeOpacity="0.7" />
-    </svg>
+    </Art>
   );
 }
 
 // Appeals: a pair of scales
 function AppealsArt() {
   return (
-    <svg {...artProps}>
+    <Art id="resArtAppeals">
       <path d="M12 4v16M7.5 20h9M5 7.5h14" strokeWidth="0.8" />
       <path d="M5 7.5 2.5 13.5a3 3 0 0 0 5 0L5 7.5Z" fill="currentColor" fillOpacity="0.16" strokeWidth="0.8" />
       <path d="m19 7.5-2.5 6a3 3 0 0 0 5 0L19 7.5Z" fill="currentColor" fillOpacity="0.16" strokeWidth="0.8" />
-    </svg>
+    </Art>
   );
 }
 
 // Applications: a clipboard with a check
 function ApplicationsArt() {
   return (
-    <svg {...artProps}>
+    <Art id="resArtApplications">
       <rect x="5" y="4.5" width="14" height="16.5" rx="2" fill="currentColor" fillOpacity="0.16" strokeWidth="0.8" />
       <rect x="9" y="2.5" width="6" height="3.5" rx="1" strokeWidth="0.8" />
       <path d="m8.5 12.5 2.2 2.2 4.3-4.4" strokeWidth="1.1" />
       <path d="M8.5 17.5h7" strokeWidth="0.6" strokeOpacity="0.7" />
-    </svg>
+    </Art>
   );
 }
 
 // ----------------------------------------------------------------------------
-// The panels. `color` is the design token of the panel colour; a panel with an href is a
-// link, a panel without one does nothing.
+// The panels. `from` and `to` are the two colours of the panel gradient (design tokens): purple
+// for Projects, the announcements cyan, and light and dark pink for Appeals and Applications.
+// A panel with an href is a link, a panel without one does nothing.
 // ----------------------------------------------------------------------------
+const LIGHT_PINK = 'var(--mention-booster-one-light)';
+const DARK_PINK = 'color-mix(in srgb, var(--mention-booster-one-color) 60%, black)';
+
 const cards = [
-  { id: 'projects', title: 'Projects', description: 'See what we are building and working on.', icon: IconSparkle, art: <ProjectsArt />, color: 'var(--color-success)' },
-  { id: 'announcements', title: 'Announcements', description: 'Change-logs, announcements and updates from the team.', icon: IconMegaphone, art: <AnnouncementsArt />, color: 'var(--color-danger)', href: '/announcements' },
-  { id: 'appeals', title: 'Appeals', description: 'Think a punishment was a mistake? Appeal it here.', icon: IconRules, art: <AppealsArt />, color: 'var(--color-warning)' },
-  { id: 'applications', title: 'Applications', description: 'Want to join the team? Apply here.', icon: IconUsers, art: <ApplicationsArt />, color: 'var(--color-azure)' },
+  { id: 'projects', title: 'Projects', description: 'See what we are building and working on.', icon: IconSparkle, art: <ProjectsArt />, from: 'var(--mention-booster-two-light)', to: 'var(--mention-booster-two-color)' },
+  { id: 'announcements', title: 'Announcements', description: 'Change-logs, announcements and updates from the team.', icon: IconMegaphone, art: <AnnouncementsArt />, from: 'var(--anno-theme-light)', to: 'var(--anno-theme-main)', href: '/resources/announcements' },
+  { id: 'appeals', title: 'Appeals', description: 'Think a punishment was a mistake? Appeal it here.', icon: IconRules, art: <AppealsArt />, from: LIGHT_PINK, to: DARK_PINK },
+  { id: 'applications', title: 'Applications', description: 'Want to join the team? Apply here.', icon: IconUsers, art: <ApplicationsArt />, from: DARK_PINK, to: LIGHT_PINK },
 ];
 
 // ----------------------------------------------------------------------------
@@ -111,8 +127,8 @@ function ResourceCard({ card }) {
     </>
   );
 
-  // The panel colour reaches the CSS through one variable
-  const style = { '--res-color': card.color };
+  // The two panel colours reach the CSS through variables
+  const style = { '--res-from': card.from, '--res-to': card.to };
   if (card.href) {
     return (
       <Link className="panel panelGlow resCard" href={card.href} style={style}>
