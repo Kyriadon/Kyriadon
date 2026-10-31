@@ -1,0 +1,196 @@
+/* ==========================================================================
+   resourcesStyles.css
+   Styles for the Resources page (/resources). Everything reuses the design tokens from
+   lib/siteDesign.js and the primitives from homeStyles.css, aboutStyles.css and
+   rulesStyles.css (panels, hero, topic icons, link chevron). Only what is new lives here.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Layout: the hero over two thirds like the other pages, the panels below it
+   -------------------------------------------------------------------------- */
+.resPage {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas:
+    'hero  hero  .'
+    'cards cards cards';
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.resPage .areaHero {
+  grid-area: hero;
+}
+
+/* Two panels per row, one on phones */
+.resCards {
+  display: grid;
+  grid-area: cards;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   2. Panel: the panel colour as a soft glow, with its art enlarged in the lower right corner.
+   The backdrop clips the glow and the art to the panel shape, so the hover ring keeps the
+   normal stacking of every other panel (same construction as the rules categories).
+   -------------------------------------------------------------------------- */
+.resCard {
+  --res-light: color-mix(in srgb, var(--res-color) 55%, white);
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 10rem;
+  padding: var(--space-6);
+  color: inherit;
+  text-decoration: none;
+  background: var(--color-bg-raised);
+  border-color: var(--color-border-strong);
+}
+
+/* The flow animation is always attached but paused, so on unhover the ring fades out from
+   where it is instead of snapping back to its start (same fix as the rules categories) */
+.resCard.panelGlow::before {
+  animation: holoFlow var(--motion-flow) linear infinite paused;
+}
+
+.resCard.panelGlow:hover::before,
+.resCard.panelGlow:focus-visible::before {
+  animation-play-state: running;
+}
+
+.resCard:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.resBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* The glow: the panel colour, blurred for the creamy look */
+.resGlow {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(60% 80% at 88% 92%, color-mix(in srgb, var(--res-color) 50%, transparent) 0%, transparent 70%),
+    linear-gradient(135deg, color-mix(in srgb, var(--res-color) 20%, transparent) 0%, transparent 60%);
+  filter: blur(30px);
+  opacity: 0.85;
+  transition: opacity var(--motion-base) linear;
+}
+
+/* The art: bigger than the panel, so the lower right edge crops it. It zooms in on hover. */
+.resArt {
+  position: absolute;
+  right: -2.5rem;
+  bottom: -3rem;
+  width: 14rem;
+  height: 14rem;
+  color: var(--res-light);
+  opacity: 0.34;
+  transform-origin: 65% 65%;
+  -webkit-mask-image: linear-gradient(150deg, transparent 8%, #000 70%);
+  mask-image: linear-gradient(150deg, transparent 8%, #000 70%);
+  transition: transform 600ms var(--motion-ease), opacity var(--motion-base) linear;
+}
+
+.resArt svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.resCard:hover .resArt,
+.resCard:focus-visible .resArt {
+  opacity: 0.55;
+  transform: scale(1.22);
+}
+
+.resCard:hover .resGlow,
+.resCard:focus-visible .resGlow {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   3. Panel content: icon tile, title with its line, chevron
+   -------------------------------------------------------------------------- */
+.resIcon {
+  --topic-color: var(--res-color);
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+.resText {
+  display: grid;
+  flex: 1;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.resTitle {
+  margin: 0;
+}
+
+.resChevron {
+  flex: none;
+  margin-left: auto;
+}
+
+/* --------------------------------------------------------------------------
+   4. Narrow screens: one column, a little less padding, smaller art
+   -------------------------------------------------------------------------- */
+@media (max-width: 980px) {
+  .resPage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'hero'
+      'cards';
+    gap: var(--space-4);
+  }
+}
+
+@media (max-width: 720px) {
+  .resCards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .resCard {
+    min-height: 8.5rem;
+    padding: var(--space-5);
+  }
+
+  .resIcon {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .resArt {
+    right: -2rem;
+    bottom: -2.5rem;
+    width: 11rem;
+    height: 11rem;
+  }
+}
+
+/* People who asked for less motion get no zoom */
+@media (prefers-reduced-motion: reduce) {
+  .resArt,
+  .resGlow {
+    transition: none;
+  }
+
+  .resCard:hover .resArt,
+  .resCard:focus-visible .resArt {
+    transform: none;
+  }
+}
