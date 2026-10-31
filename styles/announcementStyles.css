@@ -1919,3 +1919,252 @@ a.annoGalleryItem:hover img {
     width: 2.5rem;
   }
 }
+
+/* --------------------------------------------------------------------------
+   15. Links: grey cyan text. With a mouse a translucent shine sweeps over the link and a smooth
+   underline draws in from the left. Touch screens (phones) keep the look they have now.
+   -------------------------------------------------------------------------- */
+@media (hover: hover) and (pointer: fine) {
+  .annoLink {
+    --link-tint: var(--color-light-cyan, #67e8f9);
+    padding: 0 0.2em;
+    margin: 0 -0.2em;
+    color: color-mix(in srgb, var(--link-tint) 55%, var(--color-text-secondary));
+    text-decoration: none;
+    border-radius: 0.35em;
+    background-color: transparent;
+    /* Two layers: the shine, then the underline */
+    background-image:
+      linear-gradient(105deg, transparent 0%, color-mix(in srgb, var(--link-tint) 38%, transparent) 50%, transparent 100%),
+      linear-gradient(var(--link-tint), var(--link-tint));
+    background-repeat: no-repeat;
+    background-position: -150% 0, 0 100%;
+    background-size: 60% 100%, 0% 1.5px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    transition: color 0.2s linear, background-color 0.25s linear, background-size 0.35s ease;
+  }
+
+  .annoLink:hover,
+  .annoLink:focus-visible {
+    color: color-mix(in srgb, var(--link-tint) 60%, var(--color-text-primary));
+    background-color: color-mix(in srgb, var(--link-tint) 10%, transparent);
+    background-position: 250% 0, 0 100%;
+    background-size: 60% 100%, 100% 1.5px;
+    transition: color 0.2s linear, background-color 0.25s linear, background-size 0.35s ease, background-position 0.9s ease;
+  }
+
+  .annoLink:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
+
+/* No sweep for people who asked for less motion: the underline simply appears */
+@media (prefers-reduced-motion: reduce) {
+  .annoLink,
+  .annoLink:hover,
+  .annoLink:focus-visible {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   16. Resources in an announcement: a heading with a count, and a card per link with an icon,
+   the label, the site it goes to and a copy button
+   -------------------------------------------------------------------------- */
+.annoResourcesBlock {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.annoResourcesHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.annoResourcesTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.annoResourcesCount {
+  padding: 0.05rem 0.5rem;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  font-weight: 700;
+  color: var(--anno-light, var(--color-light-blue));
+  background: var(--anno-bg, var(--color-card));
+  border-radius: var(--radius-pill);
+}
+
+/* A grid of cards: one column on phones, two where there is room */
+.annoResources {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-2);
+}
+
+.annoResourceItem {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  transition: border-color var(--motion-fast) linear, background var(--motion-fast) linear;
+}
+
+.annoResourceItem:hover,
+.annoResourceItem:focus-within {
+  background: var(--color-card-hover);
+  border-color: var(--anno-color, var(--color-azure));
+}
+
+/* The link fills the card; the card itself carries the border and background */
+.annoResourceItem .annoResource {
+  flex: 1 1 auto;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+.annoResourceItem .annoResource:hover {
+  background: transparent;
+}
+
+.annoResourceIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--anno-light, var(--color-light-blue));
+  background: color-mix(in srgb, var(--anno-color, var(--color-azure)) 14%, var(--color-card));
+  border: 1px solid color-mix(in srgb, var(--anno-color, var(--color-azure)) 32%, transparent);
+  border-radius: var(--radius-control);
+}
+
+.annoResourceText {
+  display: grid;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.annoResourceText strong {
+  line-height: 1.25;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.annoResourceText small {
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.annoResourceCopy {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.75rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  border-left: 1px solid var(--color-divider);
+  cursor: pointer;
+  transition: color var(--motion-fast) linear, background var(--motion-fast) linear;
+}
+
+.annoResourceCopy:hover {
+  color: var(--color-text-primary);
+  background: var(--color-card-hover);
+}
+
+.annoResourceCopy:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+/* --------------------------------------------------------------------------
+   17. Resources in the editor: a counter, a card per row, a hint that says where the link goes
+   (or what is wrong with it) and the extra buttons (open, duplicate)
+   -------------------------------------------------------------------------- */
+.annoResourcesBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.annoResourcesLimit {
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.annoResourceRow {
+  padding: var(--space-3);
+  background: var(--color-card);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-control);
+  transition: border-color var(--motion-fast) linear;
+}
+
+.annoResourceRow:focus-within {
+  border-color: var(--color-border-strong);
+}
+
+.annoResourceRow[data-state='bad'] {
+  border-color: color-mix(in srgb, var(--color-danger) 55%, var(--color-divider));
+}
+
+.annoResourceHint {
+  grid-column: 1 / -1;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+}
+
+.annoResourceHint[data-state='ok'] {
+  color: var(--color-text-secondary);
+}
+
+.annoResourceHint[data-state='bad'] {
+  color: var(--color-danger);
+}
+
+/* The open button is greyed out until the link is valid */
+.annoResourceTools a.btn[aria-disabled='true'] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Phones: five tools share one row, and the hint sits right under the link field */
+@media (max-width: 640px) {
+  .annoResourceTools {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .annoResourceHint {
+    order: 1;
+  }
+
+  .annoResourceTools {
+    order: 2;
+  }
+}
