@@ -37,7 +37,8 @@
    normal stacking of every other panel (same construction as the rules categories).
    -------------------------------------------------------------------------- */
 .resCard {
-  --res-light: color-mix(in srgb, var(--res-color) 55%, white);
+  --res-light: color-mix(in srgb, var(--res-from) 60%, white);
+  --res-light-2: color-mix(in srgb, var(--res-to) 60%, white);
   position: relative;
   isolation: isolate;
   display: flex;
@@ -76,13 +77,13 @@
   pointer-events: none;
 }
 
-/* The glow: the panel colour, blurred for the creamy look */
+/* The glow: a gradient of the two panel colours, blurred for the creamy look */
 .resGlow {
   position: absolute;
   inset: -20%;
   background:
-    radial-gradient(60% 80% at 88% 92%, color-mix(in srgb, var(--res-color) 50%, transparent) 0%, transparent 70%),
-    linear-gradient(135deg, color-mix(in srgb, var(--res-color) 20%, transparent) 0%, transparent 60%);
+    radial-gradient(60% 80% at 88% 92%, color-mix(in srgb, var(--res-to) 55%, transparent) 0%, transparent 70%),
+    linear-gradient(135deg, color-mix(in srgb, var(--res-from) 30%, transparent) 0%, color-mix(in srgb, var(--res-to) 14%, transparent) 100%);
   filter: blur(30px);
   opacity: 0.85;
   transition: opacity var(--motion-base) linear;
@@ -95,8 +96,8 @@
   bottom: -3rem;
   width: 14rem;
   height: 14rem;
-  color: var(--res-light);
-  opacity: 0.34;
+  color: var(--res-light-2);
+  opacity: 0.4;
   transform-origin: 65% 65%;
   -webkit-mask-image: linear-gradient(150deg, transparent 8%, #000 70%);
   mask-image: linear-gradient(150deg, transparent 8%, #000 70%);
@@ -111,7 +112,7 @@
 
 .resCard:hover .resArt,
 .resCard:focus-visible .resArt {
-  opacity: 0.55;
+  opacity: 0.6;
   transform: scale(1.22);
 }
 
@@ -123,10 +124,13 @@
 /* --------------------------------------------------------------------------
    3. Panel content: icon tile, title with its line, chevron
    -------------------------------------------------------------------------- */
+/* The icon tile carries the same gradient as the panel */
 .resIcon {
-  --topic-color: var(--res-color);
+  --topic-color: var(--res-light);
   width: 3.5rem;
   height: 3.5rem;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--res-from) 26%, var(--color-bg-raised)), color-mix(in srgb, var(--res-to) 26%, var(--color-bg-raised)));
+  border: 1px solid color-mix(in srgb, var(--res-from) 35%, transparent);
 }
 
 .resText {
