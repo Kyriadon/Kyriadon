@@ -12,14 +12,14 @@
 // ============================================================================
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { IconBook, IconCheck, IconCode, IconLock, IconPencil, IconRefresh, IconRows, IconSearch, IconTrash, IconUpload, IconWarning, Modal, logEvent } from './siteShell';
+import { IconBook, IconCheck, IconCode, IconCopy, IconLock, IconPencil, IconRefresh, IconRows, IconSearch, IconTrash, IconUpload, IconWarning, Modal, logEvent } from './siteShell';
 import { sendJson } from '../lib/accountClient';
 import { announceChange, formatDate, formatWhen, uploadMedia } from '../lib/announcementsClient';
 import { LIMITS, TYPE_META, TYPE_ORDER, excerptOf, findMarkupProblems, guessKind, parseRaw, safeUrl, serializeRaw, stripMarkup } from '../lib/announcementMarkup';
 import { announcementColors } from '../lib/siteDesign';
 import { AnnoInline, AnnoMarkup } from './announcementMarkup';
 import { CopyButton } from './guideKit';
-import { AnnouncementCard, IconBars, IconEye, IconExternal, IconFavourite, IconPlus, TypeBadge } from './announcementCards';
+import { AnnouncementCard, IconBars, IconEye, IconExternal, IconFavourite, IconLinkChain, IconPlus, TypeBadge, describeResource } from './announcementCards';
 
 const API = '/api/staff/announcements';
 const MODE_KEY = 'kyriadon:announcementMode';
@@ -225,7 +225,7 @@ function GuideView() {
           <li>A deleted announcement stays for 3 days for the people who favourited it.</li>
           <li>Images can be up to 3 MB (large pictures are shrunk for you), videos up to 4 MB as MP4 or WebM.</li>
           <li>For bigger videos, add the link as a resource instead.</li>
-          <li>Up to {LIMITS.resources} resources. Links are shown in bold under the text.</li>
+          <li>Up to {LIMITS.resources} resources. Links are shown as cards under the text, with the site name and a copy button.</li>
           <li>The preview next to the editor shows the card and the opened view as people will see them.</li>
         </ul>
       </section>
@@ -360,6 +360,32 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved }) {
 
   const updateResource = (index, patch) => change({ resources: fields.resources.map((resource, n) => (n === index ? { ...resource, ...patch } : resource)) });
   const removeResource = (index) => change({ resources: fields.resources.filter((_, n) => n !== index) });
+  // Copy a resource right below itself
+  const duplicateResource = (index) => {
+    if (fields.resources.length >= LIMITS.resources) return;
+    const next = [...fields.resources];
+    next.splice(index + 1, 0, { ...fields.resources[index] });
+    change({ resources: next });
+  };
+  // An empty label fills in with the name of the site once the link is typed
+  const fillResourceLabel = (index) => {
+    const resource = fields.resources[index];
+    const url = resource && safeUrl(resource.url);
+    if (!url || resource.label.trim()) return;
+    updateResource(index, { label: describeResource(url).site });
+  };
+  // Add a link straight from the clipboard (an empty row when the clipboard holds no link)
+  const pasteLink = async () => {
+    if (fields.resources.length >= LIMITS.resources) return;
+    let text = '';
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      /* the clipboard can be unavailable or refused */
+    }
+    const url = safeUrl(text);
+    change({ resources: [...fields.resources, { kind: url ? guessKind(url) : 'link', label: url ? describeResource(url).site : '', url }] });
+  };
   const moveResource = (index, step) => {
     const target = index + step;
     if (target < 0 || target >= fields.resources.length) return;
@@ -489,21 +515,37 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved }) {
               </div>
 
               <div className="studioField">
-                <span className="studioLabel">Resources</span>
+                {/* Title with the number of resources used */}
+                <div className="annoResourcesBar">
+                  <span className="studioLabel">Resources</span>
+                  <span className="annoResourcesLimit">{fields.resources.length} of {LIMITS.resources}</span>
+                </div>
                 {fields.resources.length > 0 && (
                   <ul className="annoResourceList">
-                    {fields.resources.map((resource, index) => (
-                      <li key={index} className="annoResourceRow">
-                        <span className="annoResourceKind" data-kind={resource.kind || guessKind(resource.url)}>{resource.kind || guessKind(resource.url)}</span>
-                        <input className="studioInput" type="text" value={resource.label} maxLength={LIMITS.label} placeholder="Label" aria-label="Resource label" onChange={(event) => updateResource(index, { label: event.target.value })} />
-                        <input className="studioInput" type="text" value={resource.url} maxLength={LIMITS.url} placeholder="https://..." aria-label="Resource link" onChange={(event) => updateResource(index, { url: event.target.value, kind: guessKind(event.target.value) })} spellCheck={false} />
-                        <div className="annoResourceTools">
-                          <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => moveResource(index, -1)} disabled={index === 0} aria-label="Move up">&uarr;</button>
-                          <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => moveResource(index, 1)} disabled={index === fields.resources.length - 1} aria-label="Move down">&darr;</button>
-                          <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => removeResource(index)} aria-label="Remove resource"><IconTrash size={16} /></button>
-                        </div>
-                      </li>
-                    ))}
+                    {fields.resources.map((resource, index) => {
+                      const kind = resource.kind || guessKind(resource.url);
+                      const checked = safeUrl(resource.url);
+                      const state = !resource.url.trim() ? 'empty' : checked ? 'ok' : 'bad';
+                      return (
+                        <li key={index} className="annoResourceRow" data-state={state}>
+                          <span className="annoResourceKind" data-kind={kind}>{kind}</span>
+                          <input className="studioInput" type="text" value={resource.label} maxLength={LIMITS.label} placeholder="Label" aria-label="Resource label" onChange={(event) => updateResource(index, { label: event.target.value })} />
+                          <input className="studioInput" type="text" value={resource.url} maxLength={LIMITS.url} placeholder="https://..." aria-label="Resource link" onChange={(event) => updateResource(index, { url: event.target.value, kind: guessKind(event.target.value) })} onBlur={() => fillResourceLabel(index)} spellCheck={false} />
+                          {/* Tools: move, open the link to try it, copy the row, remove */}
+                          <div className="annoResourceTools">
+                            <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => moveResource(index, -1)} disabled={index === 0} aria-label="Move up">&uarr;</button>
+                            <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => moveResource(index, 1)} disabled={index === fields.resources.length - 1} aria-label="Move down">&darr;</button>
+                            <a className="btn btnGhost btnIcon btnCompact" href={checked || undefined} target="_blank" rel="noopener noreferrer" aria-label="Open the link in a new tab" aria-disabled={!checked} tabIndex={checked ? undefined : -1}><IconExternal size={16} /></a>
+                            <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => duplicateResource(index)} disabled={fields.resources.length >= LIMITS.resources} aria-label="Duplicate resource"><IconCopy size={16} /></button>
+                            <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => removeResource(index)} aria-label="Remove resource"><IconTrash size={16} /></button>
+                          </div>
+                          {/* Shows where the link goes, or what is wrong with it */}
+                          <span className="annoResourceHint" data-state={state} role={state === 'bad' ? 'alert' : undefined}>
+                            {state === 'ok' ? `\u2713 ${describeResource(checked).site}` : state === 'bad' ? 'Needs a valid link' : 'Type or paste a link'}
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
                 <div className="studioRow">
@@ -511,12 +553,16 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved }) {
                     <IconPlus size={16} />
                     Add link
                   </button>
+                  <button type="button" className="btn btnSecondary btnCompact" onClick={pasteLink} disabled={fields.resources.length >= LIMITS.resources}>
+                    <IconLinkChain size={16} />
+                    Paste link
+                  </button>
                   <button type="button" className="btn btnSecondary btnCompact" onClick={() => mediaInput.current?.click()} disabled={Boolean(upload) || fields.resources.length >= LIMITS.resources}>
                     <IconUpload size={16} />
                     Upload image or video
                   </button>
                 </div>
-                <span className="helperText annoHelp">Images and videos are shown in a gallery, links are shown in bold.</span>
+                <span className="helperText annoHelp">Images and videos are shown in a gallery, links as cards. An empty label fills in with the site name.</span>
               </div>
             </>
           ) : (
