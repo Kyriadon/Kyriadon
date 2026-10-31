@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { TYPE_META } from '../lib/announcementMarkup';
 import { fetchAnnouncement, formatDate, formatWhen, sendView, timeLeft } from '../lib/announcementsClient';
-import { IconCheck, IconChevron, IconMegaphone, IconSparkle, IconWarning, Modal } from './siteShell';
+import { IconCheck, IconChevron, IconCopy, IconMegaphone, IconSparkle, IconWarning, Modal } from './siteShell';
 import { AnnoInline, AnnoMarkup } from './announcementMarkup';
 
 // ----------------------------------------------------------------------------
@@ -122,21 +122,110 @@ export function CopyLinkButton({ url }) {
   );
 }
 
-// A resource link: internal paths use the router, everything else opens in a new tab
-function ResourceLink({ resource }) {
+// Names for well-known sites, so a resource shows "YouTube" instead of "youtu.be"
+const KNOWN_SITES = { 'discord.gg': 'Discord', 'discord.com': 'Discord', 'youtube.com': 'YouTube', 'youtu.be': 'YouTube', 'github.com': 'GitHub', 'x.com': 'X', 'twitter.com': 'X', 'twitch.tv': 'Twitch', 'docs.google.com': 'Google Docs', 'drive.google.com': 'Google Drive' };
+
+// Where a resource points, as short text: the site name (or host), a tag for files, and whether
+// the link leaves this site. The editor uses it too, to fill in an empty label.
+export function describeResource(url) {
+  const value = String(url ?? '').trim();
+  if (value.startsWith('/')) return { site: 'On this site', tag: '', external: false };
+  let host = '';
+  let path = '';
+  try {
+    const parsed = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
+    path = parsed.pathname.toLowerCase();
+  } catch {
+    host = value.slice(0, 40);
+  }
+  const tag = /\.pdf$/.test(path) ? 'PDF' : /\.(zip|rar|7z|jar)$/.test(path) ? 'Download' : '';
+  return { site: KNOWN_SITES[host] || host, tag, external: true };
+}
+
+// The full address of a resource (paths get the address of this site in front)
+const fullUrl = (url) => (String(url).startsWith('/') ? `${window.location.origin}${url}` : url);
+
+// A resource as a card: icon, label, the site it goes to, and a button that copies the link.
+// Internal paths use the router, everything else opens in a new tab
+function ResourceItem({ resource }) {
+  const [copied, setCopied] = useState(false);
+  const { site, tag } = describeResource(resource.url);
+  const internal = resource.url.startsWith('/') && !resource.url.startsWith('/api/');
+
+  // The tick on the copy button goes away after a moment
+  useEffect(() => {
+    if (!copied) return undefined;
+    const timer = setTimeout(() => setCopied(false), 1400);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  // Copy the link of this resource
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(fullUrl(resource.url));
+      setCopied(true);
+    } catch {
+      /* the clipboard can be unavailable */
+    }
+  };
+
   const inner = (
     <>
-      <IconLinkChain size={16} />
-      <strong>{resource.label}</strong>
+      <span className="annoResourceIcon" aria-hidden="true">{internal ? <IconLinkChain size={16} /> : <IconExternal size={16} />}</span>
+      <span className="annoResourceText">
+        <strong>{resource.label}</strong>
+        <small>{tag ? `${site} \u00b7 ${tag}` : site}</small>
+      </span>
     </>
   );
-  if (resource.url.startsWith('/') && !resource.url.startsWith('/api/')) return <Link className="annoResource" href={resource.url}>{inner}</Link>;
-  return <a className="annoResource" href={resource.url} target="_blank" rel="noopener noreferrer">{inner}</a>;
+
+  return (
+    <li className="annoResourceItem">
+      {internal ? (
+        <Link className="annoResource" href={resource.url}>{inner}</Link>
+      ) : (
+        <a className="annoResource" href={resource.url} target="_blank" rel="noopener noreferrer">{inner}</a>
+      )}
+      <button type="button" className="annoResourceCopy" onClick={copy} aria-label={`Copy the link to ${resource.label}`} title={copied ? 'Copied' : 'Copy link'}>
+        {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+      </button>
+    </li>
+  );
+}
+
+// Copies every link of the resources, one per line ("Label: link")
+function CopyAllResources({ links }) {
+  const [copied, setCopied] = useState(false);
+
+  // The tick goes away after a moment
+  useEffect(() => {
+    if (!copied) return undefined;
+    const timer = setTimeout(() => setCopied(false), 1400);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  // Copy the list
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(links.map((resource) => `${resource.label}: ${fullUrl(resource.url)}`).join('\n'));
+      setCopied(true);
+    } catch {
+      /* the clipboard can be unavailable */
+    }
+  };
+
+  return (
+    <button type="button" className="btn btnGhost btnCompact" onClick={copy}>
+      {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+      {copied ? 'Copied' : 'Copy all'}
+    </button>
+  );
 }
 
 // ----------------------------------------------------------------------------
 // The expanded view: cover image, the main announcement, uploaded images and videos,
-// and the links (shown in bold). `item` needs body and resources.
+// and the links (shown as resource cards). `item` needs body and resources.
 // ----------------------------------------------------------------------------
 export function AnnouncementContent({ item }) {
   const resources = item.resources || [];
@@ -167,13 +256,21 @@ export function AnnouncementContent({ item }) {
       )}
 
       {links.length > 0 && (
-        <ul className="annoResources" aria-label="Resources">
-          {links.map((resource, index) => (
-            <li key={index}>
-              <ResourceLink resource={resource} />
-            </li>
-          ))}
-        </ul>
+        <section className="annoResourcesBlock" aria-label="Resources">
+          <div className="annoResourcesHead">
+            <h4 className="annoResourcesTitle">
+              <IconLinkChain size={16} />
+              Resources
+              <span className="annoResourcesCount">{links.length}</span>
+            </h4>
+            {links.length > 1 && <CopyAllResources links={links} />}
+          </div>
+          <ul className="annoResources">
+            {links.map((resource, index) => (
+              <ResourceItem key={index} resource={resource} />
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );
