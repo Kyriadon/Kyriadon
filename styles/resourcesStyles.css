@@ -22,6 +22,11 @@
   grid-area: hero;
 }
 
+/* Resources hero: emerald green */
+.heroPanel[data-tone='emerald'] .heroGlow {
+  background: var(--gradient-holo-hero-emerald);
+}
+
 /* Two panels per row, one on phones */
 .resCards {
   display: grid;
