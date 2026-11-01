@@ -447,15 +447,54 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved, onDrafte
     }
   };
 
-  // Ctrl or Cmd + S saves. Ctrl or Cmd + C in a text field with nothing selected copies the whole field.
+  // Keyboard shortcuts of the editor (on a computer):
+  //   Ctrl/Cmd + S or Enter: publish       Ctrl/Cmd + Shift + S: save as draft
+  //   Ctrl/Cmd + B, I, K in the text: bold, italic, link       Alt + G: guide       Alt + M: Simple or Raw
+  //   Ctrl/Cmd + C in a text field with nothing selected: copy the whole field
   const onKeyDown = (event) => {
     const key = event.key.toLowerCase();
-    if ((event.ctrlKey || event.metaKey) && key === 's') {
+    const mod = event.ctrlKey || event.metaKey;
+
+    // Publish
+    if (mod && !event.altKey && (key === 'enter' || (key === 's' && !event.shiftKey))) {
       event.preventDefault();
       save();
       return;
     }
-    if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && key === 'c') {
+
+    // Save as a draft (new announcements only)
+    if (mod && !event.altKey && event.shiftKey && key === 's') {
+      event.preventDefault();
+      if (!editing.id && !volatile) saveDraft();
+      return;
+    }
+
+    // Bold, italic and link in the text of the announcement. Ctrl+K is the search of the whole
+    // site everywhere else, so it is only taken over inside the text.
+    const snippetId = { b: 'bold', i: 'italic', k: 'link' }[key];
+    if (mod && !event.shiftKey && !event.altKey && snippetId && (event.target === bodyRef.current || event.target === rawRef.current)) {
+      event.preventDefault();
+      event.stopPropagation();
+      const snippet = SNIPPETS.find((entry) => entry.id === snippetId);
+      if (event.target === bodyRef.current) insertAt(bodyRef.current, fields.body, snippet.make, (text) => change({ body: text }));
+      else insertAt(rawRef.current, raw, snippet.make, changeRaw);
+      return;
+    }
+
+    // Open or close the guide, and switch between Simple and Raw
+    if (event.altKey && !mod && event.code === 'KeyG') {
+      event.preventDefault();
+      showGuide();
+      return;
+    }
+    if (event.altKey && !mod && event.code === 'KeyM') {
+      event.preventDefault();
+      switchMode(mode === 'raw' ? 'advanced' : 'raw');
+      return;
+    }
+
+    // Copy the whole field when nothing is selected
+    if (mod && !event.shiftKey && !event.altKey && key === 'c') {
       const field = event.target;
       const isText = field && (field.tagName === 'TEXTAREA' || (field.tagName === 'INPUT' && field.type === 'text'));
       if (isText && field.value && field.selectionStart === field.selectionEnd) {
@@ -492,7 +531,7 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved, onDrafte
         </button>
       </div>
       <p className="modeHint">{mode === 'advanced' ? 'Advanced: one field for everything, with uploads for the image and resources.' : 'Raw: one panel of text. Variables like :title: "title" set the fields, everything else is the main announcement.'}</p>
-      <p className="helperText annoHelp annoKeyTip">Tip: Ctrl+S saves. Ctrl+C in a field with nothing selected copies the whole field.</p>
+      <p className="helperText annoHelp annoKeyTip">Shortcuts: Ctrl+S or Ctrl+Enter publish, Ctrl+Shift+S saves a draft, Ctrl+B, Ctrl+I and Ctrl+K in the text make bold, italic and a link, Alt+G opens the guide, Alt+M switches Simple and Raw. Ctrl+C in a field with nothing selected copies the whole field.</p>
 
       {guideOpen && <GuideView />}
 
@@ -1010,6 +1049,25 @@ export default function AnnouncementManager({ onClose, initialDraftId = '' }) {
       setBusyId(null);
     }
   };
+
+  // Shortcuts on the list (not while typing in a field): "/" jumps to the search, "N" starts a new announcement
+  useEffect(() => {
+    if (editing) return undefined;
+    const onKey = (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      const tag = event.target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target?.isContentEditable) return;
+      if (event.key === '/') {
+        event.preventDefault();
+        document.querySelector('.annoListTools input')?.focus();
+      } else if (event.key.toLowerCase() === 'n') {
+        event.preventDefault();
+        openEditor();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   // Opened from a ghost card: go straight to that draft once the list has loaded
   useEffect(() => {
