@@ -2168,3 +2168,129 @@ a.annoGalleryItem:hover img {
     order: 2;
   }
 }
+
+/* --------------------------------------------------------------------------
+   18. Drafts: translucent ghost cards on the announcements page, the Drafts list in the
+   manager, and the keyboard tip (desktop only)
+   -------------------------------------------------------------------------- */
+.annoSection[data-type='draft'],
+.annoCount[data-type='draft'] {
+  --anno-color: var(--color-text-secondary);
+  --anno-light: var(--color-text-primary);
+  --anno-bg: color-mix(in srgb, var(--color-text-secondary) 14%, transparent);
+  --anno-line: color-mix(in srgb, var(--color-text-secondary) 40%, transparent);
+  --anno-chip: color-mix(in srgb, var(--color-text-secondary) 14%, transparent);
+  --level-color: var(--color-text-secondary);
+}
+
+/* The ghost card: see-through with a dashed edge, fully visible on hover */
+.annoGhost {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-4);
+  font: inherit;
+  text-align: left;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  background: color-mix(in srgb, var(--color-card) 40%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--color-text-secondary) 45%, transparent);
+  border-radius: var(--radius-control);
+  opacity: 0.7;
+  transition: opacity var(--motion-base) linear, background var(--motion-base) linear, border-color var(--motion-base) linear;
+}
+
+.annoGhost:hover,
+.annoGhost:focus-visible {
+  background: color-mix(in srgb, var(--color-card) 70%, transparent);
+  border-color: var(--color-text-secondary);
+  opacity: 1;
+}
+
+.annoGhost:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.annoGhostTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.annoGhostWhen {
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+}
+
+.annoGhostTitle {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.annoGhostText {
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.annoGhostCta {
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-secondary);
+}
+
+/* The Drafts list above the announcements in the manager */
+.annoDraftsPanel {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.annoDraftList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.annoDraftRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: color-mix(in srgb, var(--color-card) 40%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--color-text-secondary) 45%, transparent);
+  border-radius: var(--radius-control);
+}
+
+.annoDraftInfo {
+  display: grid;
+  flex: 1 1 14rem;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.annoDraftTitle {
+  overflow-wrap: anywhere;
+}
+
+.annoDraftActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Phones have no Ctrl key, so no tip */
+@media (hover: none) {
+  .annoKeyTip {
+    display: none;
+  }
+}
+
