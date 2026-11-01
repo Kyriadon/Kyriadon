@@ -8,7 +8,8 @@
 // Staff manage announcements through /api/staff/announcements.
 // ============================================================================
 import { getUser, withErrors } from '../../lib/accountServer';
-import { isValidId, listForViewer } from '../../lib/announcementsServer';
+import { isValidId, listDrafts, listForViewer } from '../../lib/announcementsServer';
+import { getViewerRoles } from '../../lib/logServer';
 import { normalizeSlug, normalizeType } from '../../lib/announcementMarkup';
 
 async function handler(req, res) {
@@ -32,9 +33,16 @@ async function handler(req, res) {
   const result = await listForViewer(user ? user.id : null, { limit: max, type, id, slug });
   const viewer = { signedIn: Boolean(user), favourites: result.favourites || [] };
 
+  // Staff get their own drafts (admins all of them) for the ghost cards, when the page asks (?drafts=1)
+  let drafts = [];
+  if (user && req.query.drafts === '1' && !req.query.id && !req.query.slug) {
+    const roles = await getViewerRoles(user.id);
+    if (roles.staff || roles.admin) drafts = await listDrafts(user, roles);
+  }
+
   // One announcement (null when it does not exist, which is a normal answer)
   if (req.query.id || req.query.slug) return res.status(200).json({ item: result.item, viewer });
-  return res.status(200).json({ announcements: result.items, total: result.total, viewer });
+  return res.status(200).json({ announcements: result.items, total: result.total, drafts, viewer });
 }
 
 export default withErrors('/api/announcements', handler);
