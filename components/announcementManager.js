@@ -260,7 +260,7 @@ function GuideView() {
                       </span>
                     ))}
                   </span>
-                  <span>{what}</span>
+                  <span className="helperText annoGuideInline">{what}</span>
                 </li>
               ))}
             </ul>
