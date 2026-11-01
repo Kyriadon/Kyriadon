@@ -4,12 +4,14 @@
 //   POST    create an announcement
 //   PUT     edit one { id, expectedUpdatedAt, ...fields }
 //   DELETE  delete one { id }
+//   Drafts: send draft: true with POST (save or update one, { id? ...fields }) or DELETE ({ id }).
+//           GET also answers with the drafts of the viewer (all of them for admins).
 // Staff need the Staff role and an active staff login (admins only need the role). Staff can
 // edit and delete the announcements they created, admins any of them. Every change is a log.
 // Expected outcomes (a field is wrong, not allowed) answer 200 with ok: false.
 // ============================================================================
 import { jsonBody, withErrors } from '../../../lib/accountServer';
-import { authorizeManager, createAnnouncement, deleteAnnouncement, managerSnapshot, updateAnnouncement } from '../../../lib/announcementsServer';
+import { authorizeManager, createAnnouncement, deleteAnnouncement, deleteDraft, listDrafts, managerSnapshot, saveDraft, updateAnnouncement } from '../../../lib/announcementsServer';
 import { isVolatileHost, storageKind } from '../../../lib/kvStore';
 
 export const config = { api: { bodyParser: { sizeLimit: '256kb' } } };
@@ -26,7 +28,7 @@ async function handler(req, res) {
 
   if (req.method === 'GET') {
     const snapshot = await managerSnapshot(user, roles);
-    return res.status(200).json({ ...snapshot, viewer: { id: user.id, name: user.name, staff: roles.staff, admin: roles.admin }, volatile: isVolatileHost(), storage: storageKind, serverNow: Date.now() });
+    return res.status(200).json({ ...snapshot, drafts: await listDrafts(user, roles, { full: true }), viewer: { id: user.id, name: user.name, staff: roles.staff, admin: roles.admin }, volatile: isVolatileHost(), storage: storageKind, serverNow: Date.now() });
   }
 
   // Announcements must be shared by every server instance
@@ -36,7 +38,8 @@ async function handler(req, res) {
   if (!body) return res.status(400).json({ error: 'Send JSON' });
 
   let result;
-  if (req.method === 'POST') result = await createAnnouncement(user, body);
+  if (body.draft) result = req.method === 'DELETE' ? await deleteDraft(user, roles, String(body.id || '')) : await saveDraft(user, roles, body);
+  else if (req.method === 'POST') result = await createAnnouncement(user, body);
   else if (req.method === 'PUT') result = await updateAnnouncement(user, roles, String(body.id || ''), body, body.expectedUpdatedAt);
   else result = await deleteAnnouncement(user, roles, String(body.id || ''));
   return res.status(200).json(result);
