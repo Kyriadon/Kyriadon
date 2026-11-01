@@ -12,12 +12,16 @@
 // ============================================================================
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { IconSearch, IconClose, SiteShell, logEvent } from '../../components/siteShell';
+import { IconSearch, IconClose, IconPencil, SiteShell, logEvent } from '../../components/siteShell';
 import { AnnouncementCard, AnnouncementContent, AnnouncementMeta, CopyLinkButton, DeletedNote, FavouriteButton, IconBack, IconFavourite, TYPE_ICON, TypeBadge } from '../../components/announcementCards';
 import { AnnoInline } from '../../components/announcementMarkup';
 import { TYPE_META, TYPE_ORDER, stripMarkup } from '../../lib/announcementMarkup';
-import { fetchAnnouncement, formatDate, requestFavourite, sendView, useAnnouncementFeed } from '../../lib/announcementsClient';
+import { fetchAnnouncement, formatDate, formatWhen, requestFavourite, sendView, useAnnouncementFeed } from '../../lib/announcementsClient';
+
+// The editor, loaded only when a draft is opened
+const AnnouncementManager = dynamic(() => import('../../components/announcementManager'), { ssr: false });
 
 const description = 'Change-logs, announcements and updates from the Kyriadon team. Favourite the ones you want to keep.';
 
@@ -63,14 +67,51 @@ function CategorySection({ id, type, title, blurb, icon, items, expandedId, deta
 }
 
 // ----------------------------------------------------------------------------
+// Drafts: translucent "ghost" cards, only for the people who made them (and the admins).
+// A click opens the draft in the editor to continue.
+// ----------------------------------------------------------------------------
+function DraftsSection({ drafts, onOpen }) {
+  return (
+    <section className="panel annoSection annoDrafts" id="drafts" data-type="draft" aria-labelledby="draftsTitle">
+      <div className="panelHeader annoSectionHead">
+        <span className="annoSectionIcon" aria-hidden="true">
+          <IconPencil size={20} />
+        </span>
+        <div className="annoSectionTitles">
+          <h3 id="draftsTitle">Drafts</h3>
+          <p className="annoSectionBlurb">Only you and the admins can see these. Click one to keep writing.</p>
+        </div>
+        <span className="badge annoCount" data-type="draft">{drafts.length}</span>
+      </div>
+      <div className="annoList">
+        {drafts.map((draft) => (
+          <button key={draft.id} type="button" className="annoGhost" data-type={draft.type} onClick={() => onOpen(draft)}>
+            <span className="annoGhostTop">
+              <TypeBadge type={draft.type} />
+              <span className="annoGhostWhen">{draft.mine ? 'Saved' : `${draft.authorName}, saved`} {formatWhen(draft.updatedAt)}</span>
+            </span>
+            <span className="annoGhostTitle">
+              <AnnoInline text={draft.title || 'Untitled draft'} />
+            </span>
+            {draft.description && <span className="annoGhostText">{draft.description}</span>}
+            <span className="annoGhostCta">Continue editing &rarr;</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ----------------------------------------------------------------------------
 // /announcements
 // ----------------------------------------------------------------------------
 function AnnouncementsIndex() {
-  const feed = useAnnouncementFeed({ limit: 200 });
+  const feed = useAnnouncementFeed({ limit: 200, drafts: true });
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
   const [details, setDetails] = useState({});
+  const [draftId, setDraftId] = useState(null);
 
   // Loads the full text of one announcement for its opened view
   const loadDetail = useCallback(async (item) => {
@@ -134,6 +175,8 @@ function AnnouncementsIndex() {
 
   return (
     <SiteShell title="Announcements - Kyriadon" description={description}>
+      {/* The editor, opened on a draft from its ghost card */}
+      {draftId && <AnnouncementManager initialDraftId={draftId} onClose={() => { setDraftId(null); feed.refresh(); }} />}
       <div className="annoGrid" data-ready={ready}>
         {/* Hero: same component as the other pages, cyan tone */}
         <section className="heroShell areaHero" aria-labelledby="heroTitle">
@@ -210,6 +253,8 @@ function AnnouncementsIndex() {
 
           {ready && (
             <>
+              {feed.drafts.length > 0 && <DraftsSection drafts={feed.drafts} onOpen={(draft) => setDraftId(draft.id)} />}
+
               {favourites.length > 0 && (
                 <CategorySection id="favourites" type="favourite" title="Favourites" blurb="The ones you saved. They stay for 3 days after staff delete them." icon={IconFavourite} items={favourites} {...shared} emptyText="" />
               )}
