@@ -2294,3 +2294,81 @@ a.annoGalleryItem:hover img {
   }
 }
 
+/* --------------------------------------------------------------------------
+   19. Editor buttons with the draft button, and the keyboard shortcuts in the guide
+   -------------------------------------------------------------------------- */
+.annoDraftShort {
+  display: none;
+}
+
+/* Phones: Publish gets a full row, "Save draft" and Cancel share the row under it */
+@media (max-width: 640px) {
+  .annoDraftLong {
+    display: none;
+  }
+
+  .annoDraftShort {
+    display: inline;
+  }
+
+  .annoEditorActions .annoHasDraft {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .annoEditorActions .annoHasDraft > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .annoShortcut {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+}
+
+.annoShortcutGroup {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.annoShortcuts {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.annoShortcut {
+  display: grid;
+  grid-template-columns: minmax(10rem, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.annoKeys {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* A key cap */
+.annoKey {
+  padding: 0.15rem 0.5rem;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  background: var(--color-card);
+  border: 1px solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: 0.4rem;
+}
+
+.annoKeyPlus {
+  margin: 0 0.1rem;
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+}
+
