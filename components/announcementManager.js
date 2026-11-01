@@ -171,6 +171,31 @@ function GuideTable({ rows }) {
   );
 }
 
+// Keyboard shortcuts for the guide: the keys, and what they do
+const GUIDE_SHORTCUTS = [
+  {
+    group: 'In the editor',
+    rows: [
+      ['Ctrl + S', 'Publish the announcement (or save your changes)'],
+      ['Ctrl + Enter', 'Publish, the same as Ctrl + S'],
+      ['Ctrl + Shift + S', 'Save as a draft for later (new announcements only)'],
+      ['Ctrl + B', 'Bold: wraps the selected text'],
+      ['Ctrl + I', 'Italic: wraps the selected text'],
+      ['Ctrl + K', 'Link: wraps the selected text (only inside the text, everywhere else it opens the site search)'],
+      ['Ctrl + C', 'With nothing selected in a field: copies the whole field'],
+      ['Alt + G', 'Open or close this guide'],
+      ['Alt + M', 'Switch between Advanced and Raw mode'],
+    ],
+  },
+  {
+    group: 'On the list',
+    rows: [
+      ['/', 'Jump to the search'],
+      ['N', 'Start a new announcement'],
+    ],
+  },
+];
+
 function GuideView() {
   return (
     <div className="annoGuide">
@@ -220,6 +245,31 @@ function GuideView() {
       </section>
 
       <section className="controlSection">
+        <h4 className="studioSectionTitle">Keyboard shortcuts</h4>
+        {GUIDE_SHORTCUTS.map((group) => (
+          <div key={group.group} className="annoShortcutGroup">
+            <p className="helperText">{group.group}</p>
+            <ul className="annoShortcuts">
+              {group.rows.map(([keys, what]) => (
+                <li key={keys} className="annoShortcut">
+                  <span className="annoKeys">
+                    {keys.split(' + ').map((part, index) => (
+                      <span key={part} className="annoKeys">
+                        {index > 0 && <span className="annoKeyPlus">+</span>}
+                        <kbd className="annoKey">{part}</kbd>
+                      </span>
+                    ))}
+                  </span>
+                  <span>{what}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        <p className="helperText">On a Mac use Cmd instead of Ctrl and Option instead of Alt. Shortcuts need a keyboard, so they are for computers.</p>
+      </section>
+
+      <section className="controlSection">
         <h4 className="studioSectionTitle">Good to know</h4>
         <ul className="mdList">
           <li>A deleted announcement stays for 3 days for the people who favourited it.</li>
@@ -227,6 +277,7 @@ function GuideView() {
           <li>For bigger videos, add the link as a resource instead.</li>
           <li>Up to {LIMITS.resources} resources. Links are shown as cards under the text, with the site name and a copy button.</li>
           <li>The preview next to the editor shows the card and the opened view as people will see them.</li>
+          <li>Save as draft for later keeps an unfinished announcement. Only you (and the admins) see it, as a ghost card at the top of the announcements page and in Drafts here.</li>
         </ul>
       </section>
     </div>
@@ -531,7 +582,7 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved, onDrafte
         </button>
       </div>
       <p className="modeHint">{mode === 'advanced' ? 'Advanced: one field for everything, with uploads for the image and resources.' : 'Raw: one panel of text. Variables like :title: "title" set the fields, everything else is the main announcement.'}</p>
-      <p className="helperText annoHelp annoKeyTip">Shortcuts: Ctrl+S or Ctrl+Enter publish, Ctrl+Shift+S saves a draft, Ctrl+B, Ctrl+I and Ctrl+K in the text make bold, italic and a link, Alt+G opens the guide, Alt+M switches Simple and Raw. Ctrl+C in a field with nothing selected copies the whole field.</p>
+      <p className="helperText annoHelp annoKeyTip">Tip: press Alt+G to open the guide. It lists every keyboard shortcut.</p>
 
       {guideOpen && <GuideView />}
 
@@ -702,14 +753,15 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved, onDrafte
       <div className="annoEditorActions">
         {note?.text && <p className="helperText acctNote" data-tone={note.tone} role={note.tone === 'error' ? 'alert' : 'status'}>{note.text}</p>}
         {volatile && <p className="helperText acctNote" data-tone="error">Saving needs the Upstash Redis database to be connected to this project.</p>}
-        <div className="studioRow">
+        <div className={`studioRow${editing.id ? '' : ' annoHasDraft'}`}>
           <button type="button" className="btn btnPrimary" onClick={save} disabled={busy || Boolean(upload) || volatile}>
             {busy ? 'Saving...' : editing.id ? 'Save changes' : 'Publish announcement'}
           </button>
           {!editing.id && (
             <button type="button" className="btn btnSecondary" onClick={saveDraft} disabled={busy || Boolean(upload) || volatile}>
               <IconPencil size={16} />
-              Save as draft for later
+              <span className="annoDraftLong">Save as draft for later</span>
+              <span className="annoDraftShort">Save draft</span>
             </button>
           )}
           <button type="button" className="btn btnSecondary" onClick={onBack} disabled={busy}>
