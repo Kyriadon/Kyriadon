@@ -236,7 +236,7 @@ function GuideView() {
 // ----------------------------------------------------------------------------
 // The editor
 // ----------------------------------------------------------------------------
-function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved }) {
+function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved, onDrafted }) {
   const [mode, setMode] = useState(() => {
     try {
       return localStorage.getItem(MODE_KEY) === 'raw' ? 'raw' : 'advanced';
@@ -256,6 +256,8 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved }) {
   const coverInput = useRef(null);
   const mediaInput = useRef(null);
   const createdAt = useRef(editing.createdAt || Date.now());
+  // The draft this editor continues (set after the first "Save as draft")
+  const [draftId, setDraftId] = useState(editing.draftId || null);
 
   const change = useCallback(
     (patch) => {
@@ -410,6 +412,8 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved }) {
       if (data?.ok) {
         dirtyRef.current = false;
         announceChange();
+        // A draft that was published is not a draft any more
+        if (draftId) sendJson(API, 'DELETE', { id: draftId, draft: true }).catch(() => {});
         onSaved(data.item, editing.id ? 'updated' : 'created');
         return;
       }
@@ -421,11 +425,51 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved }) {
     }
   };
 
-  // Ctrl or Cmd + S saves
+  // Save as a draft: keeps what is written so far for later, without publishing it
+  const saveDraft = async () => {
+    if (busy || upload) return;
+    setBusy(true);
+    setNote(null);
+    try {
+      const { data } = await sendJson(API, 'POST', { ...fields, draft: true, id: draftId });
+      if (data?.ok) {
+        dirtyRef.current = false;
+        setDraftId(data.draft.id);
+        announceChange();
+        onDrafted(data.draft);
+        return;
+      }
+      setNote({ tone: 'error', text: data?.message || data?.error || 'Could not save the draft. Try again.' });
+    } catch {
+      setNote({ tone: 'error', text: 'Could not reach the server. Try again.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Ctrl or Cmd + S saves. Ctrl or Cmd + C in a text field with nothing selected copies the whole field.
   const onKeyDown = (event) => {
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+    const key = event.key.toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && key === 's') {
       event.preventDefault();
       save();
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey && key === 'c') {
+      const field = event.target;
+      const isText = field && (field.tagName === 'TEXTAREA' || (field.tagName === 'INPUT' && field.type === 'text'));
+      if (isText && field.value && field.selectionStart === field.selectionEnd) {
+        event.preventDefault();
+        navigator.clipboard.writeText(field.value).then(
+          () => {
+            setNote({ tone: 'success', text: 'Copied the whole field.' });
+            setTimeout(() => setNote((current) => (current?.text === 'Copied the whole field.' ? null : current)), 2000);
+          },
+          () => {
+            /* the clipboard can be unavailable or refused */
+          },
+        );
+      }
     }
   };
 
@@ -448,6 +492,7 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved }) {
         </button>
       </div>
       <p className="modeHint">{mode === 'advanced' ? 'Advanced: one field for everything, with uploads for the image and resources.' : 'Raw: one panel of text. Variables like :title: "title" set the fields, everything else is the main announcement.'}</p>
+      <p className="helperText annoHelp annoKeyTip">Tip: Ctrl+S saves. Ctrl+C in a field with nothing selected copies the whole field.</p>
 
       {guideOpen && <GuideView />}
 
@@ -622,6 +667,12 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved }) {
           <button type="button" className="btn btnPrimary" onClick={save} disabled={busy || Boolean(upload) || volatile}>
             {busy ? 'Saving...' : editing.id ? 'Save changes' : 'Publish announcement'}
           </button>
+          {!editing.id && (
+            <button type="button" className="btn btnSecondary" onClick={saveDraft} disabled={busy || Boolean(upload) || volatile}>
+              <IconPencil size={16} />
+              Save as draft for later
+            </button>
+          )}
           <button type="button" className="btn btnSecondary" onClick={onBack} disabled={busy}>
             Cancel
           </button>
@@ -820,7 +871,45 @@ function ListView({ items, query, filter, pending, busyId, onEdit, onDelete }) {
 // ----------------------------------------------------------------------------
 // The manager
 // ----------------------------------------------------------------------------
-export default function AnnouncementManager({ onClose }) {
+// ----------------------------------------------------------------------------
+// The drafts of the viewer (all of them for admins): continue writing or delete
+// ----------------------------------------------------------------------------
+function DraftsPanel({ drafts, busyId, onContinue, onDelete }) {
+  return (
+    <section className="annoDraftsPanel" aria-label="Drafts">
+      <div className="annoResourcesBar">
+        <span className="studioLabel">Drafts</span>
+        <span className="annoResourcesLimit">{drafts.length}</span>
+      </div>
+      <ul className="annoDraftList">
+        {drafts.map((draft) => (
+          <li key={draft.id} className="annoDraftRow">
+            <div className="annoDraftInfo">
+              <div className="annoRowTop">
+                <TypeBadge type={draft.type} />
+                <span className="annoRowAuthor">{draft.mine ? 'Saved' : `${draft.authorName}, saved`} {formatWhen(draft.updatedAt)}</span>
+              </div>
+              <strong className="annoDraftTitle">
+                <AnnoInline text={draft.title || 'Untitled draft'} />
+              </strong>
+            </div>
+            <div className="annoDraftActions">
+              <button type="button" className="btn btnSecondary btnCompact" onClick={() => onContinue(draft)}>
+                <IconPencil size={16} />
+                Continue
+              </button>
+              <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={() => onDelete(draft)} disabled={busyId === draft.id} aria-label="Delete draft">
+                <IconTrash size={16} />
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export default function AnnouncementManager({ onClose, initialDraftId = '' }) {
   const [load, setLoad] = useState({ status: 'loading', data: null, message: '' });
   const [view, setView] = useState('list'); // list | stats | guide
   const [editing, setEditing] = useState(null);
@@ -830,6 +919,7 @@ export default function AnnouncementManager({ onClose }) {
   const [busyId, setBusyId] = useState(null);
   const [notice, setNotice] = useState(null);
   const dirtyRef = useRef(false);
+  const openedDraft = useRef(false);
 
   // Loads everything (the list, the numbers and who is asking)
   const reload = useCallback(async () => {
@@ -885,6 +975,50 @@ export default function AnnouncementManager({ onClose }) {
     dirtyRef.current = false;
     setEditing(null);
   };
+
+  // Continue a draft: the editor opens with what was written. Publishing it removes the draft.
+  const openDraft = (draft) => {
+    dirtyRef.current = false;
+    setNotice(null);
+    setEditing({ id: null, draftId: draft.id, createdAt: draft.createdAt, fields: { title: draft.title || '', url: draft.url || '', type: draft.type || 'update', description: draft.description || '', body: draft.body || '', image: draft.image || '', resources: draft.resources || [] } });
+    logEvent({ code: 'ANNOUNCEMENT_DRAFT_OPENED', reason: 'Opened a draft in the editor' });
+  };
+
+  // A draft was saved: back to the list
+  const drafted = async () => {
+    setEditing(null);
+    setNotice({ tone: 'success', text: 'Draft saved. Continue it from Drafts here, or from its ghost card on the announcements page.' });
+    await reload();
+  };
+
+  // Delete a draft
+  const removeDraft = async (draft) => {
+    if (!window.confirm('Delete this draft?')) return;
+    setBusyId(draft.id);
+    try {
+      const { data: answer } = await sendJson(API, 'DELETE', { id: draft.id, draft: true });
+      if (answer?.ok) {
+        announceChange();
+        setNotice({ tone: 'success', text: 'Draft deleted.' });
+        await reload();
+      } else {
+        setNotice({ tone: 'error', text: answer?.message || answer?.error || 'Could not delete the draft. Try again.' });
+      }
+    } catch {
+      setNotice({ tone: 'error', text: 'Could not reach the server. Try again.' });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // Opened from a ghost card: go straight to that draft once the list has loaded
+  useEffect(() => {
+    if (!initialDraftId || openedDraft.current || load.status !== 'ready') return;
+    openedDraft.current = true;
+    const draft = (load.data?.drafts || []).find((entry) => entry.id === initialDraftId);
+    if (draft) openDraft(draft);
+    else setNotice({ tone: 'error', text: 'That draft no longer exists.' });
+  });
 
   const saved = async (item, how) => {
     setEditing(null);
@@ -988,11 +1122,12 @@ export default function AnnouncementManager({ onClose }) {
           {notice?.text && !editing && <p className="helperText acctNote annoNotice" data-tone={notice.tone} role={notice.tone === 'error' ? 'alert' : 'status'}>{notice.text}</p>}
 
           {editing ? (
-            <Editor key={editing.id || 'new'} editing={editing} viewer={viewer} volatile={data.volatile} dirtyRef={dirtyRef} onBack={closeEditor} onSaved={saved} />
+            <Editor key={editing.id || editing.draftId || 'new'} editing={editing} viewer={viewer} volatile={data.volatile} dirtyRef={dirtyRef} onBack={closeEditor} onSaved={saved} onDrafted={drafted} />
           ) : (
             <>
               {view === 'list' && (
                 <>
+                  {(data.drafts || []).length > 0 && <DraftsPanel drafts={data.drafts} busyId={busyId} onContinue={openDraft} onDelete={removeDraft} />}
                   <div className="logToolbar annoListTools">
                     <label className="boostField logSearch">
                       <IconSearch size={18} />
