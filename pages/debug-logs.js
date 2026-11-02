@@ -5,11 +5,12 @@
 // Staff logins and their reviews are only listed for staff and admins; admins also
 // see a bobbing red ! on a staff login nobody has reviewed yet.
 // Developers get the raw view by default and the "relevant to this release"
-// section. The header, footer and search palette come from components/siteShell.js.
+// section, and the Command panel (@prefix:command, components/commandPanel.js). The header, footer and search palette come from components/siteShell.js.
 // All visual values live in lib/siteDesign.js and styles/debugStyles.css.
 // ============================================================================
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
+import CommandPanel from '../components/commandPanel';
 import {
   IconAlert,
   IconCheck,
@@ -1332,6 +1333,10 @@ export default function DebugLogs() {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [actionId, setActionId] = useState(null);
+  // Command panel (developers): open or not, what it starts with, and the order of the list
+  const [commandsOpen, setCommandsOpen] = useState(false);
+  const [commandSeed, setCommandSeed] = useState('');
+  const [order, setOrder] = useState('newest');
   const filterRef = useRef(null);
 
   // Live review state of staff logins (admins): changes reach every admin within seconds,
@@ -1415,7 +1420,12 @@ export default function DebugLogs() {
   }, []);
 
   const counts = useMemo(() => countByLevel(logs), [logs]);
-  const filtered = useMemo(() => logs.filter((log) => (level === 'all' || log.level === level) && matches(log, query)), [logs, level, query]);
+  const filtered = useMemo(() => {
+    const rows = logs.filter((log) => (level === 'all' || log.level === level) && matches(log, query));
+    if (order === 'oldest') return [...rows].reverse();
+    if (order === 'errors-first') return [...rows].sort((a, b) => levelKeys.indexOf(b.level) - levelKeys.indexOf(a.level));
+    return rows;
+  }, [logs, level, query, order]);
   const visible = filtered.slice(0, limit);
   const selected = logs.find((log) => log.id === selectedId) || null;
   const actionApproval = actionId ? approvalOf(logs.find((log) => log.id === actionId) || { id: actionId }) : null;
@@ -1441,6 +1451,62 @@ export default function DebugLogs() {
     },
     [reload],
   );
+
+  // Command panel: only developers see and use it. Pressing @ outside a field opens it on a computer.
+  const isDeveloper = Boolean(viewer?.developer);
+  const openCommands = useCallback((seed = '') => {
+    setCommandSeed(seed);
+    setCommandsOpen(true);
+    logEvent({ code: 'COMMANDS_OPENED', reason: 'Opened the command panel' });
+  }, []);
+  useEffect(() => {
+    if (!isDeveloper || commandsOpen) return undefined;
+    const onKey = (event) => {
+      if (event.key !== '@' || event.ctrlKey || event.metaKey || event.altKey) return;
+      const tag = event.target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target?.isContentEditable) return;
+      event.preventDefault();
+      openCommands('@');
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isDeveloper, commandsOpen, openCommands]);
+
+  // What the commands can do on the page
+  const commandContext = {
+    viewer,
+    logs,
+    filtered,
+    counts,
+    release,
+    level,
+    query,
+    order,
+    activeView,
+    setView: (next) => {
+      setView(next);
+      logEvent({ code: 'VIEW_SWITCHED', reason: `Switched the logs to the ${next} view` });
+      try {
+        localStorage.setItem(VIEW_KEY, next);
+      } catch {
+        /* storage can be unavailable */
+      }
+    },
+    setLevel: changeLevel,
+    setQuery,
+    setOrder,
+    setLimit,
+    reload,
+    // Downloads the shown logs in a format
+    exportRows: (format) => {
+      const fields = ['time', 'level', 'code', 'reason', 'fix', 'user', 'path', 'release', 'id'];
+      const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+      downloadFile(`kyriadon-logs-${stamp}.${format}`, buildExport(filtered, format, fields), mimeTypes[format]);
+      return filtered.length;
+    },
+    // Copies the shown logs as JSON
+    copyJson: () => copyText(buildExport(filtered, 'json', ['time', 'level', 'code', 'reason', 'fix', 'user', 'path', 'release', 'id'])),
+  };
 
   const ViewIcon = activeView === 'raw' ? IconRows : IconCode;
   const viewLabel = activeView === 'raw' ? 'Switch to advanced view' : 'Switch to raw view';
@@ -1482,6 +1548,12 @@ export default function DebugLogs() {
               <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={reload} aria-label="Refresh logs" title="Refresh logs" data-nolog>
                 <IconRefresh size={16} />
               </button>
+              {isDeveloper && (
+                <button type="button" className="btn btnSecondary btnCompact cmdOpenButton" onClick={() => openCommands('')} aria-label="Open the command panel" title="Command panel" disabled={status !== 'ready'}>
+                  <span className="cmdAtMark">@</span>
+                  <span className="cmdOpenLabel">Commands</span>
+                </button>
+              )}
               <button type="button" className="btn btnSecondary btnCompact" onClick={openControls} disabled={status !== 'ready'}>
                 Open controls
               </button>
@@ -1572,6 +1644,9 @@ export default function DebugLogs() {
 
       {/* After a disapproval: kick the session or block the login (admins) */}
       {viewer?.admin && actionApproval && <ActionModal approval={actionApproval} onAct={review.act} onClose={() => setActionId(null)} />}
+
+      {/* Command panel (developers only) */}
+      {commandsOpen && isDeveloper && <CommandPanel ctx={commandContext} initialLine={commandSeed} onClose={() => setCommandsOpen(false)} />}
 
       {controlsOpen && (
         <ControlsModal
