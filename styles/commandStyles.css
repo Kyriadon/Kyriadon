@@ -1,0 +1,340 @@
+/* ==========================================================================
+   commandStyles.css
+   Styles for the Command panel of the debug logs (components/commandPanel.js). The colours of
+   the @, the prefixes and the commands are set inline from lib/commandRegistry.js, so every
+   prefix keeps its own solid colour. Everything else uses the design tokens.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. The button on the logs page: "@ Commands" on a computer, just the @ on phones
+   -------------------------------------------------------------------------- */
+.cmdOpenButton {
+  gap: var(--space-2);
+}
+
+.cmdAtMark {
+  font-family: var(--type-meta-family);
+  font-weight: 800;
+  color: #ff6fb5;
+}
+
+@media (max-width: 640px) {
+  .cmdOpenLabel {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. Panel: the screen, the suggestions and the input
+   -------------------------------------------------------------------------- */
+.cmdPanel {
+  display: grid;
+  gap: var(--space-3);
+  min-height: 0;
+  min-width: 0;
+}
+
+/* The screen: a dark terminal-like box that scrolls */
+.cmdScreen {
+  min-height: 14rem;
+  max-height: 52vh;
+  padding: var(--space-3) var(--space-4);
+  overflow: auto;
+  background: color-mix(in srgb, black 55%, var(--color-card));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  font-family: var(--type-meta-family);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.cmdRow {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.cmdEcho {
+  margin-top: var(--space-2);
+  font-weight: 700;
+}
+
+.cmdGap {
+  height: var(--space-2);
+}
+
+/* The result colours */
+.cmdRow[data-kind='ok'] {
+  color: #4ade80;
+}
+
+.cmdRow[data-kind='error'] {
+  color: #f87171;
+}
+
+.cmdRow[data-kind='warn'] {
+  color: #facc15;
+}
+
+.cmdRow[data-kind='info'] {
+  color: var(--color-text-secondary);
+}
+
+/* A command with what it does, one under the other on phones */
+.cmdHelp {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-3);
+}
+
+.cmdHelpLine {
+  font-weight: 700;
+}
+
+.cmdHelpText {
+  color: var(--color-text-muted);
+}
+
+/* Suggestion chips: one row that scrolls sideways */
+.cmdSuggest {
+  display: flex;
+  gap: var(--space-2);
+  padding-bottom: 0.15rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.cmdChip {
+  flex: none;
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  font-family: var(--type-meta-family);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  transition: background var(--motion-fast) linear, border-color var(--motion-fast) linear;
+}
+
+.cmdChip:hover,
+.cmdChip:focus-visible {
+  background: var(--color-card-hover);
+  border-color: var(--color-border-strong);
+}
+
+.cmdChip:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.cmdConfirm {
+  width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   3. The input: a coloured copy of the text sits behind a see-through input, so the @, the
+   prefix and the command are coloured while you type. Both use the same font and padding.
+   -------------------------------------------------------------------------- */
+.cmdForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+}
+
+.cmdField {
+  position: relative;
+  height: 3rem;
+  min-width: 0;
+  background: var(--color-card);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  transition: border-color var(--motion-fast) linear;
+}
+
+.cmdField:focus-within {
+  border-color: var(--color-focus);
+}
+
+.cmdMirror,
+.cmdInput {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 var(--space-4);
+  font-family: var(--type-meta-family);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 3rem;
+  letter-spacing: 0;
+  white-space: pre;
+}
+
+.cmdMirror {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cmdInput {
+  position: relative;
+  z-index: 1;
+  color: transparent;
+  caret-color: var(--color-text-primary);
+  background: transparent;
+  border: 0;
+  outline: none;
+}
+
+.cmdInput::placeholder {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.cmdInput::selection {
+  color: transparent;
+  background: color-mix(in srgb, var(--color-focus) 40%, transparent);
+}
+
+.cmdRun {
+  min-width: 5rem;
+}
+
+/* --------------------------------------------------------------------------
+   4. The guide
+   -------------------------------------------------------------------------- */
+.cmdGuide {
+  display: grid;
+  gap: var(--space-3);
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-helper-size);
+}
+
+.cmdGuideText {
+  margin: 0;
+}
+
+.cmdSample {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  width: fit-content;
+  max-width: 100%;
+  font-family: var(--type-meta-family);
+  font-size: 1rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+}
+
+.cmdLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-muted);
+}
+
+.cmdLegend span {
+  font-family: var(--type-meta-family);
+  font-weight: 700;
+}
+
+.cmdArgsColor {
+  color: #cbd5e1;
+}
+
+.cmdGroup {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.cmdGroupTitle {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 var(--space-1);
+  margin: var(--space-2) 0 0;
+  font-family: var(--type-meta-family);
+  font-size: 1rem;
+}
+
+.cmdGroupHint {
+  margin-left: var(--space-2);
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-helper-size);
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.cmdList {
+  display: grid;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One command of the guide: tap it to put it in the box */
+.cmdPick {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-3);
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.25rem var(--space-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+}
+
+.cmdPick:hover,
+.cmdPick:focus-visible {
+  background: var(--color-card-hover);
+}
+
+.cmdPick:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.cmdPickLine {
+  font-family: var(--type-meta-family);
+  font-size: 0.9rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.cmdPickText {
+  color: var(--color-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   5. Phones: the screen is a little shorter so the input stays above the keyboard
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .cmdScreen {
+    min-height: 10rem;
+    max-height: 38vh;
+    padding: var(--space-3);
+    font-size: 0.85rem;
+  }
+
+  .cmdHelp {
+    display: grid;
+    gap: 0;
+  }
+}
