@@ -31,6 +31,9 @@ import '../styles/announcementStyles.css';
 // Resources page styles (/resources)
 import '../styles/resourcesStyles.css';
 
+// Command panel of the debug logs (developers)
+import '../styles/commandStyles.css';
+
 // Design tokens become CSS variables once, at module load
 const tokenCss = buildCssVariables();
 
