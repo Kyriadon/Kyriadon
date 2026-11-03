@@ -9,13 +9,14 @@
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, logEvent } from './siteShell';
-import { AT_COLOR, PREFIXES, commandTint, findCommand, findPrefix, parseCommand, suggest, tokenize } from '../lib/commandRegistry';
+import { AT_COLOR, commandTint, findCommand, parseCommand, rolesOf, suggest, tokenize, usablePrefixes } from '../lib/commandRegistry';
 
 const HISTORY_KEY = 'kyriadon:commandHistory';
 const HISTORY_MAX = 40;
 const OUTPUT_MAX = 200;
 const DAY = 24 * 60 * 60 * 1000;
 
+// Commands that only change the page are written here; the server ones are in pages/api/commands.js.
 // A line made of coloured pieces (used by the input, the output, the suggestions and the guide)
 function Tokens({ line }) {
   return (
@@ -66,6 +67,20 @@ async function runClient(prefix, command, args, ctx) {
       ctx.setView(next);
       return ok(`Showing the ${next} view.`);
     }
+
+    // Staff and admin shortcuts into the search
+    case 'staff:me':
+      ctx.setQuery(ctx.viewer?.name || '');
+      return ok('Showing the logs you caused.');
+    case 'staff:logins':
+      ctx.setQuery('STAFF_');
+      return ok('Showing staff logins and reviews.');
+    case 'admin:audit':
+      ctx.setQuery('COMMAND_');
+      return ok('Showing every command that was run.');
+    case 'admin:denied':
+      ctx.setQuery('_DENIED');
+      return ok('Showing every refused attempt.');
 
     // Level filter
     case 'filter:all':
@@ -151,9 +166,13 @@ async function runClient(prefix, command, args, ctx) {
 
     // Help
     case 'help:all':
-      return [{ kind: 'info', text: 'Type @prefix:command. Type a prefix to see its commands, for example @search' }, ...PREFIXES.map((item) => ({ kind: 'help', line: `@${item.id}`, text: item.title }))];
+      return [{ kind: 'info', text: 'Type @prefix:command. Type a prefix to see its commands, for example @search' }, ...usablePrefixes(ctx.viewer).map((item) => ({ kind: 'help', line: `@${item.id}`, text: item.title }))];
     case 'help:prefixes':
-      return PREFIXES.flatMap((item) => [{ kind: 'gap' }, ...commandLines(item)]);
+      return usablePrefixes(ctx.viewer).flatMap((item) => [{ kind: 'gap' }, ...commandLines(item)]);
+    case 'help:whoami': {
+      const have = rolesOf(ctx.viewer);
+      return info(`You are ${ctx.viewer?.name || 'signed in'}.`, `Roles: ${have.length ? have.join(', ') : 'none'}.`, `You can use: ${usablePrefixes(ctx.viewer).map((item) => `@${item.id}`).join(' ')}`);
+    }
     case 'help:shortcuts':
       return info('Enter runs the command.', 'Tab completes the first suggestion.', 'Up and Down bring back earlier commands.', 'Esc closes the panel.', 'On a computer, pressing @ on the logs page opens the panel.');
 
@@ -177,7 +196,8 @@ async function runClient(prefix, command, args, ctx) {
 // ----------------------------------------------------------------------------
 // The small guide: how a command is built, every prefix with its commands
 // ----------------------------------------------------------------------------
-function CommandGuide({ onPick }) {
+function CommandGuide({ onPick, viewer }) {
+  const prefixes = usablePrefixes(viewer);
   return (
     <div className="cmdGuide">
       <p className="helperText cmdGuideText">
@@ -191,22 +211,23 @@ function CommandGuide({ onPick }) {
           <span style={{ color: AT_COLOR }}>@</span> always has this colour
         </li>
         <li>
-          <span style={{ color: PREFIXES[0].color }}>prefix</span> has its own colour
+          <span style={{ color: prefixes[0]?.color }}>prefix</span> has its own colour
         </li>
         <li>
-          <span style={{ color: commandTint(PREFIXES[0].color) }}>command</span> is a light tint of it
+          <span style={{ color: commandTint(prefixes[0]?.color || '#ffffff') }}>command</span> is a light tint of it
         </li>
         <li>
           <span className="cmdArgsColor">arguments</span> are grey
         </li>
       </ul>
-      <p className="helperText cmdGuideText">Commands that delete ask you to run them twice. Press Enter again (or tap Confirm) to go ahead. Only developers see this panel.</p>
-      {PREFIXES.map((prefix) => (
+      <p className="helperText cmdGuideText">Commands that delete ask you to run them twice. Press Enter again (or tap Confirm) to go ahead. You only see the prefixes your role can use.</p>
+      {prefixes.map((prefix) => (
         <section key={prefix.id} className="cmdGroup">
           <h4 className="cmdGroupTitle">
             <span style={{ color: AT_COLOR }}>@</span>
             <span style={{ color: prefix.color }}>{prefix.id}</span>
             <span className="cmdGroupHint">{prefix.title}</span>
+            <span className="cmdWho">{prefix.who}</span>
           </h4>
           <ul className="cmdList">
             {prefix.commands.map((command) => (
@@ -248,7 +269,7 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
   const mirrorRef = useRef(null);
   const outputRef = useRef(null);
   const nextId = useRef(1);
-  const suggestions = useMemo(() => suggest(line).slice(0, 14), [line]);
+  const suggestions = useMemo(() => suggest(line, ctx.viewer).slice(0, 14), [line, ctx.viewer]);
 
   // Adds lines to the screen (the last 200 stay)
   const push = (...entries) => setOutput((previous) => [...previous, ...entries.map((entry) => ({ id: nextId.current++, ...entry }))].slice(-OUTPUT_MAX));
@@ -314,7 +335,7 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
         }
         const took = Math.round(performance.now() - started);
         push({ kind: 'ok', text: prefix.id === 'stats' ? `${data.message} ${took} ms round trip.` : data.message });
-        if (data.deleted !== undefined || prefix.id === 'log') await ctx.reload();
+        if (data.deleted !== undefined || data.reload) await ctx.reload();
         return;
       }
       logEvent({ code: 'COMMAND_RUN', reason: `Ran the command ${text.slice(0, 80)}` });
@@ -334,11 +355,11 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
     setLine('');
     setHistoryAt(-1);
     setGuideOpen(false);
-    const parsed = parseCommand(text);
+    const parsed = parseCommand(text, ctx.viewer);
     if (parsed.ok && parsed.command?.danger && !(pending && pending.key === normalise(text))) {
       remember(text);
       setPending({ text, key: normalise(text) });
-      push({ kind: 'echo', line: text }, { kind: 'warn', text: 'This deletes logs for good. Press Enter again, or tap Confirm, to run it.' });
+      push({ kind: 'echo', line: text }, { kind: 'warn', text: parsed.command.id === 'set-limiter' ? 'This changes how logs are deleted from now on, and can delete logs right away. Press Enter again, or tap Confirm, to run it.' : 'This deletes logs for good. Press Enter again, or tap Confirm, to run it.' });
       return;
     }
     const confirmed = Boolean(pending && parsed.ok && pending.key === normalise(text));
@@ -387,7 +408,7 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
     <Modal
       titleId="commandsTitle"
       title="Command panel"
-      subtitle="Type @prefix:command, for example @delete:reset-logs. Developers only."
+      subtitle="Type @prefix:command, for example @help. You only see the prefixes your role can use."
       onClose={onClose}
       footer={
         <>
@@ -405,7 +426,7 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
       <div className="cmdPanel">
         {guideOpen ? (
           <div className="cmdScreen" ref={outputRef}>
-            <CommandGuide onPick={pick} />
+            <CommandGuide onPick={pick} viewer={ctx.viewer} />
           </div>
         ) : (
           <div className="cmdScreen" ref={outputRef} role="log" aria-live="polite">
