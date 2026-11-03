@@ -6,7 +6,7 @@
 // ============================================================================
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from './auth/[...nextauth]';
-import { VIEW_REQUIRES_ROLE, appendLogs, deleteLogs, getRelease, getViewerRoles, makeEntry, rateLimited, readLogs } from '../../lib/logServer';
+import { VIEW_REQUIRES_ROLE, appendLogs, audienceOf, deleteLogs, getRelease, getViewerRoles, isHiddenFrom, makeEntry, rateLimited, readLogs, readSettings } from '../../lib/logServer';
 import { STAFF_ACTIONS_REQUIRE_LOGIN, getStaffSession, listApprovals } from '../../lib/staffServer';
 
 export const config = { api: { bodyParser: { sizeLimit: '64kb' } } };
@@ -55,6 +55,12 @@ async function handleRequest(req, res) {
     let logs = await readLogs();
     // Staff logins and reviews are only for staff and admins
     if (!viewer.staff && !viewer.admin) logs = logs.filter((log) => !log.staffOnly);
+    // Logs an admin hid from this kind of viewer (@toggle in the Command panel). Admins and developers see everything.
+    const audience = audienceOf(viewer);
+    if (audience) {
+      const { visibility } = await readSettings();
+      logs = logs.filter((log) => !isHiddenFrom(log, audience, visibility));
+    }
     // Only admins see where a staff login came from, and which ones still wait for a review
     if (!viewer.admin) logs = logs.map((log) => (log.staffOnly && log.meta?.ip ? { ...log, meta: { ...log.meta, ip: undefined } } : log));
     else {
@@ -106,4 +112,3 @@ export default async function handler(req, res) {
     return undefined;
   }
 }
-
