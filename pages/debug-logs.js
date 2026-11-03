@@ -5,12 +5,14 @@
 // Staff logins and their reviews are only listed for staff and admins; admins also
 // see a bobbing red ! on a staff login nobody has reviewed yet.
 // Developers get the raw view by default and the "relevant to this release"
-// section, and the Command panel (@prefix:command, components/commandPanel.js). The header, footer and search palette come from components/siteShell.js.
+// section. Staff, managers, admins and developers get the Command panel (@prefix:command,
+// components/commandPanel.js); each role only sees the prefixes it may use. The header, footer and search palette come from components/siteShell.js.
 // All visual values live in lib/siteDesign.js and styles/debugStyles.css.
 // ============================================================================
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import CommandPanel from '../components/commandPanel';
+import { hasCommandAccess } from '../lib/commandRegistry';
 import {
   IconAlert,
   IconCheck,
@@ -1452,15 +1454,16 @@ export default function DebugLogs() {
     [reload],
   );
 
-  // Command panel: only developers see and use it. Pressing @ outside a field opens it on a computer.
-  const isDeveloper = Boolean(viewer?.developer);
+  // Command panel: staff, managers, admins and developers see it (each role only its own prefixes).
+  // Pressing @ outside a field opens it on a computer.
+  const canCommand = hasCommandAccess(viewer);
   const openCommands = useCallback((seed = '') => {
     setCommandSeed(seed);
     setCommandsOpen(true);
     logEvent({ code: 'COMMANDS_OPENED', reason: 'Opened the command panel' });
   }, []);
   useEffect(() => {
-    if (!isDeveloper || commandsOpen) return undefined;
+    if (!canCommand || commandsOpen) return undefined;
     const onKey = (event) => {
       if (event.key !== '@' || event.ctrlKey || event.metaKey || event.altKey) return;
       const tag = event.target?.tagName;
@@ -1470,7 +1473,7 @@ export default function DebugLogs() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isDeveloper, commandsOpen, openCommands]);
+  }, [canCommand, commandsOpen, openCommands]);
 
   // What the commands can do on the page
   const commandContext = {
@@ -1548,7 +1551,7 @@ export default function DebugLogs() {
               <button type="button" className="btn btnGhost btnIcon btnCompact" onClick={reload} aria-label="Refresh logs" title="Refresh logs" data-nolog>
                 <IconRefresh size={16} />
               </button>
-              {isDeveloper && (
+              {canCommand && (
                 <button type="button" className="btn btnSecondary btnCompact cmdOpenButton" onClick={() => openCommands('')} aria-label="Open the command panel" title="Command panel" disabled={status !== 'ready'}>
                   <span className="cmdAtMark">@</span>
                   <span className="cmdOpenLabel">Commands</span>
@@ -1645,8 +1648,8 @@ export default function DebugLogs() {
       {/* After a disapproval: kick the session or block the login (admins) */}
       {viewer?.admin && actionApproval && <ActionModal approval={actionApproval} onAct={review.act} onClose={() => setActionId(null)} />}
 
-      {/* Command panel (developers only) */}
-      {commandsOpen && isDeveloper && <CommandPanel ctx={commandContext} initialLine={commandSeed} onClose={() => setCommandsOpen(false)} />}
+      {/* Command panel (staff, managers, admins and developers) */}
+      {commandsOpen && canCommand && <CommandPanel ctx={commandContext} initialLine={commandSeed} onClose={() => setCommandsOpen(false)} />}
 
       {controlsOpen && (
         <ControlsModal
