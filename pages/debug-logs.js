@@ -1517,7 +1517,7 @@ export default function DebugLogs() {
   const filterOptions = [['all', 'All logs', logs.length], ...levelKeys.map((key) => [key, `${levelMeta[key].label} logs`, counts[key]])];
 
   return (
-    <SiteShell title="Debug logs | Kyriadon" description="Every user action, bug and error on the Kyriadon website, grouped as info, warning and error.">
+    <SiteShell title="Kyriadon — Debug logs" description="Every user action, bug and error on the Kyriadon website, grouped as info, warning and error.">
       <div className="debugGrid">
         {/* Hero: same component as the home and about pages, pink tone */}
         <section className="heroShell areaHero" aria-labelledby="heroTitle">
