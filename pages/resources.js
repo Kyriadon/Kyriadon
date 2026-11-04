@@ -15,7 +15,7 @@ import { IconChevron, IconMegaphone, IconRules, IconSparkle, IconUsers, SiteShel
 // Content: everything the page says lives here so copy is easy to edit
 // ----------------------------------------------------------------------------
 const content = {
-  title: 'Resources - Kyriadon',
+  title: 'Kyriadon — Resources',
   description: 'Everything Kyriadon in one place: projects, announcements, appeals and applications.',
   hero: {
     title: 'Resources',
