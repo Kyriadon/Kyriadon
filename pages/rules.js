@@ -19,7 +19,7 @@ import { IconChevron, IconClose, IconDiscord, IconSearch, SiteShell } from '../c
 // Content: everything the page says lives here so copy is easy to edit
 // ----------------------------------------------------------------------------
 const content = {
-  title: 'Rules - Kyriadon',
+  title: 'Kyriadon — Rules',
   description:
     'The official rules for Discord, Minecraft and the community in general: search them, jump between categories and open any rule for the full detail.',
   hero: {
