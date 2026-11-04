@@ -174,7 +174,7 @@ function AnnouncementsIndex() {
   const ready = feed.status === 'ready';
 
   return (
-    <SiteShell title="Announcements - Kyriadon" description={description}>
+    <SiteShell title="Kyriadon — Announcements" description={description}>
       {/* The editor, opened on a draft from its ghost card */}
       {draftId && <AnnouncementManager initialDraftId={draftId} onClose={() => { setDraftId(null); feed.refresh(); }} />}
       <div className="annoGrid" data-ready={ready}>
@@ -314,7 +314,7 @@ function AnnouncementDetail({ slug }) {
   };
 
   const others = more.items.filter((entry) => !item || entry.id !== item.id).slice(0, 3);
-  const title = item ? `${stripMarkup(item.title)} - Kyriadon` : 'Announcements - Kyriadon';
+  const title = item ? `Kyriadon — ${stripMarkup(item.title)}` : 'Kyriadon — Announcements';
 
   // The side panel only exists while it has something to show; without it the article is centred
   const solo = more.status !== 'loading' && others.length === 0;
@@ -415,7 +415,7 @@ export default function AnnouncementsRoute() {
   const router = useRouter();
   if (!router.isReady) {
     return (
-      <SiteShell title="Announcements - Kyriadon" description={description}>
+      <SiteShell title="Kyriadon — Announcements" description={description}>
         <div className="annoGrid" data-ready="false" aria-busy="true">
           <div className="annoMain">
             <div className="skeleton skeletonCard" />
