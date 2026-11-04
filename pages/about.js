@@ -32,7 +32,7 @@ import {
 // Content: everything the page says lives here so copy is easy to edit
 // ----------------------------------------------------------------------------
 const content = {
-  title: 'About - Kyriadon',
+  title: 'Kyriadon — About',
   description: 'How to register, get tested and join the Kyriadon community: step-by-step guides, help and the official Discord.',
   hero: {
     title: 'About Kyriadon',
