@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import CommandPanel from '../components/commandPanel';
+import StaffNotes from '../components/staffNotes';
 import { hasCommandAccess } from '../lib/commandRegistry';
 import {
   IconAlert,
@@ -1534,6 +1535,8 @@ export default function DebugLogs() {
         <aside className="debugSide">
           <AccessPanel session={session} viewer={viewer} activeView={activeView} />
           <ReleasePanel release={release} />
+          {/* The staff notes board: staff, managers, admins and developers */}
+          {canCommand && <StaffNotes />}
         </aside>
 
         {/* Main: stats, search, filter and the log list */}
