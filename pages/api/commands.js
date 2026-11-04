@@ -28,7 +28,8 @@ import {
   writeSettings,
 } from '../../lib/logServer';
 import { STAFF_ACTIONS_REQUIRE_LOGIN, getStaffSession } from '../../lib/staffServer';
-import { canUsePrefix, findCommand, findPrefix, hasCommandAccess, rolesOf } from '../../lib/commandRegistry';
+import { NOTE_COLORS, NOTE_VISIBILITY, NOTE_VISIBILITY_LABEL, canUsePrefix, findCommand, findPrefix, hasCommandAccess, rolesOf } from '../../lib/commandRegistry';
+import { clearNotes, createNote, filterNotes, listNotes } from '../../lib/notesServer';
 
 export const config = { api: { bodyParser: { sizeLimit: '16kb' } } };
 
@@ -56,6 +57,73 @@ const parseBody = (body) => {
 };
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
+
+// ----------------------------------------------------------------------------
+// Parameters: key:value words after a command, for example  color:blue for:admin limit:5
+// ----------------------------------------------------------------------------
+const PARAM_ALIASES = { colour: 'color', visible: 'for', to: 'for', pin: 'pinned', by: 'author' };
+const VISIBILITY_ALIASES = { all: 'all', everyone: 'all', staff: 'staff', manager: 'manager', managers: 'manager', dev: 'dev', devs: 'dev', developer: 'dev', developers: 'dev', admin: 'admin', admins: 'admin' };
+const FETCH_KEYS = ['color', 'for', 'author', 'pinned', 'text', 'sort', 'limit'];
+const NOTE_KEYS = ['color', 'for', 'pinned'];
+
+// Splits the arguments into { params, text }. With leadingOnly the parameters only count at the
+// start and everything after them is the text (the message of a note).
+function readParams(args, { leadingOnly = false } = {}) {
+  const params = {};
+  const words = [];
+  const tokens = args.split(/\s+/).filter(Boolean);
+  let index = 0;
+  for (; index < tokens.length; index += 1) {
+    const match = /^([a-z-]+):(.*)$/i.exec(tokens[index]);
+    if (!match) {
+      if (leadingOnly) break;
+      words.push(tokens[index]);
+    } else {
+      const key = match[1].toLowerCase();
+      params[PARAM_ALIASES[key] || key] = match[2];
+    }
+  }
+  if (leadingOnly) words.push(...tokens.slice(index));
+  return { params, text: words.join(' ') };
+}
+
+// Checks one parameter value
+const pick = (value, options, message) => {
+  const found = String(value).toLowerCase();
+  if (!options.includes(found)) throw new CommandError(message);
+  return found;
+};
+const asVisibility = (value) => {
+  const found = VISIBILITY_ALIASES[String(value).toLowerCase()];
+  if (!found) throw new CommandError(`Visibility must be one of: ${NOTE_VISIBILITY.join(', ')}.`);
+  return found;
+};
+const asYesNo = (value) => {
+  const found = String(value).toLowerCase();
+  if (['yes', 'y', 'true', 'on', '1'].includes(found)) return true;
+  if (['no', 'n', 'false', 'off', '0'].includes(found)) return false;
+  throw new CommandError('Use yes or no.');
+};
+const rejectUnknown = (params, allowed) => {
+  const unknown = Object.keys(params).find((key) => !allowed.includes(key));
+  if (unknown) throw new CommandError(`Unknown parameter "${unknown}:". Use ${allowed.join(', ')}.`);
+};
+
+// "just now", "5 min ago", "3 h ago", "2 days ago"
+const ago = (time) => {
+  const minutes = Math.floor(Math.max(0, Date.now() - time) / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 60 * 24) return `${Math.floor(minutes / 60)} h ago`;
+  const days = Math.floor(minutes / (60 * 24));
+  return `${days} day${days === 1 ? '' : 's'} ago`;
+};
+
+// One note as a line of the answer
+const noteLine = (note) => {
+  const text = note.text.replace(/\s+/g, ' ');
+  return `${note.pinned ? '[pinned] ' : ''}${note.authorName} (${NOTE_VISIBILITY_LABEL[note.visibility || 'all']}, ${note.color}, ${ago(note.updatedAt)}): ${text.length > 140 ? `${text.slice(0, 140)}...` : text}`;
+};
 
 // Runs one command and returns { message, deleted?, reload? }
 async function runCommand({ prefix, command, args, user, viewer, release, req }) {
@@ -100,12 +168,46 @@ async function runCommand({ prefix, command, args, user, viewer, release, req })
       return { message: `Pong. Server time ${new Date().toISOString()}.` };
 
     // ---------------------------------------------------------------- staff
+    // A sticky note on the staff board: @staff:note [color:blue] [for:admin] [pinned:yes] <message>
     case 'staff:note': {
-      // A note only staff and admins can see (the same flag the staff logins use)
-      const entry = makeEntry({ level: 'info', code: 'STAFF_NOTE', reason: args }, { user, release });
-      entry.staffOnly = true;
-      await appendLogs([entry]);
-      return { message: 'Wrote a staff note. Only staff and admins can see it.', reload: true };
+      const { params, text } = readParams(args, { leadingOnly: true });
+      rejectUnknown(params, NOTE_KEYS);
+      if (!text) throw new CommandError('Write the note after the parameters, for example @staff:note for:admin Check the audit logs.');
+      const result = await createNote(user, {
+        text,
+        color: params.color ? pick(params.color, NOTE_COLORS, `Colour must be one of: ${NOTE_COLORS.join(', ')}.`) : undefined,
+        visibility: params.for ? asVisibility(params.for) : 'all',
+        pinned: params.pinned ? asYesNo(params.pinned) : false,
+      });
+      if (!result.ok) throw new CommandError(result.error, result.status);
+      const { note } = result;
+      return { message: `Stuck a ${note.color} note on the board${note.pinned ? ' and pinned it' : ''}. ${note.visibility === 'all' ? 'Everyone with access can see it.' : `Only ${NOTE_VISIBILITY_LABEL[note.visibility].toLowerCase()} can see it (and its author).`}`, notes: true };
+    }
+
+    // Find sticky notes: @fetch:notes [color:..] [for:..] [author:me] [pinned:yes] [text:..] [sort:..] [limit:..]
+    // (@staff:notes does the same). Only the notes this person may see are ever looked at.
+    case 'fetch:notes':
+    case 'staff:notes': {
+      const { params, text } = readParams(args);
+      rejectUnknown(params, FETCH_KEYS);
+      const filters = {
+        color: params.color ? pick(params.color, NOTE_COLORS, `Colour must be one of: ${NOTE_COLORS.join(', ')}.`) : undefined,
+        visibility: params.for ? asVisibility(params.for) : undefined,
+        pinned: params.pinned ? asYesNo(params.pinned) : undefined,
+        sort: params.sort ? pick(params.sort, ['newest', 'oldest'], 'Sort must be newest or oldest.') : undefined,
+        text: [params.text, text].filter(Boolean).join(' ').replace(/_/g, ' '),
+      };
+      if (params.author) {
+        if (params.author.toLowerCase() === 'me') filters.authorId = user.id;
+        else filters.author = params.author.replace(/_/g, ' ');
+      }
+      const limit = params.limit === undefined ? 10 : Number(params.limit);
+      if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new CommandError('Limit must be a whole number from 1 to 20.');
+      const visible = await listNotes({ ...viewer, id: user.id });
+      const found = filterNotes(visible, filters);
+      if (!found.length) return { message: visible.length ? `No notes match. You can see ${plural(visible.length, 'note')} in total.` : 'There are no notes you can see yet.' };
+      const shown = found.slice(0, limit);
+      return { message: [`${plural(found.length, 'note')} found${shown.length < found.length ? `, showing ${shown.length}` : ''} (you can see ${visible.length} in total):`, ...shown.map(noteLine)].join('\n') };
     }
     case 'staff:clear-info':
     case 'staff:clear-warnings':
@@ -122,6 +224,8 @@ async function runCommand({ prefix, command, args, user, viewer, release, req })
       const ids = (await readLogs()).filter((log) => log.staffOnly).map((log) => log.id);
       return done(ids.length ? await deleteLogs({ ids }) : 0);
     }
+    case 'admin:clear-notes':
+      return { message: `Removed ${plural(await clearNotes(), 'note')} from the staff board.`, notes: true };
 
     // ---------------------------------------------------------------- toggle (admins)
     case 'toggle:level':
@@ -227,12 +331,16 @@ async function handleRequest(req, res) {
   if (!prefix || !command || command.where !== 'server') return res.status(400).json({ error: 'Unknown command' });
   const args = String(body.args ?? '').trim().slice(0, 300);
   const line = `@${prefix.id}:${command.id}${args ? ` ${args}` : ''}`;
-  if (!canUsePrefix(prefix, viewer)) return denied(`${user.name} tried to run ${line} without the role for it.`);
+  // Commands with private text (notes) never put that text in the logs
+  const shown = command.secret ? `@${prefix.id}:${command.id} (text hidden)` : line;
+  if (!canUsePrefix(prefix, viewer)) return denied(`${user.name} tried to run ${shown} without the role for it.`);
   if (command.required && !args) return res.status(400).json({ error: `Usage: @${prefix.id}:${command.id} ${command.args}` });
 
   try {
     const result = await runCommand({ prefix, command, args, user, viewer, release, req });
-    await appendLogs([makeEntry({ level: 'info', code: 'COMMAND_RUN', reason: `${user.name} ran ${line}${result.deleted !== undefined ? ` (${result.deleted} deleted)` : ''}.` }, { user, release })]);
+    const entry = makeEntry({ level: 'info', code: 'COMMAND_RUN', reason: `${user.name} ran ${shown}${result.deleted !== undefined ? ` (${result.deleted} deleted)` : ''}.` }, { user, release });
+    if (command.secret) entry.staffOnly = true;
+    await appendLogs([entry]);
     return res.status(200).json({ ok: true, ...result, serverTime: new Date().toISOString() });
   } catch (error) {
     if (error instanceof CommandError) return res.status(error.status).json({ error: error.message });
