@@ -34,6 +34,9 @@ import '../styles/resourcesStyles.css';
 // Command panel of the debug logs (developers)
 import '../styles/commandStyles.css';
 
+// Staff notes board of the debug logs (sticky notes)
+import '../styles/notesStyles.css';
+
 // Design tokens become CSS variables once, at module load
 const tokenCss = buildCssVariables();
 
