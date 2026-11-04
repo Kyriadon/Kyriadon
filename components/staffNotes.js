@@ -262,6 +262,7 @@ export default function StaffNotes() {
 
           {composing && (
             <div className="stickyNote stickyDraft" style={{ '--note-paper': COLORS[draft.color].paper, '--note-ink': COLORS[draft.color].ink, '--note-rotate': '0deg' }}>
+              <div className="noteSheet">
               <span className="notePin" aria-hidden="true" />
               <textarea ref={composerRef} className="noteInput" value={draft.text} maxLength={TEXT_MAX} rows={4} placeholder="Write a note for the team..." aria-label="New note" onChange={(event) => setDraft({ ...draft, text: event.target.value })} onKeyDown={(event) => onKeyDown(event, add, () => setComposing(false))} data-nolog />
               <div className="noteTools">
@@ -280,6 +281,7 @@ export default function StaffNotes() {
                 <button type="button" className="btn btnGhost btnCompact" onClick={() => setComposing(false)} data-nolog>
                   Cancel
                 </button>
+              </div>
               </div>
             </div>
           )}
@@ -319,6 +321,8 @@ export default function StaffNotes() {
                 const isEditing = editing?.id === note.id;
                 return (
                   <li key={note.id} className="stickyNote" data-pinned={note.pinned} style={{ '--note-paper': color.paper, '--note-ink': color.ink, '--note-rotate': isEditing ? '0deg' : `${tiltOf(note.id)}deg` }}>
+                    {/* The list item stays still; the paper inside it moves, so hovering never flickers */}
+                    <div className="noteSheet">
                     <span className="notePin" aria-hidden="true" />
                     {isEditing ? (
                       <>
@@ -367,6 +371,7 @@ export default function StaffNotes() {
                         </div>
                       </>
                     )}
+                    </div>
                   </li>
                 );
               })}
