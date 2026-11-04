@@ -336,6 +336,8 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
         const took = Math.round(performance.now() - started);
         push({ kind: 'ok', text: prefix.id === 'stats' ? `${data.message} ${took} ms round trip.` : data.message });
         if (data.deleted !== undefined || data.reload) await ctx.reload();
+        // The staff notes board refreshes when a command changed a note
+        if (data.notes) window.dispatchEvent(new Event('kyriadon:notes-changed'));
         return;
       }
       logEvent({ code: 'COMMAND_RUN', reason: `Ran the command ${text.slice(0, 80)}` });
@@ -458,7 +460,7 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
           <div className="cmdSuggest" role="group" aria-label="Suggestions">
             {suggestions.map((item) => (
               <button key={item.insert} type="button" className="cmdChip" onClick={() => pick(item.insert)} title={item.desc} data-nolog>
-                <Tokens line={item.insert} />
+                {item.label ? <span style={{ color: item.color }}>{item.label}</span> : <Tokens line={item.insert} />}
               </button>
             ))}
           </div>
