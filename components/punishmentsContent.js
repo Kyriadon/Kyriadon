@@ -18,7 +18,7 @@ import { categories } from './punishmentsOffenses';
 // Page copy
 // ----------------------------------------------------------------------------
 export const content = {
-  title: 'Punishments - Kyriadon',
+  title: 'Kyriadon — Punishments',
   description:
     'Exact ban lengths for every offense, the full Screenshare procedure and how appeals work: search the schedule, jump between categories and read every offense in detail.',
   hero: {
