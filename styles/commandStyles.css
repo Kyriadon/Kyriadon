@@ -350,3 +350,107 @@
     gap: 0;
   }
 }
+
+/* --------------------------------------------------------------------------
+   6. Freestyle mode: the panel looks and works like the F12 console
+   -------------------------------------------------------------------------- */
+.cmdTabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #3c4043;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+}
+
+.cmdTab {
+  padding: 0.25rem 0.1rem;
+  font-weight: 700;
+  color: #e8eaed;
+  border-bottom: 2px solid #8ab4f8;
+}
+
+.cmdTabHint {
+  color: #9aa0a6;
+}
+
+/* The screen turns dark grey like the browser console */
+.cmdScreen[data-mode='freestyle'] {
+  background: #1b1c1f;
+  border-color: #3c4043;
+  color: #e8eaed;
+  font-size: 0.85rem;
+}
+
+.cmdJsRow {
+  display: flex;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cmdPrompt {
+  flex: none;
+  font-weight: 800;
+  color: #8ab4f8;
+}
+
+.cmdJsOut .cmdPrompt {
+  color: #9aa0a6;
+}
+
+.cmdJsText {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* What console.log, warn and error print, like the console: plain, yellow and red rows */
+.cmdScreen[data-mode='freestyle'] .cmdRow[data-kind='log'],
+.cmdScreen[data-mode='freestyle'] .cmdRow[data-kind='info'] {
+  color: #e8eaed;
+}
+
+.cmdScreen[data-mode='freestyle'] .cmdRow[data-kind='warn'] {
+  padding: 0.2rem 0.4rem;
+  color: #fde68a;
+  background: rgba(250, 204, 21, 0.1);
+  border-top: 1px solid rgba(250, 204, 21, 0.25);
+  border-bottom: 1px solid rgba(250, 204, 21, 0.25);
+}
+
+.cmdScreen[data-mode='freestyle'] .cmdRow[data-kind='error'] {
+  padding: 0.2rem 0.4rem;
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.12);
+  border-top: 1px solid rgba(248, 113, 113, 0.28);
+  border-bottom: 1px solid rgba(248, 113, 113, 0.28);
+}
+
+/* The > in front of the input, and room for it */
+.cmdPromptMark {
+  position: absolute;
+  top: 0;
+  left: var(--space-4);
+  z-index: 2;
+  font-family: var(--type-meta-family);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 3rem;
+  color: #8ab4f8;
+  pointer-events: none;
+}
+
+.cmdPanel[data-mode='freestyle'] .cmdMirror,
+.cmdPanel[data-mode='freestyle'] .cmdInput {
+  padding-left: 2.4rem;
+}
+
+.cmdPanel[data-mode='freestyle'] .cmdField {
+  background: #1b1c1f;
+  border-color: #3c4043;
+}
+
