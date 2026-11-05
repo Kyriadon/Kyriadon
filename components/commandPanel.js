@@ -9,7 +9,8 @@
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, logEvent } from './siteShell';
-import { AT_COLOR, commandTint, findCommand, parseCommand, rolesOf, suggest, tokenize, usablePrefixes } from '../lib/commandRegistry';
+import { AT_COLOR, commandTint, findCommand, findPrefix, parseCommand, rolesOf, suggest, tokenize, usablePrefixes } from '../lib/commandRegistry';
+import { formatValue, highlightJs, runJs } from '../lib/consoleRunner';
 
 const HISTORY_KEY = 'kyriadon:commandHistory';
 const HISTORY_MAX = 40;
@@ -29,6 +30,35 @@ function Tokens({ line }) {
     </>
   );
 }
+
+// JavaScript made of coloured pieces (freestyle mode)
+function JsTokens({ line }) {
+  return (
+    <>
+      {highlightJs(line).map((piece, index) => (
+        <span key={index} style={{ color: piece.color }}>
+          {piece.text}
+        </span>
+      ))}
+    </>
+  );
+}
+
+// What the freestyle console says when it opens, and the examples under the empty input
+const FREESTYLE_BANNER = [
+  { kind: 'info', text: 'Freestyle console. Type JavaScript and press Enter, like the F12 console in your browser.' },
+  { kind: 'warn', text: 'It runs in this browser tab as you. Only run code you wrote or trust, and never code someone else sent you.' },
+  { kind: 'info', text: "Helpers: $('css'), $$('css'), copy(value) and clear(). Lines that start with @ still run panel commands, for example @convert:contained." },
+];
+const CONVERT_COLOR = findPrefix('convert')?.color;
+const FREESTYLE_CHIPS = [
+  { insert: '@convert:contained', label: '@convert:contained', color: CONVERT_COLOR, desc: 'Back to the normal command panel' },
+  { insert: 'document.title', label: 'document.title', desc: 'The title of this page' },
+  { insert: 'location.href', label: 'location.href', desc: 'The address of this page' },
+  { insert: "$$('a').length", label: "$$('a').length", desc: 'How many links are on the page' },
+  { insert: 'localStorage', label: 'localStorage', desc: 'What this site saved in your browser' },
+  { insert: 'clear()', label: 'clear()', desc: 'Empty the console' },
+];
 
 // "Delete   RESET-logs" and "delete reset-logs" are the same command
 const normalise = (text) => text.trim().replace(/\s+/g, ' ').toLowerCase();
@@ -221,6 +251,9 @@ function CommandGuide({ onPick, viewer }) {
         </li>
       </ul>
       <p className="helperText cmdGuideText">Commands that delete ask you to run them twice. Press Enter again (or tap Confirm) to go ahead. You only see the prefixes your role can use.</p>
+      <p className="helperText cmdGuideText">
+        The panel is contained by default. @convert:freestyle turns it into a JavaScript console like F12 for this visit only: it is contained again when you close the panel or refresh the page.
+      </p>
       {prefixes.map((prefix) => (
         <section key={prefix.id} className="cmdGroup">
           <h4 className="cmdGroupTitle">
@@ -265,19 +298,25 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
   const [pending, setPending] = useState(null);
   const [busy, setBusy] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
+  // The mode is only ever remembered while this panel is open: it always starts contained, and closing the
+  // panel or refreshing the page puts it back (nothing is saved)
+  const [mode, setMode] = useState('contained');
+  const [consoleOutput, setConsoleOutput] = useState([]);
+  const consoleHistory = useRef([]);
   const inputRef = useRef(null);
   const mirrorRef = useRef(null);
   const outputRef = useRef(null);
   const nextId = useRef(1);
   const suggestions = useMemo(() => suggest(line, ctx.viewer).slice(0, 14), [line, ctx.viewer]);
 
-  // Adds lines to the screen (the last 200 stay)
-  const push = (...entries) => setOutput((previous) => [...previous, ...entries.map((entry) => ({ id: nextId.current++, ...entry }))].slice(-OUTPUT_MAX));
+  // Adds lines to the screen of a mode (the last 200 stay). push writes to the screen that is showing.
+  const pushTo = (which, ...entries) => (which === 'freestyle' ? setConsoleOutput : setOutput)((previous) => [...previous, ...entries.map((entry) => ({ id: nextId.current++, ...entry }))].slice(-OUTPUT_MAX));
+  const push = (...entries) => pushTo(mode, ...entries);
 
   // The screen scrolls to the newest line
   useEffect(() => {
     if (outputRef.current) outputRef.current.scrollTop = outputRef.current.scrollHeight;
-  }, [output, guideOpen]);
+  }, [output, consoleOutput, guideOpen, mode]);
 
   // The coloured copy behind the input scrolls with it (long lines)
   const syncMirror = () => {
@@ -300,7 +339,7 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
   // The helpers the commands use on the page, plus the two that belong to this panel
   const fullCtx = {
     ...ctx,
-    clearOutput: () => setOutput([]),
+    clearOutput: () => (mode === 'freestyle' ? setConsoleOutput([]) : setOutput([])),
     clearHistory: () => {
       setHistory([]);
       try {
@@ -309,6 +348,54 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
         /* storage can be unavailable */
       }
     },
+  };
+
+  // Switches between contained (the normal panel) and freestyle (a JavaScript console)
+  const switchMode = (next) => {
+    if (next === mode) {
+      push({ kind: 'info', text: `Already in ${next} mode.` });
+      return;
+    }
+    setMode(next);
+    setHistoryAt(-1);
+    setLine('');
+    setPending(null);
+    setGuideOpen(false);
+    if (next === 'freestyle') {
+      pushTo('contained', { kind: 'ok', text: 'Freestyle mode on. The panel is a JavaScript console now. Contained mode comes back when you close the panel.' });
+      setConsoleOutput((previous) => (previous.length ? previous : FREESTYLE_BANNER.map((entry) => ({ id: nextId.current++, ...entry }))));
+    } else {
+      pushTo('contained', { kind: 'ok', text: 'Contained mode on. Back to the normal command panel.' });
+    }
+    logEvent({ code: 'COMMAND_RUN', reason: `Switched the command panel to ${next} mode` });
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  // Freestyle: runs a line of JavaScript in this tab and prints what it logged and what it returned
+  const runConsole = async (code) => {
+    consoleHistory.current = [...consoleHistory.current.filter((item) => item !== code), code].slice(-HISTORY_MAX);
+    setPending(null);
+    setBusy(true);
+    pushTo('freestyle', { kind: 'jsin', line: code });
+    let cleared = false;
+    const helpers = {
+      $: (selector) => document.querySelector(selector),
+      $$: (selector) => Array.from(document.querySelectorAll(selector)),
+      copy: (value) => {
+        navigator.clipboard?.writeText(typeof value === 'string' ? value : formatValue(value));
+      },
+      clear: () => {
+        cleared = true;
+        setConsoleOutput([]);
+      },
+    };
+    try {
+      const { logs, result } = await runJs(code, helpers);
+      if (!cleared) pushTo('freestyle', ...logs, result);
+    } finally {
+      setBusy(false);
+      inputRef.current?.focus();
+    }
   };
 
   // Runs a command that was already parsed
@@ -322,6 +409,11 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
     }
     if (command.required && !args) {
       push({ kind: 'error', text: `Usage: @${prefix.id}:${command.id} ${command.args}` });
+      return;
+    }
+    // @convert: changes the mode of the panel itself
+    if (prefix.id === 'convert') {
+      switchMode(command.id);
       return;
     }
     try {
@@ -357,6 +449,11 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
     setLine('');
     setHistoryAt(-1);
     setGuideOpen(false);
+    // In freestyle everything that does not start with @ is JavaScript
+    if (mode === 'freestyle' && !text.startsWith('@')) {
+      await runConsole(text);
+      return;
+    }
     const parsed = parseCommand(text, ctx.viewer);
     if (parsed.ok && parsed.command?.danger && !(pending && pending.key === normalise(text))) {
       remember(text);
@@ -383,16 +480,18 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
 
   // Arrow keys bring back earlier commands, Tab completes the first suggestion
   const onKeyDown = (event) => {
-    if (event.key === 'ArrowUp' && history.length) {
+    // Commands and console code have their own history (console code is never saved)
+    const list = mode === 'freestyle' ? consoleHistory.current : history;
+    if (event.key === 'ArrowUp' && list.length) {
       event.preventDefault();
-      const next = Math.min(historyAt + 1, history.length - 1);
+      const next = Math.min(historyAt + 1, list.length - 1);
       setHistoryAt(next);
-      setLine(history[history.length - 1 - next]);
+      setLine(list[list.length - 1 - next]);
     } else if (event.key === 'ArrowDown' && historyAt >= 0) {
       event.preventDefault();
       const next = historyAt - 1;
       setHistoryAt(next);
-      setLine(next < 0 ? '' : history[history.length - 1 - next]);
+      setLine(next < 0 ? '' : list[list.length - 1 - next]);
     } else if (event.key === 'Tab' && suggestions.length && line.trim()) {
       event.preventDefault();
       setLine(suggestions[0].insert);
@@ -406,17 +505,23 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
     inputRef.current?.focus();
   };
 
+  // The suggestions under the input (examples in freestyle while the input is empty)
+  const chips = mode === 'freestyle' && !line.trim() ? FREESTYLE_CHIPS : suggestions;
+
   return (
     <Modal
       titleId="commandsTitle"
-      title="Command panel"
-      subtitle="Type @prefix:command, for example @help. You only see the prefixes your role can use."
+      title={mode === 'freestyle' ? 'Console' : 'Command panel'}
+      subtitle={mode === 'freestyle' ? 'Freestyle mode. JavaScript runs in this tab, like the F12 console. Type @convert:contained to go back.' : 'Type @prefix:command, for example @help. You only see the prefixes your role can use.'}
       onClose={onClose}
       footer={
         <>
           <div className="footerGroup">
             <button type="button" className="btn btnSecondary" onClick={() => setGuideOpen((open) => !open)} aria-pressed={guideOpen} data-nolog>
               {guideOpen ? 'Back to the panel' : 'Guide'}
+            </button>
+            <button type="button" className="btn btnSecondary" onClick={() => switchMode(mode === 'freestyle' ? 'contained' : 'freestyle')} data-nolog>
+              {mode === 'freestyle' ? 'Contained' : 'Freestyle'}
             </button>
           </div>
           <button type="button" className="btn btnSecondary" onClick={onClose} data-nolog>
@@ -425,19 +530,43 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
         </>
       }
     >
-      <div className="cmdPanel">
+      <div className="cmdPanel" data-mode={mode}>
+        {mode === 'freestyle' && (
+          <div className="cmdTabs">
+            <span className="cmdTab" aria-current="true">
+              Console
+            </span>
+            <span className="cmdTabHint">Freestyle: runs in this tab. It is contained again when you close the panel.</span>
+          </div>
+        )}
         {guideOpen ? (
-          <div className="cmdScreen" ref={outputRef}>
+          <div className="cmdScreen" ref={outputRef} data-mode={mode}>
             <CommandGuide onPick={pick} viewer={ctx.viewer} />
           </div>
         ) : (
-          <div className="cmdScreen" ref={outputRef} role="log" aria-live="polite">
-            {output.map((entry) =>
+          <div className="cmdScreen" ref={outputRef} role="log" aria-live="polite" data-mode={mode}>
+            {(mode === 'freestyle' ? consoleOutput : output).map((entry) =>
               entry.kind === 'gap' ? (
                 <div key={entry.id} className="cmdGap" />
               ) : entry.kind === 'echo' ? (
                 <p key={entry.id} className="cmdRow cmdEcho">
                   <Tokens line={entry.line} />
+                </p>
+              ) : entry.kind === 'jsin' ? (
+                <p key={entry.id} className="cmdRow cmdJsRow">
+                  <span className="cmdPrompt" aria-hidden="true">
+                    &gt;
+                  </span>
+                  <span className="cmdJsText">
+                    <JsTokens line={entry.line} />
+                  </span>
+                </p>
+              ) : entry.kind === 'result' ? (
+                <p key={entry.id} className="cmdRow cmdJsRow cmdJsOut">
+                  <span className="cmdPrompt" aria-hidden="true">
+                    &lsaquo;
+                  </span>
+                  <span className="cmdJsText">{entry.text}</span>
                 </p>
               ) : entry.kind === 'help' ? (
                 <p key={entry.id} className="cmdRow cmdHelp">
@@ -456,9 +585,9 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
         )}
 
         {/* Suggestions: tap one to complete the line (the prefixes when the box is empty) */}
-        {!guideOpen && suggestions.length > 0 && (
+        {!guideOpen && chips.length > 0 && (
           <div className="cmdSuggest" role="group" aria-label="Suggestions">
-            {suggestions.map((item) => (
+            {chips.map((item) => (
               <button key={item.insert} type="button" className="cmdChip" onClick={() => pick(item.insert)} title={item.desc} data-nolog>
                 {item.label ? <span style={{ color: item.color }}>{item.label}</span> : <Tokens line={item.insert} />}
               </button>
@@ -480,8 +609,13 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
           }}
         >
           <div className="cmdField">
+            {mode === 'freestyle' && (
+              <span className="cmdPromptMark" aria-hidden="true">
+                &gt;
+              </span>
+            )}
             <div className="cmdMirror" ref={mirrorRef} aria-hidden="true">
-              <Tokens line={line} />
+              {mode === 'freestyle' && !line.trimStart().startsWith('@') ? <JsTokens line={line} /> : <Tokens line={line} />}
             </div>
             <input
               ref={inputRef}
@@ -497,8 +631,8 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
               onKeyUp={syncMirror}
               onScroll={syncMirror}
               onSelect={syncMirror}
-              placeholder="@prefix:command"
-              aria-label="Command"
+              placeholder={mode === 'freestyle' ? 'Type JavaScript...' : '@prefix:command'}
+              aria-label={mode === 'freestyle' ? 'Console input' : 'Command'}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="none"
