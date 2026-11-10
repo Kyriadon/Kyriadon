@@ -6,10 +6,12 @@
 // (view, filter, search ...) run here; commands that touch the server (delete, log, ping) go to
 // /api/commands, which checks the Developer role again. The list of commands is in
 // lib/commandRegistry.js. All visual values live in styles/commandStyles.css.
+// A command can end with a suffix ($ * & /) that changes how it runs (see SUFFIXES in the
+// registry). They are handled in submit() and execute() below and never work in freestyle mode.
 // ============================================================================
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, logEvent } from './siteShell';
-import { AT_COLOR, commandTint, findCommand, findPrefix, parseCommand, rolesOf, suggest, tokenize, usablePrefixes } from '../lib/commandRegistry';
+import { AT_COLOR, SUFFIXES, SUFFIX_COLOR, commandTint, findCommand, findPrefix, parseCommand, rolesOf, suggest, tokenize, usablePrefixes } from '../lib/commandRegistry';
 import { formatValue, highlightJs, runJs } from '../lib/consoleRunner';
 
 const HISTORY_KEY = 'kyriadon:commandHistory';
@@ -19,10 +21,10 @@ const DAY = 24 * 60 * 60 * 1000;
 
 // Commands that only change the page are written here; the server ones are in pages/api/commands.js.
 // A line made of coloured pieces (used by the input, the output, the suggestions and the guide)
-function Tokens({ line }) {
+function Tokens({ line, suffixes = true }) {
   return (
     <>
-      {tokenize(line).map((token, index) => (
+      {tokenize(line, { suffixes }).map((token, index) => (
         <span key={index} style={{ color: token.color }}>
           {token.text}
         </span>
@@ -196,15 +198,21 @@ async function runClient(prefix, command, args, ctx) {
 
     // Help
     case 'help:all':
-      return [{ kind: 'info', text: 'Type @prefix:command. Type a prefix to see its commands, for example @search' }, ...usablePrefixes(ctx.viewer).map((item) => ({ kind: 'help', line: `@${item.id}`, text: item.title }))];
+      return [{ kind: 'info', text: 'Type @prefix:command. Type a prefix to see its commands, for example @search' }, { kind: 'info', text: 'Put a suffix ($ * & /) right after a command to change how it runs. Type @help:suffixes to see them.' }, ...usablePrefixes(ctx.viewer).map((item) => ({ kind: 'help', line: `@${item.id}`, text: item.title }))];
     case 'help:prefixes':
       return usablePrefixes(ctx.viewer).flatMap((item) => [{ kind: 'gap' }, ...commandLines(item)]);
+    case 'help:suffixes':
+      return [
+        { kind: 'info', text: 'A suffix is one symbol right after the command, before the space. Use several if you like, each once, for example @refresh:logs*&' },
+        ...SUFFIXES.map((suffix) => ({ kind: 'help', line: suffix.example, text: `${suffix.symbol} ${suffix.title}: ${suffix.desc}` })),
+        { kind: 'info', text: 'Suffixes only work in the normal panel, not in freestyle mode.' },
+      ];
     case 'help:whoami': {
       const have = rolesOf(ctx.viewer);
       return info(`You are ${ctx.viewer?.name || 'signed in'}.`, `Roles: ${have.length ? have.join(', ') : 'none'}.`, `You can use: ${usablePrefixes(ctx.viewer).map((item) => `@${item.id}`).join(' ')}`);
     }
     case 'help:shortcuts':
-      return info('Enter runs the command.', 'Tab completes the first suggestion.', 'Up and Down bring back earlier commands.', 'Esc closes the panel.', 'On a computer, pressing @ on the logs page opens the panel.');
+      return info('Enter runs the command.', 'Tab completes the first suggestion.', 'Up and Down bring back earlier commands.', 'Esc closes the panel.', `A suffix after a command changes how it runs: ${SUFFIXES.map((suffix) => `${suffix.symbol} ${suffix.title.toLowerCase()}`).join(', ')}.`, 'On a computer, pressing @ on the logs page opens the panel.');
 
     // Tidy up
     case 'clear:output':
@@ -249,11 +257,41 @@ function CommandGuide({ onPick, viewer }) {
         <li>
           <span className="cmdArgsColor">arguments</span> are grey
         </li>
+        <li>
+          <span style={{ color: SUFFIX_COLOR }}>suffix</span> has the same colour as the @
+        </li>
       </ul>
       <p className="helperText cmdGuideText">Commands that delete ask you to run them twice. Press Enter again (or tap Confirm) to go ahead. You only see the prefixes your role can use.</p>
       <p className="helperText cmdGuideText">
         The panel is contained by default. @convert:freestyle turns it into a JavaScript console like F12 for this visit only: it is contained again when you close the panel or refresh the page.
       </p>
+      <p className="helperText cmdGuideText">
+        A <strong>suffix</strong> is one symbol right after the command, before any space, like <strong>@prefix:command$</strong>. It changes how the command runs. Use several if you like, each once, for example <strong>{'@refresh:logs*&'}</strong>. Tap one below to put an example in the box. Suffixes only work in the normal panel, not in freestyle mode.
+      </p>
+      <section className="cmdGroup">
+        <h4 className="cmdGroupTitle">
+          <span style={{ color: SUFFIX_COLOR }}>{SUFFIXES.map((suffix) => suffix.symbol).join(' ')}</span>
+          <span className="cmdGroupHint">Suffixes</span>
+          <span className="cmdWho">Staff, managers, admins and developers</span>
+        </h4>
+        <ul className="cmdList">
+          {SUFFIXES.map((suffix) => (
+            <li key={suffix.symbol}>
+              <button type="button" className="cmdPick" onClick={() => onPick(suffix.example)} data-nolog>
+                <span className="cmdPickLine">
+                  <Tokens line={suffix.example} />
+                </span>
+                <span className="cmdPickText">
+                  <span className="cmdSuffixMark" style={{ color: SUFFIX_COLOR }}>
+                    {suffix.symbol}
+                  </span>{' '}
+                  {suffix.title}: {suffix.desc}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
       {prefixes.map((prefix) => (
         <section key={prefix.id} className="cmdGroup">
           <h4 className="cmdGroupTitle">
@@ -307,7 +345,7 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
   const mirrorRef = useRef(null);
   const outputRef = useRef(null);
   const nextId = useRef(1);
-  const suggestions = useMemo(() => suggest(line, ctx.viewer).slice(0, 14), [line, ctx.viewer]);
+  const suggestions = useMemo(() => suggest(line, ctx.viewer, { suffixes: mode !== 'freestyle' }).slice(0, 14), [line, ctx.viewer, mode]);
 
   // Adds lines to the screen of a mode (the last 200 stay). push writes to the screen that is showing.
   const pushTo = (which, ...entries) => (which === 'freestyle' ? setConsoleOutput : setOutput)((previous) => [...previous, ...entries.map((entry) => ({ id: nextId.current++, ...entry }))].slice(-OUTPUT_MAX));
@@ -398,23 +436,29 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
     }
   };
 
-  // Runs a command that was already parsed
+  // Runs a command that was already parsed. Returns how it ended: 'failed', 'previewed' (the / suffix),
+  // 'switched' (the mode changed), 'reloaded' (the command loaded the logs again itself) or 'done'.
   const execute = async (text, parsed) => {
-    const { prefix, args } = parsed;
+    const { prefix, args, suffixes = [] } = parsed;
     let { command } = parsed;
     if (!command && prefix.id === 'help') command = findCommand(prefix, 'all');
     if (!command) {
       push({ kind: 'info', text: `@${prefix.id}: ${prefix.title}` }, ...commandLines(prefix));
-      return;
+      return 'done';
     }
     if (command.required && !args) {
       push({ kind: 'error', text: `Usage: @${prefix.id}:${command.id} ${command.args}` });
-      return;
+      return 'failed';
+    }
+    // The / suffix: say what the command would do and run nothing
+    if (suffixes.includes('/')) {
+      push({ kind: 'info', text: `Preview: ${command.desc.replace(/\.$/, '')}.` }, ...(command.danger ? [{ kind: 'warn', text: 'It would ask you to confirm before it runs.' }] : []), { kind: 'info', text: 'Nothing was run.' });
+      return 'previewed';
     }
     // @convert: changes the mode of the panel itself
     if (prefix.id === 'convert') {
       switchMode(command.id);
-      return;
+      return 'switched';
     }
     try {
       if (command.where === 'server') {
@@ -423,20 +467,26 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
           push({ kind: 'error', text: data.error || `The server answered ${response.status}.` });
-          return;
+          return 'failed';
         }
         const took = Math.round(performance.now() - started);
         push({ kind: 'ok', text: prefix.id === 'stats' ? `${data.message} ${took} ms round trip.` : data.message });
-        if (data.deleted !== undefined || data.reload) await ctx.reload();
+        let reloaded = false;
+        if (data.deleted !== undefined || data.reload) {
+          await ctx.reload();
+          reloaded = true;
+        }
         // The staff notes board refreshes when a command changed a note
         if (data.notes) window.dispatchEvent(new Event('kyriadon:notes-changed'));
-        return;
+        return reloaded ? 'reloaded' : 'done';
       }
       logEvent({ code: 'COMMAND_RUN', reason: `Ran the command ${text.slice(0, 80)}` });
       const lines = await runClient(prefix, command, args, fullCtx);
       if (lines.length) push(...lines);
+      return prefix.id === 'refresh' ? 'reloaded' : 'done';
     } catch (error) {
       push({ kind: 'error', text: `That did not work: ${error?.message || 'unknown error'}` });
+      return 'failed';
     }
   };
 
@@ -454,26 +504,43 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
       await runConsole(text);
       return;
     }
-    const parsed = parseCommand(text, ctx.viewer);
-    if (parsed.ok && parsed.command?.danger && !(pending && pending.key === normalise(text))) {
-      remember(text);
+    // Suffixes only work in the contained panel (parseCommand refuses them in freestyle mode)
+    const parsed = parseCommand(text, ctx.viewer, { suffixes: mode !== 'freestyle' });
+    const marks = parsed.ok ? parsed.suffixes : [];
+    const isPrivate = marks.includes('$');
+    const isPreview = marks.includes('/');
+    if (parsed.ok && parsed.command?.danger && !isPreview && !(pending && pending.key === normalise(text))) {
+      if (!isPrivate) remember(text);
       setPending({ text, key: normalise(text) });
       push({ kind: 'echo', line: text }, { kind: 'warn', text: parsed.command.id === 'set-limiter' ? 'This changes how logs are deleted from now on, and can delete logs right away. Press Enter again, or tap Confirm, to run it.' : 'This deletes logs for good. Press Enter again, or tap Confirm, to run it.' });
       return;
     }
     const confirmed = Boolean(pending && parsed.ok && pending.key === normalise(text));
     setPending(null);
-    remember(text);
+    // The $ suffix: the line is not saved in the history
+    if (!isPrivate) remember(text);
     if (!confirmed) push({ kind: 'echo', line: text });
     if (!parsed.ok) {
       push({ kind: 'error', text: parsed.error });
       return;
     }
     setBusy(true);
+    let outcome = 'failed';
     try {
-      await execute(text, parsed);
+      outcome = await execute(text, parsed);
+      // The & suffix: load the logs again afterwards (unless the command already did)
+      if (outcome === 'done' && marks.includes('&')) {
+        try {
+          await ctx.reload();
+          push({ kind: 'ok', text: 'Loaded the logs again.' });
+        } catch {
+          push({ kind: 'error', text: 'The logs could not be loaded again.' });
+        }
+      }
     } finally {
       setBusy(false);
+      // The * suffix: the command stays in the box so it can be run again
+      if (marks.includes('*') && outcome !== 'switched') setLine(text);
       inputRef.current?.focus();
     }
   };
@@ -492,9 +559,13 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
       const next = historyAt - 1;
       setHistoryAt(next);
       setLine(next < 0 ? '' : list[list.length - 1 - next]);
-    } else if (event.key === 'Tab' && suggestions.length && line.trim()) {
-      event.preventDefault();
-      setLine(suggestions[0].insert);
+    } else if (event.key === 'Tab' && line.trim()) {
+      // Tab completes the first prefix, command or parameter (suffix suggestions are only tapped)
+      const first = suggestions.find((item) => item.kind !== 'suffix');
+      if (first) {
+        event.preventDefault();
+        setLine(first.insert);
+      }
     }
   };
 
@@ -550,7 +621,7 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
                 <div key={entry.id} className="cmdGap" />
               ) : entry.kind === 'echo' ? (
                 <p key={entry.id} className="cmdRow cmdEcho">
-                  <Tokens line={entry.line} />
+                  <Tokens line={entry.line} suffixes={mode !== 'freestyle'} />
                 </p>
               ) : entry.kind === 'jsin' ? (
                 <p key={entry.id} className="cmdRow cmdJsRow">
@@ -615,7 +686,7 @@ export default function CommandPanel({ ctx, initialLine = '', onClose }) {
               </span>
             )}
             <div className="cmdMirror" ref={mirrorRef} aria-hidden="true">
-              {mode === 'freestyle' && !line.trimStart().startsWith('@') ? <JsTokens line={line} /> : <Tokens line={line} />}
+              {mode === 'freestyle' && !line.trimStart().startsWith('@') ? <JsTokens line={line} /> : <Tokens line={line} suffixes={mode !== 'freestyle'} />}
             </div>
             <input
               ref={inputRef}
