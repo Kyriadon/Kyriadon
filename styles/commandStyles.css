@@ -334,6 +334,12 @@
   color: var(--color-text-muted);
 }
 
+/* The symbol of a suffix in the guide (its colour is set inline, like the @) */
+.cmdSuffixMark {
+  font-family: var(--type-meta-family);
+  font-weight: 800;
+}
+
 /* --------------------------------------------------------------------------
    5. Phones: the screen is a little shorter so the input stays above the keyboard
    -------------------------------------------------------------------------- */
@@ -453,4 +459,3 @@
   background: #1b1c1f;
   border-color: #3c4043;
 }
-
