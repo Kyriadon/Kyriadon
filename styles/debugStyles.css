@@ -457,7 +457,7 @@
 /* Hover, keyboard focus and tap: the aurora flows and the edge lifts a little */
 .logRow[data-server='true']:is(:hover, :focus-visible, :active) {
   border-color: rgba(255, 255, 255, 0.34);
-  animation: serverAuroraFlow 10s linear infinite;
+  animation: serverAuroraFlow 16s linear infinite;
 }
 
 /* The aurora moves sideways by exactly one tile, so the loop has no seam */
@@ -496,10 +496,31 @@
   min-width: 0;
 }
 
-/* Server badge: the normal badge, in neutral light on a dark pill, with no aurora colour */
-.serverBadge {
-  --badge-fg: var(--color-text-primary);
-  --badge-bg: rgba(6, 10, 28, 0.55);
+/* Server badge (SVG): neutral light on a dark pill, with no aurora colour */
+.serverBadgeSvg {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+
+.serverBadgeBg {
+  fill: rgba(6, 10, 28, 0.55);
+  stroke: rgba(255, 255, 255, 0.28);
+}
+
+.serverBadgeGlyph {
+  fill: none;
+  stroke: var(--color-text-primary);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.serverBadgeText {
+  fill: var(--color-text-primary);
+  font-family: var(--font-ui);
+  font-weight: var(--type-overline-weight);
+  letter-spacing: 0.02em;
 }
 
 /* The red pin of the sticky notes (same look as a pinned note), stuck in the top edge of the card */
@@ -514,10 +535,11 @@
 .logPin {
   position: absolute;
   top: -0.45rem;
-  left: 1.25rem;
+  left: 50%;
   z-index: 1;
   width: 1.1rem;
   height: 1.1rem;
+  transform: translateX(-50%);
 }
 
 .showMore {
@@ -599,7 +621,7 @@
 }
 
 .rawLine[data-server='true']:is(:hover, :focus-visible, :active) {
-  animation: serverAuroraFlow 10s linear infinite;
+  animation: serverAuroraFlow 16s linear infinite;
 }
 
 /* Text on the aurora: light, so it stays readable on every colour of the fill */
@@ -620,7 +642,7 @@
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4);
 }
 
-.rawLine .serverBadge {
+.rawLine .serverBadgeSvg {
   align-self: center;
 }
 
