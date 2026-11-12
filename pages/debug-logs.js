@@ -4,6 +4,8 @@
 // info, warning and error. Anyone signed in can read; only staff can delete.
 // Staff logins and their reviews are only listed for staff and admins; admins also
 // see a bobbing red ! on a staff login nobody has reviewed yet.
+// Staff logins are "Server" logs: they are pinned to the top of the list (advanced and raw),
+// tagged Server and wear the Galaxy aurora gradient that drifts on hover (styles/debugStyles.css).
 // Developers get the raw view by default and the "relevant to this release"
 // section. Staff, managers, admins and developers get the Command panel (@prefix:command,
 // components/commandPanel.js); each role only sees the prefixes it may use. The header, footer and search palette come from components/siteShell.js.
@@ -107,13 +109,43 @@ const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const matches = (log, query) => {
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (!words.length) return true;
-  const haystack = `${log.level} ${log.code} ${log.reason} ${log.fix} ${log.user?.name || ''} ${log.path}`.toLowerCase();
+  const haystack = `${log.level} ${log.code} ${log.reason} ${log.fix} ${log.user?.name || ''} ${log.path} ${isServerLog(log) ? 'server pinned' : ''}`.toLowerCase();
   return words.every((word) => haystack.includes(word));
 };
 
 const countByLevel = (logs) => logs.reduce((totals, log) => ({ ...totals, [log.level]: (totals[log.level] || 0) + 1 }), { info: 0, warning: 0, error: 0 });
 
 const userLabel = (log) => (log.user ? `${log.user.name} (${log.user.id})` : 'anonymous');
+
+// Server logs are the staff logins, the ones admins have to approve. Only the server can create
+// the STAFF_LOGIN code (the log API renames look-alikes from browsers), so the code is enough to know.
+const isServerLog = (log) => log?.code === 'STAFF_LOGIN';
+
+// Pins server logs to the top, keeping whatever order was picked inside both groups
+const pinServerLogs = (rows) => {
+  const pinned = rows.filter(isServerLog);
+  return pinned.length ? [...pinned, ...rows.filter((log) => !isServerLog(log))] : rows;
+};
+
+// Pin icon (stroke style, same as the other icons of the site)
+function IconPin({ size = 12 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 17v5" />
+      <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" />
+    </svg>
+  );
+}
+
+// The "Server" tag: a pinned pin plus the word, with an aurora ring that flows on hover
+function ServerTag() {
+  return (
+    <span className="serverTag" title="Pinned server log">
+      <IconPin />
+      <span className="serverTagText">Server</span>
+    </span>
+  );
+}
 
 // Fields shown for one log in the raw view, in a stable order
 const rawShape = (log) => {
@@ -348,13 +380,17 @@ function LogCards({ logs, query, onOpen, approvalOf }) {
       {logs.map((log) => {
         const { Icon } = levelMeta[log.level];
         const waiting = approvalOf(log)?.status === 'pending';
+        const server = isServerLog(log);
         return (
           <li key={log.id}>
-            <button type="button" className="logRow" data-level={log.level} data-flagged={waiting} onClick={() => onOpen(log)} data-nolog>
+            <button type="button" className="logRow" data-level={log.level} data-flagged={waiting} data-server={server} onClick={() => onOpen(log)} data-nolog>
               <span className="logRowIcon"><Icon size={16} /></span>
               <span className="logRowBody">
                 <span className="logRowTop">
-                  <code className="mdCode"><Highlight text={log.code} query={query} /></code>
+                  <span className="logRowCodeGroup">
+                    <code className="mdCode"><Highlight text={log.code} query={query} /></code>
+                    {server && <ServerTag />}
+                  </span>
                   <span className="logRowTime" title={formatTime(log.time)}>{relativeTime(log.time)}</span>
                 </span>
                 <span className="logRowReason"><Highlight text={log.reason || 'No reason recorded'} query={query} /></span>
@@ -382,11 +418,12 @@ function RawBox({ logs, query, onOpen, approvalOf }) {
     <ul className="rawBox">
       {logs.map((log) => (
         <li key={log.id}>
-          <button type="button" className="rawLine" data-level={log.level} onClick={() => onOpen(log)} data-nolog>
+          <button type="button" className="rawLine" data-level={log.level} data-server={isServerLog(log)} onClick={() => onOpen(log)} data-nolog>
             {approvalOf(log)?.status === 'pending' && <span className="rawFlag"><ApprovalBang size={14} /></span>}
             <span className="rawTime">{formatTime(log.time)}</span>
             <span className="rawLevel">{log.level.toUpperCase()}</span>
             <span className="rawCode"><Highlight text={log.code} query={query} /></span>
+            {isServerLog(log) && <ServerTag />}
             <span className="rawReason"><Highlight text={log.reason} query={query} /></span>
             <span className="rawUser"><Highlight text={log.user?.name || 'anonymous'} query={query} /></span>
           </button>
@@ -1425,9 +1462,10 @@ export default function DebugLogs() {
   const counts = useMemo(() => countByLevel(logs), [logs]);
   const filtered = useMemo(() => {
     const rows = logs.filter((log) => (level === 'all' || log.level === level) && matches(log, query));
-    if (order === 'oldest') return [...rows].reverse();
-    if (order === 'errors-first') return [...rows].sort((a, b) => levelKeys.indexOf(b.level) - levelKeys.indexOf(a.level));
-    return rows;
+    // Server logs (staff logins) are pinned: they stay on top whichever order is picked
+    if (order === 'oldest') return pinServerLogs([...rows].reverse());
+    if (order === 'errors-first') return pinServerLogs([...rows].sort((a, b) => levelKeys.indexOf(b.level) - levelKeys.indexOf(a.level)));
+    return pinServerLogs(rows);
   }, [logs, level, query, order]);
   const visible = filtered.slice(0, limit);
   const selected = logs.find((log) => log.id === selectedId) || null;
