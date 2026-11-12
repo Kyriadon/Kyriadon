@@ -128,9 +128,19 @@ const pinServerLogs = (rows) => {
   return pinned.length ? [...pinned, ...rows.filter((log) => !isServerLog(log))] : rows;
 };
 
-// The "Server" tag: the site's normal badge, no special colour
+// The "Server" badge, drawn as an SVG: a neutral pill, a small server glyph and the word
 function ServerTag() {
-  return <span className="badge serverBadge">Server</span>;
+  return (
+    <svg className="serverBadgeSvg" viewBox="0 0 66 22" width="66" height="22" role="img" aria-label="Server log" focusable="false">
+      <rect className="serverBadgeBg" x="0.5" y="0.5" width="65" height="21" rx="10.5" />
+      <g className="serverBadgeGlyph">
+        <rect x="8" y="5" width="10" height="5.2" rx="1.3" />
+        <rect x="8" y="11.8" width="10" height="5.2" rx="1.3" />
+        <path d="M11 7.6h.01M11 14.4h.01" />
+      </g>
+      <text className="serverBadgeText" x="25" y="14.8" fontSize="11">Server</text>
+    </svg>
+  );
 }
 
 // Fields shown for one log in the raw view, in a stable order
