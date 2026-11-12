@@ -436,58 +436,53 @@
 }
 
 /* --------------------------------------------------------------------------
-   6b. Server logs: pinned staff logins on a solid Galaxy aurora
-   The aurora is the card's own fill, so it always covers the whole card and can
-   never be cut off or spill outside it. On hover, keyboard focus or tap it flows
-   slowly (phones have no hover, so a tap does the same).
+   6b. Server logs: pinned staff logins with panel art
+   Same construction as the Rules page panels: a backdrop clips an enlarged
+   illustration, which the lower right edge of the card crops.
    -------------------------------------------------------------------------- */
 
-/* Server card: opaque aurora fill with a soft sheen along the top edge */
-.logRow[data-server='true'],
-.logRow[data-server='true']:hover {
+/* Server card: the pin sticks out of the top edge, the art stays behind the content */
+.logRow[data-server='true'] {
   position: relative;
-  background-color: var(--color-bg-raised);
-  background-image: var(--gradient-server-aurora-sheen), var(--gradient-server-aurora);
-  background-size: 100% 100%, 200% 100%;
-  background-position: 0% 0%, 0% 0%;
-  background-repeat: no-repeat, repeat-x;
-  border-color: rgba(255, 255, 255, 0.16);
+  isolation: isolate;
 }
 
-/* Hover, keyboard focus and tap: the aurora flows and the edge lifts a little */
-.logRow[data-server='true']:is(:hover, :focus-visible, :active) {
-  border-color: rgba(255, 255, 255, 0.34);
-  animation: serverAuroraFlow 16s linear infinite;
+/* Backdrop: clips the art to the card so nothing can spill outside it */
+.logBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
 }
 
-/* The aurora moves sideways by exactly one tile, so the loop has no seam */
-@keyframes serverAuroraFlow {
-  from { background-position: 0% 0%, 0% 0%; }
-  to { background-position: 0% 0%, 200% 0%; }
+/* Panel art: bigger than the card, faded in from the lower right (same mask as the Rules art) */
+.logArt {
+  position: absolute;
+  right: -1.5rem;
+  bottom: -2.75rem;
+  width: 9rem;
+  height: 9rem;
+  color: var(--color-text-secondary);
+  opacity: 0.3;
+  -webkit-mask-image: linear-gradient(150deg, transparent 8%, #000 70%);
+  mask-image: linear-gradient(150deg, transparent 8%, #000 70%);
+  transition: opacity var(--motion-base) linear;
 }
 
-/* Text on the aurora: light, so it stays readable on every colour of the fill */
-.logRow[data-server='true'] .logRowReason {
-  color: var(--color-text-primary);
+.logArt svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
-.logRow[data-server='true'] :is(.logRowTime, .logRowMeta, .logRowChevron) {
-  color: color-mix(in srgb, var(--color-text-primary) 82%, transparent);
+/* Hover, keyboard focus and tap: the art comes forward a little */
+.logRow[data-server='true']:is(:hover, :focus-visible, :active) .logArt {
+  opacity: 0.5;
 }
 
-/* Level icon: a quiet light circle on the aurora */
-.logRow[data-server='true'] .logRowIcon {
-  color: var(--color-text-primary);
-  background: rgba(255, 255, 255, 0.16);
-}
-
-/* Code chip: dark, so it reads the same as on a normal log */
-.logRow[data-server='true'] .mdCode {
-  background: rgba(5, 8, 24, 0.5);
-  border-color: rgba(255, 255, 255, 0.18);
-}
-
-/* Code and Server badge sit together on the left of the top line */
+/* Code and server badge sit together on the left of the top line */
 .logRowCodeGroup {
   display: flex;
   flex-wrap: wrap;
@@ -496,34 +491,26 @@
   min-width: 0;
 }
 
-/* Server badge (SVG): neutral light on a dark pill, with no aurora colour */
+/* Server badge (SVG): the neutral badge look of the site, a pill with a server glyph and no text */
 .serverBadgeSvg {
   display: block;
   flex: none;
-  overflow: visible;
 }
 
 .serverBadgeBg {
-  fill: rgba(6, 10, 28, 0.55);
-  stroke: rgba(255, 255, 255, 0.28);
+  fill: var(--color-neutral-soft);
+  stroke: color-mix(in srgb, var(--color-neutral) 28%, transparent);
 }
 
 .serverBadgeGlyph {
   fill: none;
-  stroke: var(--color-text-primary);
+  stroke: var(--color-neutral);
   stroke-width: 1.4;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.serverBadgeText {
-  fill: var(--color-text-primary);
-  font-family: var(--font-ui);
-  font-weight: var(--type-overline-weight);
-  letter-spacing: 0.02em;
-}
-
-/* The red pin of the sticky notes (same look as a pinned note), stuck in the top edge of the card */
+/* The red pin of the sticky notes (same look as a pinned note), stuck in the middle of the top edge */
 .logPin,
 .rawPin {
   background: radial-gradient(circle at 35% 30%, #fca5a5 0 18%, #ef4444 45%, #991b1b 100%);
@@ -540,6 +527,15 @@
   width: 1.1rem;
   height: 1.1rem;
   transform: translateX(-50%);
+}
+
+/* Smaller art on phones, so the text keeps the room */
+@media (max-width: 640px) {
+  .logArt {
+    right: -1.25rem;
+    width: 7.5rem;
+    height: 7.5rem;
+  }
 }
 
 .showMore {
@@ -610,30 +606,7 @@
   color: var(--color-text-muted);
 }
 
-/* Raw view, server line: the same solid aurora fill, flowing on hover, focus and tap */
-.rawLine[data-server='true'],
-.rawLine[data-server='true']:hover {
-  background-color: var(--color-bg-raised);
-  background-image: var(--gradient-server-aurora-sheen), var(--gradient-server-aurora);
-  background-size: 100% 100%, 200% 100%;
-  background-position: 0% 0%, 0% 0%;
-  background-repeat: no-repeat, repeat-x;
-}
-
-.rawLine[data-server='true']:is(:hover, :focus-visible, :active) {
-  animation: serverAuroraFlow 16s linear infinite;
-}
-
-/* Text on the aurora: light, so it stays readable on every colour of the fill */
-.rawLine[data-server='true'] :is(.rawTime, .rawUser) {
-  color: color-mix(in srgb, var(--color-text-primary) 82%, transparent);
-}
-
-.rawLine[data-server='true'] :is(.rawLevel, .rawCode, .rawReason) {
-  color: var(--color-text-primary);
-}
-
-/* The pin and the Server badge line up with the text of the raw line */
+/* Raw view, server line: a small pin at the start and the server badge, lined up with the text */
 .rawPin {
   flex: none;
   align-self: center;
@@ -644,14 +617,6 @@
 
 .rawLine .serverBadgeSvg {
   align-self: center;
-}
-
-/* Reduced motion: the aurora stays still, same colours and layout */
-@media (prefers-reduced-motion: reduce) {
-  .logRow[data-server='true'],
-  .rawLine[data-server='true'] {
-    animation: none !important;
-  }
 }
 
 .rawJson {
