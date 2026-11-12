@@ -436,65 +436,58 @@
 }
 
 /* --------------------------------------------------------------------------
-   6b. Server logs: pinned staff logins in the Galaxy aurora
-   A calm aurora tint and a thin aurora edge at rest. On hover, focus or tap the light
-   drifts, the edge flows and the Server tag shimmers. Phones have no hover, so the tap
-   (:active) and keyboard focus trigger the same motion.
+   6b. Server logs: pinned staff logins on a solid Galaxy aurora
+   The aurora is the card's own fill, so it always covers the whole card and can
+   never be cut off or spill outside it. On hover, keyboard focus or tap it flows
+   slowly (phones have no hover, so a tap does the same).
    -------------------------------------------------------------------------- */
 
-/* Server card: the wash and the edge sit behind and on top of the content */
-.logRow[data-server='true'] {
+/* Server card: opaque aurora fill with a soft sheen along the top edge */
+.logRow[data-server='true'],
+.logRow[data-server='true']:hover {
   position: relative;
-  isolation: isolate;
-}
-
-/* Aurora wash: drawn oversized so it can drift, calm at rest */
-.logRow[data-server='true']::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background-image: var(--gradient-server-aurora);
-  background-size: 170% 170%;
-  background-position: 0% 0%;
-  background-repeat: no-repeat;
-  opacity: 0.32;
-  pointer-events: none;
-  transition: opacity var(--motion-base) linear;
-}
-
-/* Aurora edge: the same flowing ring technique as the panels, thin and still at rest */
-.logRow[data-server='true']::after {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  padding: 1.5px;
-  border-radius: inherit;
-  background: var(--gradient-server-aurora-flow);
-  background-size: 200% 100%;
-  background-repeat: repeat-x;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  opacity: 0.5;
-  pointer-events: none;
-  transition: opacity var(--motion-base) linear;
-}
-
-/* Level icon: a small aurora orb instead of the plain level circle */
-.logRow[data-server='true'] .logRowIcon {
-  color: var(--color-server-aurora);
   background-color: var(--color-bg-raised);
-  background-image: var(--gradient-server-aurora);
-  background-size: 260% 260%;
-  background-position: 0% 0%;
-  background-repeat: no-repeat;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-server-aurora) 32%, transparent);
+  background-image: var(--gradient-server-aurora-sheen), var(--gradient-server-aurora);
+  background-size: 100% 100%, 200% 100%;
+  background-position: 0% 0%, 0% 0%;
+  background-repeat: no-repeat, repeat-x;
+  border-color: rgba(255, 255, 255, 0.16);
 }
 
-/* Code and Server tag sit together on the left of the top line */
+/* Hover, keyboard focus and tap: the aurora flows and the edge lifts a little */
+.logRow[data-server='true']:is(:hover, :focus-visible, :active) {
+  border-color: rgba(255, 255, 255, 0.34);
+  animation: serverAuroraFlow 10s linear infinite;
+}
+
+/* The aurora moves sideways by exactly one tile, so the loop has no seam */
+@keyframes serverAuroraFlow {
+  from { background-position: 0% 0%, 0% 0%; }
+  to { background-position: 0% 0%, 200% 0%; }
+}
+
+/* Text on the aurora: light, so it stays readable on every colour of the fill */
+.logRow[data-server='true'] .logRowReason {
+  color: var(--color-text-primary);
+}
+
+.logRow[data-server='true'] :is(.logRowTime, .logRowMeta, .logRowChevron) {
+  color: color-mix(in srgb, var(--color-text-primary) 82%, transparent);
+}
+
+/* Level icon: a quiet light circle on the aurora */
+.logRow[data-server='true'] .logRowIcon {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* Code chip: dark, so it reads the same as on a normal log */
+.logRow[data-server='true'] .mdCode {
+  background: rgba(5, 8, 24, 0.5);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Code and Server badge sit together on the left of the top line */
 .logRowCodeGroup {
   display: flex;
   flex-wrap: wrap;
@@ -503,71 +496,28 @@
   min-width: 0;
 }
 
-/* Hover, keyboard focus and tap: the light drifts and the edge flows */
-.logRow[data-server='true']:is(:hover, :focus-visible, :active) {
-  border-color: transparent;
+/* Server badge: the normal badge, in neutral light on a dark pill, with no aurora colour */
+.serverBadge {
+  --badge-fg: var(--color-text-primary);
+  --badge-bg: rgba(6, 10, 28, 0.55);
 }
 
-.logRow[data-server='true']:is(:hover, :focus-visible, :active)::before {
-  opacity: 1;
-  animation: serverAuroraDrift 8s ease-in-out infinite;
+/* The red pin of the sticky notes (same look as a pinned note), stuck in the top edge of the card */
+.logPin,
+.rawPin {
+  background: radial-gradient(circle at 35% 30%, #fca5a5 0 18%, #ef4444 45%, #991b1b 100%);
+  border-radius: 50%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
 }
 
-.logRow[data-server='true']:is(:hover, :focus-visible, :active)::after {
-  opacity: 1;
-  animation: holoFlow var(--motion-flow) linear infinite;
-}
-
-.logRow[data-server='true']:is(:hover, :focus-visible, :active) .logRowIcon {
-  animation: serverAuroraDrift 8s ease-in-out infinite;
-}
-
-/* The aurora light moving slowly across the card (and the icon orb) */
-@keyframes serverAuroraDrift {
-  0% { background-position: 0% 0%; }
-  33% { background-position: 100% 30%; }
-  66% { background-position: 40% 100%; }
-  100% { background-position: 0% 0%; }
-}
-
-/* Server tag: a pill with an aurora ring, the pin in light lilac and the word in aurora text */
-.serverTag {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 0.3rem;
-  height: 1.25rem;
-  padding: 0 var(--space-2);
-  font-family: var(--font-ui);
-  font-size: var(--type-overline-size);
-  font-weight: var(--type-overline-weight);
-  letter-spacing: 0.02em;
-  line-height: 1;
-  color: var(--color-server-aurora);
-  background:
-    linear-gradient(var(--color-bg-raised), var(--color-bg-raised)) padding-box,
-    var(--gradient-server-aurora-flow) border-box;
-  background-size: auto, 200% 100%;
-  border: 1px solid transparent;
-  border-radius: var(--radius-pill);
-}
-
-/* The word in the same flowing gradient as the ring */
-.serverTagText {
-  background: var(--gradient-server-aurora-flow);
-  background-size: 200% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* The tag shimmers together with its row */
-:is(.logRow, .rawLine)[data-server='true']:is(:hover, :focus-visible, :active) .serverTag {
-  animation: holoFlow var(--motion-flow) linear infinite;
-}
-
-:is(.logRow, .rawLine)[data-server='true']:is(:hover, :focus-visible, :active) .serverTagText {
-  animation: roleShimmer 2.4s linear infinite;
+.logPin {
+  position: absolute;
+  top: -0.45rem;
+  left: 1.25rem;
+  z-index: 1;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .showMore {
@@ -638,62 +588,46 @@
   color: var(--color-text-muted);
 }
 
-/* Raw view, server line: the same aurora wash and a flowing aurora bar on the left */
-.rawLine[data-server='true'] {
-  position: relative;
-  isolation: isolate;
+/* Raw view, server line: the same solid aurora fill, flowing on hover, focus and tap */
+.rawLine[data-server='true'],
+.rawLine[data-server='true']:hover {
+  background-color: var(--color-bg-raised);
+  background-image: var(--gradient-server-aurora-sheen), var(--gradient-server-aurora);
+  background-size: 100% 100%, 200% 100%;
+  background-position: 0% 0%, 0% 0%;
+  background-repeat: no-repeat, repeat-x;
 }
 
-.rawLine[data-server='true']::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background-image: var(--gradient-server-aurora);
-  background-size: 170% 170%;
-  background-position: 0% 0%;
-  background-repeat: no-repeat;
-  opacity: 0.3;
-  pointer-events: none;
-  transition: opacity var(--motion-base) linear;
+.rawLine[data-server='true']:is(:hover, :focus-visible, :active) {
+  animation: serverAuroraFlow 10s linear infinite;
 }
 
-.rawLine[data-server='true']::after {
-  content: '';
-  position: absolute;
-  top: 0.3rem;
-  bottom: 0.3rem;
-  left: 0;
-  width: 3px;
-  border-radius: var(--radius-pill);
-  background: var(--gradient-server-aurora-flow);
-  background-size: 200% 100%;
-  pointer-events: none;
+/* Text on the aurora: light, so it stays readable on every colour of the fill */
+.rawLine[data-server='true'] :is(.rawTime, .rawUser) {
+  color: color-mix(in srgb, var(--color-text-primary) 82%, transparent);
 }
 
-.rawLine[data-server='true']:is(:hover, :focus-visible, :active)::before {
-  opacity: 1;
-  animation: serverAuroraDrift 8s ease-in-out infinite;
+.rawLine[data-server='true'] :is(.rawLevel, .rawCode, .rawReason) {
+  color: var(--color-text-primary);
 }
 
-.rawLine[data-server='true']:is(:hover, :focus-visible, :active)::after {
-  animation: holoFlow var(--motion-flow) linear infinite;
+/* The pin and the Server badge line up with the text of the raw line */
+.rawPin {
+  flex: none;
+  align-self: center;
+  width: 0.8rem;
+  height: 0.8rem;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4);
 }
 
-/* The tag lines up with the text of the raw line */
-.rawLine .serverTag {
+.rawLine .serverBadge {
   align-self: center;
 }
 
 /* Reduced motion: the aurora stays still, same colours and layout */
 @media (prefers-reduced-motion: reduce) {
-  :is(.logRow, .rawLine)[data-server='true'],
-  :is(.logRow, .rawLine)[data-server='true']::before,
-  :is(.logRow, .rawLine)[data-server='true']::after,
-  :is(.logRow, .rawLine)[data-server='true'] .logRowIcon,
-  :is(.logRow, .rawLine)[data-server='true'] .serverTag,
-  :is(.logRow, .rawLine)[data-server='true'] .serverTagText {
+  .logRow[data-server='true'],
+  .rawLine[data-server='true'] {
     animation: none !important;
   }
 }
