@@ -4,9 +4,9 @@
 // info, warning and error. Anyone signed in can read; only staff can delete.
 // Staff logins and their reviews are only listed for staff and admins; admins also
 // see a bobbing red ! on a staff login nobody has reviewed yet.
-// Staff logins are "Server" logs: pinned to the top (advanced and raw) with the red pin of the
-// sticky notes, tagged with a normal Server badge and filled with the solid Galaxy aurora that
-// flows on hover (styles/debugStyles.css).
+// Staff logins are "server" logs: pinned to the top (advanced and raw) with the red pin of the
+// sticky notes, marked with a neutral server badge and, in the advanced list, panel art like the
+// Rules page (components/ruleArt.js style). Styles: styles/debugStyles.css.
 // Developers get the raw view by default and the "relevant to this release"
 // section. Staff, managers, admins and developers get the Command panel (@prefix:command,
 // components/commandPanel.js); each role only sees the prefixes it may use. The header, footer and search palette come from components/siteShell.js.
@@ -128,17 +128,30 @@ const pinServerLogs = (rows) => {
   return pinned.length ? [...pinned, ...rows.filter((log) => !isServerLog(log))] : rows;
 };
 
-// The "Server" badge, drawn as an SVG: a neutral pill, a small server glyph and the word
+// Server badge, drawn as an SVG: a neutral pill with a small server glyph and no text
 function ServerTag() {
   return (
-    <svg className="serverBadgeSvg" viewBox="0 0 66 22" width="66" height="22" role="img" aria-label="Server log" focusable="false">
-      <rect className="serverBadgeBg" x="0.5" y="0.5" width="65" height="21" rx="10.5" />
+    <svg className="serverBadgeSvg" viewBox="0 0 26 22" width="26" height="22" role="img" aria-label="Server log" focusable="false">
+      <title>Server log</title>
+      <rect className="serverBadgeBg" x="0.5" y="0.5" width="25" height="21" rx="10.5" />
       <g className="serverBadgeGlyph">
         <rect x="8" y="5" width="10" height="5.2" rx="1.3" />
         <rect x="8" y="11.8" width="10" height="5.2" rx="1.3" />
         <path d="M11 7.6h.01M11 14.4h.01" />
       </g>
-      <text className="serverBadgeText" x="25" y="14.8" fontSize="11">Server</text>
+    </svg>
+  );
+}
+
+// Panel art for server logs: a server rack, drawn like the art on the Rules page (outlines two deep)
+function ServerArt() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <rect x="3" y="3.2" width="18" height="5" rx="1.6" fill="currentColor" fillOpacity="0.14" strokeWidth="0.8" />
+      <rect x="3" y="9.5" width="18" height="5" rx="1.6" fill="currentColor" fillOpacity="0.14" strokeWidth="0.8" />
+      <rect x="3" y="15.8" width="18" height="5" rx="1.6" fill="currentColor" fillOpacity="0.14" strokeWidth="0.8" />
+      <path d="M6.2 5.7h.01M6.2 12h.01M6.2 18.3h.01" strokeWidth="1.4" />
+      <path d="M10 5.7h7M10 12h7M10 18.3h7" strokeWidth="0.6" strokeOpacity="0.8" />
     </svg>
   );
 }
@@ -380,7 +393,12 @@ function LogCards({ logs, query, onOpen, approvalOf }) {
         return (
           <li key={log.id}>
             <button type="button" className="logRow" data-level={log.level} data-flagged={waiting} data-server={server} onClick={() => onOpen(log)} data-nolog>
-              {server && <span className="logPin" role="img" aria-label="Pinned" title="Pinned" />}
+              {server && (
+                <>
+                  <span className="logBackdrop" aria-hidden="true"><span className="logArt"><ServerArt /></span></span>
+                  <span className="logPin" role="img" aria-label="Pinned" title="Pinned" />
+                </>
+              )}
               <span className="logRowIcon"><Icon size={16} /></span>
               <span className="logRowBody">
                 <span className="logRowTop">
