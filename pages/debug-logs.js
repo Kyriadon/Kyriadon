@@ -5,8 +5,9 @@
 // Staff logins and their reviews are only listed for staff and admins; admins also
 // see a bobbing red ! on a staff login nobody has reviewed yet.
 // Staff logins are "server" logs: pinned to the top (advanced and raw) with the red pin of the
-// sticky notes, marked with a neutral server badge and, in the advanced list, panel art like the
-// Rules page (components/ruleArt.js style). Styles: styles/debugStyles.css.
+// sticky notes, marked with a bold Server badge and, in the advanced list, panel art like the
+// Rules page (components/ruleArt.js style) that fills with the site's light blue, azure and light
+// purple gradient on hover. Styles: styles/debugStyles.css.
 // Developers get the raw view by default and the "relevant to this release"
 // section. Staff, managers, admins and developers get the Command panel (@prefix:command,
 // components/commandPanel.js); each role only sees the prefixes it may use. The header, footer and search palette come from components/siteShell.js.
@@ -128,19 +129,9 @@ const pinServerLogs = (rows) => {
   return pinned.length ? [...pinned, ...rows.filter((log) => !isServerLog(log))] : rows;
 };
 
-// Server badge, drawn as an SVG: a neutral pill with a small server glyph and no text
+// Server badge: the site's neutral badge with the word in bold
 function ServerTag() {
-  return (
-    <svg className="serverBadgeSvg" viewBox="0 0 26 22" width="26" height="22" role="img" aria-label="Server log" focusable="false">
-      <title>Server log</title>
-      <rect className="serverBadgeBg" x="0.5" y="0.5" width="25" height="21" rx="10.5" />
-      <g className="serverBadgeGlyph">
-        <rect x="8" y="5" width="10" height="5.2" rx="1.3" />
-        <rect x="8" y="11.8" width="10" height="5.2" rx="1.3" />
-        <path d="M11 7.6h.01M11 14.4h.01" />
-      </g>
-    </svg>
-  );
+  return <span className="badge serverBadge" data-tone="neutral">Server</span>;
 }
 
 // Panel art for server logs: a server rack, drawn like the art on the Rules page (outlines two deep)
@@ -395,7 +386,7 @@ function LogCards({ logs, query, onOpen, approvalOf }) {
             <button type="button" className="logRow" data-level={log.level} data-flagged={waiting} data-server={server} onClick={() => onOpen(log)} data-nolog>
               {server && (
                 <>
-                  <span className="logBackdrop" aria-hidden="true"><span className="logArt"><ServerArt /></span></span>
+                  <span className="logBackdrop" aria-hidden="true"><span className="logArt"><ServerArt /><span className="logArtGlow" /></span></span>
                   <span className="logPin" role="img" aria-label="Pinned" title="Pinned" />
                 </>
               )}
