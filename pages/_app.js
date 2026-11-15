@@ -8,6 +8,7 @@ import { useRouter } from 'next/router';
 import { SessionProvider } from 'next-auth/react';
 import { buildCssVariables, fonts } from '../lib/siteDesign';
 import { AccountProvider } from '../lib/accountClient';
+import TextSelection from '../components/textSelection';
 
 // Global CSS must be imported here (Next.js pages router rule)
 import '../styles/homeStyles.css';
@@ -38,6 +39,9 @@ import '../styles/commandStyles.css';
 
 // Staff notes board of the debug logs (sticky notes)
 import '../styles/notesStyles.css';
+
+// Text selection, site-wide: the blue twin of the purple == highlight (loaded last on purpose)
+import '../styles/selectionStyles.css';
 
 // Design tokens become CSS variables once, at module load
 const tokenCss = buildCssVariables();
@@ -115,6 +119,8 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
         {/* The page transition (fade and slight blur) */}
         <style id="pageTransitions" dangerouslySetInnerHTML={{ __html: transitionCss }} />
       </Head>
+      {/* Site-wide text selection: draws the blue pill highlight with the flowing gradient letters */}
+      <TextSelection />
       {/* Profile, roles and staff login state of the signed-in user */}
       <AccountProvider>
         {/* Keyed by the page, so each page starts its fade in fresh */}
