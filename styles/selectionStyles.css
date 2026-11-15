@@ -1,0 +1,122 @@
+/* ============================================================================
+   selectionStyles.css
+   Site-wide text selection: the blue twin of the purple == highlight (.mdHl, .logHl).
+   Drawn by components/textSelection.js, gradients come from lib/siteDesign.js
+   (--gradient-selection-tint and --gradient-selection-flow), the loop time from --motion-flow.
+
+   Parts:
+   1. Native fallback (no JavaScript, or the painter stopped): light blue highlight
+   2. Painter on: the native highlight becomes see-through and its text turns white
+   3. Text fields keep a native light blue highlight
+   4. The two layers and their pills
+   5. Reduced motion, forced colours and print
+   ============================================================================ */
+
+/* --------------------------------------------------------------------------
+   1. Native fallback: light blue, the same colour family as the pills
+   -------------------------------------------------------------------------- */
+::selection {
+  background: color-mix(in srgb, var(--color-light-blue) 36%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   2. Painter on: the real selection stays (so Ctrl+C and dragging work), but its own highlight is
+   invisible and its letters are white. The flow layer multiplies the gradient over those white
+   letters, which is what turns them white, baby blue and azure. The painter only switches this on
+   where the browser can blend layers and colours are not forced, so these rules never apply
+   without it.
+   -------------------------------------------------------------------------- */
+html[data-selection='custom'] ::selection {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+  text-shadow: none;
+  background: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   3. Text fields cannot be redrawn, so they keep the browser highlight in the same light blue
+   -------------------------------------------------------------------------- */
+html[data-selection='custom'] input::selection,
+html[data-selection='custom'] textarea::selection,
+html[data-selection='custom'] [contenteditable]::selection,
+html[data-selection='custom'] [contenteditable] *::selection {
+  background: color-mix(in srgb, var(--color-light-blue) 36%, transparent);
+}
+
+/* The debug logs command field draws its own coloured text over transparent letters, so it keeps
+   the highlight it had before (commandStyles.css) */
+html[data-selection='custom'] .cmdInput::selection {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  background: color-mix(in srgb, var(--color-focus) 40%, transparent);
+}
+
+/* --------------------------------------------------------------------------
+   4. The layers: click-through, above the page, one tint underneath and one flow on top.
+   The tint is screened over the page (a light blue glow behind the letters, white stays white).
+   The flow is multiplied over the page (white letters take the gradient, dark areas stay dark).
+   -------------------------------------------------------------------------- */
+.selLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+
+  /* Width of one flow loop. The gradient tiles every period, and its first and last stops
+     match, so the loop has no seam. */
+  --selection-period: 520px;
+}
+
+.selTintLayer {
+  mix-blend-mode: screen;
+}
+
+.selFlowLayer {
+  mix-blend-mode: multiply;
+}
+
+/* One word (or line) of the selection. Position and size are set by the painter. */
+.selPill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  pointer-events: none;
+}
+
+/* Tint pill: light blue to azure, the same construction as the .mdHl gradient */
+.selTintLayer .selPill {
+  background: var(--gradient-selection-tint);
+}
+
+/* Flow pill: white, baby blue and azure flowing left to right. The painter sets --kx to the pill's
+   distance from the left of the screen, so neighbouring pills show one continuous wave, and each
+   pill starts at the same phase of the loop. */
+.selFlowLayer .selPill {
+  background-image: var(--gradient-selection-flow);
+  background-size: var(--selection-period) 100%;
+  background-repeat: repeat-x;
+  background-position: calc(var(--kx, 0) * -1px) 0;
+  animation: selectionFlow var(--motion-flow) linear infinite;
+}
+
+@keyframes selectionFlow {
+  from { background-position: calc(var(--kx, 0) * -1px) 0; }
+  to { background-position: calc(var(--kx, 0) * -1px + var(--selection-period)) 0; }
+}
+
+/* --------------------------------------------------------------------------
+   5. Reduced motion: the gradient stays, it just stops flowing.
+   Forced colours and print: the browser's own selection is used.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .selFlowLayer .selPill {
+    animation: none;
+  }
+}
+
+@media (forced-colors: active), print {
+  .selLayer {
+    display: none !important;
+  }
+}
