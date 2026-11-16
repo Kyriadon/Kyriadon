@@ -1349,24 +1349,25 @@ h6 {
   position: relative;
 }
 
-/* Gradient layer: 4 bar-widths wide, slanted and heavily blurred so the colors melt into each other.
-   It is much taller than the bar so the blur never fades at the bar's edges; the bar clips the overflow. */
+/* Gradient layer: 3 tiles of 3 bar-widths each, so the bar only ever shows a slice of the color cycle.
+   Slanted and heavily blurred so the colors melt into each other. It is much taller than the bar so the
+   blur never fades at the bar's edges; the bar clips the overflow. */
 .userMenuItem.userMenuExperiments::before {
   content: '';
   position: absolute;
-  top: -40px;
-  bottom: -40px;
-  left: -150%;
-  width: 400%;
+  top: -64px;
+  bottom: -64px;
+  left: -400%;
+  width: 900%;
   background: var(--gradient-experiments-flow);
-  background-size: 25% 100%;
+  background-size: 33.3333% 100%;
   background-repeat: repeat-x;
   transform: skewX(-20deg);
   filter: blur(28px);
   opacity: 0;
   transition: opacity var(--motion-fast) linear;
   pointer-events: none;
-  animation: experimentsFlow var(--motion-flow) linear infinite;
+  animation: experimentsFlow calc(var(--motion-flow) * 3) linear infinite;
   animation-play-state: paused;
 }
 
@@ -1377,10 +1378,10 @@ h6 {
   will-change: transform;
 }
 
-/* One tile (25% of the 400% layer = one bar width) = seamless loop */
+/* One tile (33.3333% of the 900% layer = 3 bar widths) = seamless loop. The duration is tripled above so the speed stays the same as before */
 @keyframes experimentsFlow {
   from { transform: skewX(-20deg) translateX(0); }
-  to { transform: skewX(-20deg) translateX(-25%); }
+  to { transform: skewX(-20deg) translateX(-33.3333%); }
 }
 
 /* Reduced motion: the gradient shows, it just stays still */
