@@ -17,6 +17,9 @@ import { useAccount } from '../lib/accountClient';
 // The Account modal (avatar editor, names, staff login) loads only when it is opened
 const AccountModal = dynamic(() => import('./accountModal'), { ssr: false });
 
+// The Experiments modal loads only when it is opened, like the Account modal
+const ExperimentsModal = dynamic(() => import('./experimentsModal'), { ssr: false });
+
 // ----------------------------------------------------------------------------
 // Shared destinations: social links and where the footer credit leads
 // ----------------------------------------------------------------------------
@@ -609,6 +612,7 @@ export function SiteShell({ title, description, children }) {
   const [modifierLabel, setModifierLabel] = useState('Ctrl');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [experimentsOpen, setExperimentsOpen] = useState(false);
   const triggerRef = useRef(null);
   const userMenuRef = useRef(null);
   const userButtonRef = useRef(null);
@@ -668,6 +672,12 @@ export function SiteShell({ title, description, children }) {
   // Closing the Account modal returns focus to the avatar button (the menu item is hidden by then)
   const closeAccount = useCallback(() => {
     setAccountOpen(false);
+    requestAnimationFrame(() => userButtonRef.current?.focus());
+  }, []);
+
+  // Closing the Experiments modal also returns focus to the avatar button
+  const closeExperiments = useCallback(() => {
+    setExperimentsOpen(false);
     requestAnimationFrame(() => userButtonRef.current?.focus());
   }, []);
 
@@ -754,8 +764,15 @@ export function SiteShell({ title, description, children }) {
                   <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
                     Notifications
                   </button>
-                                        {/* Experiments: flask icon and a label in the light blue to azure gradient */}
-                  <button type="button" className="userMenuItem userMenuExperiments" onClick={() => setUserMenuOpen(false)}>
+                  {/* Experiments: flask icon and a label in the light blue to azure gradient; opens the Experiments modal */}
+                  <button
+                    type="button"
+                    className="userMenuItem userMenuExperiments"
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      setExperimentsOpen(true);
+                    }}
+                  >
                     <IconExperiments size={18} />
                     <span>Experiments</span>
                   </button>
@@ -819,6 +836,9 @@ export function SiteShell({ title, description, children }) {
 
       {/* Account modal: avatar, username, display name and the staff login */}
       {accountOpen && authStatus === 'authenticated' && <AccountModal onClose={closeAccount} />}
+
+      {/* Experiments modal: same dialog as Account, with the flowing white, azure, baby blue and purple surface */}
+      {experimentsOpen && authStatus === 'authenticated' && <ExperimentsModal onClose={closeExperiments} />}
     </>
   );
 }
@@ -888,7 +908,7 @@ export function IconEraser({ size = 18 }) {
 // Modal: shared dialog (portal, scroll lock, Escape, focus trap). Clicks inside
 // are not logged as user actions (data-nolog) to keep the logs readable.
 // ----------------------------------------------------------------------------
-export function Modal({ titleId, title, subtitle, onClose, toolbar, footer, size, children }) {
+export function Modal({ titleId, title, subtitle, onClose, toolbar, footer, size, tone, children }) {
   const dialogRef = useRef(null);
 
   useEffect(() => {
@@ -933,7 +953,7 @@ export function Modal({ titleId, title, subtitle, onClose, toolbar, footer, size
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="studioDialog sheetDialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} ref={dialogRef} onKeyDown={onKeyDown} data-size={size} data-nolog>
+      <div className="studioDialog sheetDialog" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} ref={dialogRef} onKeyDown={onKeyDown} data-size={size} data-tone={tone} data-nolog>
         <div className="studioHeader">
           <div>
             <h3 id={titleId}>{title}</h3>
