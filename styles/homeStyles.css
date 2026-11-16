@@ -1338,30 +1338,31 @@ h6 {
   -webkit-text-fill-color: transparent;
 }
 
-/* Experiments bar: hover shows a rounded translucent chip (same style as the Announcements chip) filled with the Experiments gradient */
+/* Experiments bar: hover shows a smooth, translucent, fully blended gradient flowing behind the label (same feel as the Log out hover) */
 .userMenuItem.userMenuExperiments {
   position: relative;
-  clip-path: inset(2px 6px round 8px);
+  overflow: hidden;
 }
 
-/* The label and the flask stay above the gradient layers */
+/* The label and the flask stay above the gradient layer */
 .userMenuItem.userMenuExperiments > * {
   position: relative;
 }
 
-/* Fill: 4 bar-widths wide, slanted and blurred, clipped to the chip shape by the bar */
+/* Gradient layer: 4 bar-widths wide, slanted and heavily blurred so the colors melt into each other.
+   It is much taller than the bar so the blur never fades at the bar's edges; the bar clips the overflow. */
 .userMenuItem.userMenuExperiments::before {
   content: '';
   position: absolute;
-  top: -12px;
-  bottom: -12px;
+  top: -40px;
+  bottom: -40px;
   left: -150%;
   width: 400%;
   background: var(--gradient-experiments-flow);
   background-size: 25% 100%;
   background-repeat: repeat-x;
   transform: skewX(-20deg);
-  filter: blur(10px);
+  filter: blur(28px);
   opacity: 0;
   transition: opacity var(--motion-fast) linear;
   pointer-events: none;
@@ -1369,31 +1370,11 @@ h6 {
   animation-play-state: paused;
 }
 
-/* Border: 1px ring of the same gradient, same chip shape */
-.userMenuItem.userMenuExperiments::after {
-  content: '';
-  position: absolute;
-  inset: 2px 6px;
-  padding: 1px;
-  border-radius: 8px;
-  background: var(--gradient-experiments-flow);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  opacity: 0;
-  transition: opacity var(--motion-fast) linear;
-  pointer-events: none;
-}
-
-/* On hover the fill fades in and flows, the border fades in */
+/* On hover the layer fades in and flows */
 .userMenuItem.userMenuExperiments:hover::before {
   opacity: 0.32;
   animation-play-state: running;
   will-change: transform;
-}
-
-.userMenuItem.userMenuExperiments:hover::after {
-  opacity: 0.5;
 }
 
 /* One tile (25% of the 400% layer = one bar width) = seamless loop */
@@ -1402,7 +1383,7 @@ h6 {
   to { transform: skewX(-20deg) translateX(-25%); }
 }
 
-/* Reduced motion: the chip shows, it just stays still */
+/* Reduced motion: the gradient shows, it just stays still */
 @media (prefers-reduced-motion: reduce) {
   .userMenuItem.userMenuExperiments::before {
     animation: none;
