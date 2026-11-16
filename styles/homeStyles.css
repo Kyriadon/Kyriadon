@@ -1329,6 +1329,15 @@ h6 {
   background: var(--color-card-hover);
 }
 
+/* Experiments entry: the label carries the light blue to azure gradient, like its flask icon */
+.userMenuItem.userMenuExperiments span {
+  background: var(--gradient-experiments);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
 .userMenuItem.userMenuLogout {
   color: #ff6f6f;
 }
