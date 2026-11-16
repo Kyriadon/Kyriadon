@@ -10,6 +10,7 @@
    3. Text fields keep a native light blue highlight
    4. The two layers and their pills
    5. Reduced motion, forced colours and print
+   6. Colour tones: green, yellow, orange, pink, purple, grey and black (blue stays the default)
    ============================================================================ */
 
 /* --------------------------------------------------------------------------
@@ -132,4 +133,73 @@ html[data-selection='custom'] .cmdInput::selection {
   .selLayer {
     display: none !important;
   }
+}
+
+/* --------------------------------------------------------------------------
+   6. Colour tones. Blue is the default and is not touched by anything below: with no
+   data-selection-tone on <html> (or the value "blue"), sections 1 to 5 apply exactly as they are.
+   Pick another tone with <html data-selection-tone="green">, one of: green, yellow, orange, pink,
+   purple, grey, black. A tone only re-points the three selection colours; the shapes, the 30
+   percent strength, the flow speed and every rule above stay the same. The tokens (built like
+   the blue ones) come from lib/siteDesign.js.
+   -------------------------------------------------------------------------- */
+html[data-selection-tone='green'] {
+  --gradient-selection-tint: var(--selection-tone-green-tint);
+  --gradient-selection-flow: var(--selection-tone-green-flow);
+  --selection-native: var(--selection-tone-green-native);
+}
+
+html[data-selection-tone='yellow'] {
+  --gradient-selection-tint: var(--selection-tone-yellow-tint);
+  --gradient-selection-flow: var(--selection-tone-yellow-flow);
+  --selection-native: var(--selection-tone-yellow-native);
+}
+
+html[data-selection-tone='orange'] {
+  --gradient-selection-tint: var(--selection-tone-orange-tint);
+  --gradient-selection-flow: var(--selection-tone-orange-flow);
+  --selection-native: var(--selection-tone-orange-native);
+}
+
+html[data-selection-tone='pink'] {
+  --gradient-selection-tint: var(--selection-tone-pink-tint);
+  --gradient-selection-flow: var(--selection-tone-pink-flow);
+  --selection-native: var(--selection-tone-pink-native);
+}
+
+html[data-selection-tone='purple'] {
+  --gradient-selection-tint: var(--selection-tone-purple-tint);
+  --gradient-selection-flow: var(--selection-tone-purple-flow);
+  --selection-native: var(--selection-tone-purple-native);
+}
+
+html[data-selection-tone='grey'] {
+  --gradient-selection-tint: var(--selection-tone-grey-tint);
+  --gradient-selection-flow: var(--selection-tone-grey-flow);
+  --selection-native: var(--selection-tone-grey-native);
+}
+
+html[data-selection-tone='black'] {
+  --gradient-selection-tint: var(--selection-tone-black-tint);
+  --gradient-selection-flow: var(--selection-tone-black-flow);
+  --selection-native: var(--selection-tone-black-native);
+}
+
+/* Native fallback (painter off) in the tone's colour. Without a tone colour it is the same light
+   blue as section 1. */
+html[data-selection-tone]:not([data-selection='custom']) ::selection {
+  background: var(--selection-native, color-mix(in srgb, var(--color-light-blue) 36%, transparent));
+}
+
+/* Text fields keep a native highlight (section 3), now in the tone's colour */
+html[data-selection-tone][data-selection='custom'] input::selection,
+html[data-selection-tone][data-selection='custom'] textarea::selection,
+html[data-selection-tone][data-selection='custom'] [contenteditable]::selection,
+html[data-selection-tone][data-selection='custom'] [contenteditable] *::selection {
+  background: var(--selection-native, color-mix(in srgb, var(--color-light-blue) 36%, transparent));
+}
+
+/* Black only: a thin light edge on the tint pill, so a black pill still shows on the dark site */
+html[data-selection-tone='black'] .selTintLayer .selPill {
+  box-shadow: var(--selection-tone-black-edge);
 }
