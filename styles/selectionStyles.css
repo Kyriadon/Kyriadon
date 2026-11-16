@@ -52,30 +52,31 @@ html[data-selection='custom'] .cmdInput::selection {
 }
 
 /* --------------------------------------------------------------------------
-   4. The layers: click-through, above the page, one tint underneath and one flow on top.
-   The tint is screened over the page (a light blue glow behind the letters, white stays white).
-   The flow is multiplied over the page (white letters take the gradient, dark areas stay dark).
+   4. The layers: click-through and anchored to the page (not the screen), so scrolling moves the
+   pills together with the text without any script. The tint sits on the page as it is. The flow is
+   multiplied over the page: the letters are white while selected, so they take the gradient, and
+   dark areas stay dark.
    -------------------------------------------------------------------------- */
 .selLayer {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
   z-index: 2147483000;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
 
-  /* Width of one flow loop. The gradient tiles every period, and its first and last stops
-     match, so the loop has no seam. */
+  /* Width of one flow loop. The painter sets the same value, this is only the default. */
   --selection-period: 520px;
-}
-
-.selTintLayer {
-  mix-blend-mode: screen;
 }
 
 .selFlowLayer {
   mix-blend-mode: multiply;
 }
 
-/* One word (or line) of the selection. Position and size are set by the painter. */
+/* One line of the selection. Position and size are set by the painter. */
 .selPill {
   position: absolute;
   top: 0;
@@ -89,20 +90,32 @@ html[data-selection='custom'] .cmdInput::selection {
   background: var(--gradient-selection-tint);
 }
 
-/* Flow pill: white, baby blue and azure flowing left to right. The painter sets --kx to the pill's
-   distance from the left of the screen, so neighbouring pills show one continuous wave, and each
-   pill starts at the same phase of the loop. */
+/* Flow pill: white, baby blue and azure flowing left to right. The gradient sits on a strip that is
+   one period wider than the pill and slides by exactly one period, so the loop has no seam. Only a
+   transform moves, which the GPU does without repainting. --ko lines the pattern up with the page,
+   so neighbouring lines show one continuous wave, and --kd starts every pill at the same phase. */
 .selFlowLayer .selPill {
+  overflow: hidden;
+}
+
+.selFlowLayer .selPill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--selection-period) * -1);
+  width: calc(100% + var(--selection-period));
   background-image: var(--gradient-selection-flow);
   background-size: var(--selection-period) 100%;
   background-repeat: repeat-x;
-  background-position: calc(var(--kx, 0) * -1px) 0;
+  background-position: calc(var(--ko, 0) * 1px) 0;
   animation: selectionFlow var(--motion-flow) linear infinite;
+  animation-delay: var(--kd, 0s);
 }
 
 @keyframes selectionFlow {
-  from { background-position: calc(var(--kx, 0) * -1px) 0; }
-  to { background-position: calc(var(--kx, 0) * -1px + var(--selection-period)) 0; }
+  from { transform: translateX(0); }
+  to { transform: translateX(var(--selection-period)); }
 }
 
 /* --------------------------------------------------------------------------
@@ -110,7 +123,7 @@ html[data-selection='custom'] .cmdInput::selection {
    Forced colours and print: the browser's own selection is used.
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  .selFlowLayer .selPill {
+  .selFlowLayer .selPill::before {
     animation: none;
   }
 }
