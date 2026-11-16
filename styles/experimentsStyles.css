@@ -1,25 +1,25 @@
 /* ============================================================================
    experimentsStyles.css
    Experiments modal: the shared dialog (same shell as the Account modal) with a
-   flowing white, azure, baby blue and purple surface. The gradient itself is the
-   named token --gradient-experiments-modal (lib/siteDesign.js). The surface is
-   bright, so the text and buttons inside use dark ink for contrast.
+   flowing purple, dark purple, dark baby blue and teal surface. The gradient itself
+   is the named token --gradient-experiments-modal (lib/siteDesign.js). The surface
+   is dark, so the text and buttons inside use light ink.
    ============================================================================ */
 .sheetDialog[data-tone='experiments'] {
-  /* Local to this modal: ink and glass colours for a bright surface */
-  --exp-ink: #0b1330;
-  --exp-ink-soft: rgba(11, 19, 48, 0.85);
-  --exp-line: rgba(11, 19, 48, 0.16);
-  --exp-glass: rgba(255, 255, 255, 0.55);
-  --exp-glass-hover: rgba(255, 255, 255, 0.82);
+  /* Local to this modal: ink and glass colours for the dark gradient surface */
+  --exp-ink: #f4f7ff;
+  --exp-ink-soft: rgba(244, 247, 255, 0.86);
+  --exp-line: rgba(255, 255, 255, 0.2);
+  --exp-glass: rgba(255, 255, 255, 0.12);
+  --exp-glass-hover: rgba(255, 255, 255, 0.22);
 
   color: var(--exp-ink);
-  background-color: #ffffff;
+  background-color: #2e1065;
   background-image: var(--gradient-experiments-modal);
   background-size: 200% 200%;
   background-position: 0% 0%;
-  border-color: rgba(255, 255, 255, 0.75);
-  box-shadow: var(--shadow-modal), 0 0 80px -16px rgba(181, 140, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: var(--shadow-modal), 0 0 80px -20px rgba(109, 63, 209, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.22);
   animation: dialogIn var(--motion-base) var(--motion-ease) both, experimentsFlow 16s ease-in-out infinite;
 }
 
@@ -54,7 +54,7 @@
 
 .sheetDialog[data-tone='experiments'] .btn:hover {
   background: var(--exp-glass-hover);
-  border-color: rgba(11, 19, 48, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .sheetDialog[data-tone='experiments'] .btn:focus-visible {
