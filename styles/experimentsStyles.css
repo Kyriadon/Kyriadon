@@ -1,0 +1,70 @@
+/* ============================================================================
+   experimentsStyles.css
+   Experiments modal: the shared dialog (same shell as the Account modal) with a
+   flowing white, azure, baby blue and purple surface. The gradient itself is the
+   named token --gradient-experiments-modal (lib/siteDesign.js). The surface is
+   bright, so the text and buttons inside use dark ink for contrast.
+   ============================================================================ */
+.sheetDialog[data-tone='experiments'] {
+  /* Local to this modal: ink and glass colours for a bright surface */
+  --exp-ink: #0b1330;
+  --exp-ink-soft: rgba(11, 19, 48, 0.85);
+  --exp-line: rgba(11, 19, 48, 0.16);
+  --exp-glass: rgba(255, 255, 255, 0.55);
+  --exp-glass-hover: rgba(255, 255, 255, 0.82);
+
+  color: var(--exp-ink);
+  background-color: #ffffff;
+  background-image: var(--gradient-experiments-modal);
+  background-size: 200% 200%;
+  background-position: 0% 0%;
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow: var(--shadow-modal), 0 0 80px -16px rgba(181, 140, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: dialogIn var(--motion-base) var(--motion-ease) both, experimentsFlow 16s ease-in-out infinite;
+}
+
+/* The gradient drifts from the top left to the bottom right and back (no seam, no jump) */
+@keyframes experimentsFlow {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+.sheetDialog[data-tone='experiments'] .studioHeader {
+  border-bottom-color: var(--exp-line);
+}
+
+.sheetDialog[data-tone='experiments'] .studioFooter {
+  border-top-color: var(--exp-line);
+}
+
+.sheetDialog[data-tone='experiments'] .studioHeader h3 {
+  color: var(--exp-ink);
+}
+
+.sheetDialog[data-tone='experiments'] .guideSubtitle {
+  color: var(--exp-ink-soft);
+}
+
+.sheetDialog[data-tone='experiments'] .btn {
+  color: var(--exp-ink);
+  background: var(--exp-glass);
+  border-color: var(--exp-line);
+}
+
+.sheetDialog[data-tone='experiments'] .btn:hover {
+  background: var(--exp-glass-hover);
+  border-color: rgba(11, 19, 48, 0.3);
+}
+
+.sheetDialog[data-tone='experiments'] .btn:focus-visible {
+  outline: 2px solid var(--exp-ink);
+  outline-offset: 2px;
+}
+
+.sheetDialog[data-tone='experiments'] .expText {
+  margin: 0;
+  padding: var(--space-4) 0;
+  line-height: 1.55;
+  color: var(--exp-ink-soft);
+}
