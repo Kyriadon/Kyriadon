@@ -1338,6 +1338,47 @@ h6 {
   -webkit-text-fill-color: transparent;
 }
 
+/* Experiments bar: the hover gradient sits on a layer behind the label, so the label stays readable */
+.userMenuItem.userMenuExperiments {
+  position: relative;
+}
+
+/* The label and the flask stay above the gradient layer */
+.userMenuItem.userMenuExperiments > * {
+  position: relative;
+}
+
+/* Gradient layer: invisible until hover, twice as wide as the bar so it can slide one full loop */
+.userMenuItem.userMenuExperiments::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-experiments-flow);
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity var(--motion-fast) linear;
+  pointer-events: none;
+}
+
+/* On hover the layer fades in and flows, the same way the text selection gradient does */
+.userMenuItem.userMenuExperiments:hover::before {
+  opacity: 0.32;
+  animation: experimentsFlow var(--motion-flow) linear infinite;
+}
+
+/* Sliding by exactly one image width (200% of a 200% layer) makes the loop seamless */
+@keyframes experimentsFlow {
+  from { background-position: 0 0; }
+  to { background-position: 200% 0; }
+}
+
+/* Reduced motion: the gradient shows, it just stays still */
+@media (prefers-reduced-motion: reduce) {
+  .userMenuItem.userMenuExperiments:hover::before {
+    animation: none;
+  }
+}
+
 .userMenuItem.userMenuLogout {
   color: #ff6f6f;
 }
