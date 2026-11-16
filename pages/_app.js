@@ -28,6 +28,9 @@ import '../styles/punishmentsStyles.css';
 // Account modal and staff login review styles
 import '../styles/accountStyles.css';
 
+// Experiments modal styles (flowing white, azure, baby blue and purple surface)
+import '../styles/experimentsStyles.css';
+
 // Announcements page, cards, manager and custom markup styles
 import '../styles/announcementStyles.css';
 
