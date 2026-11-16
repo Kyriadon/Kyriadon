@@ -1338,19 +1338,18 @@ h6 {
   -webkit-text-fill-color: transparent;
 }
 
-/* Experiments bar: the hover gradient sits on a layer behind the label, so the label stays readable */
+/* Experiments bar: hover shows a rounded translucent chip (same style as the Announcements chip) filled with the Experiments gradient */
 .userMenuItem.userMenuExperiments {
   position: relative;
-  overflow: hidden;
+  clip-path: inset(2px 6px round 8px);
 }
 
-/* The label and the flask stay above the gradient layer */
+/* The label and the flask stay above the gradient layers */
 .userMenuItem.userMenuExperiments > * {
   position: relative;
 }
 
-/* Gradient layer: 4 bar-widths wide (4 tiles of exactly one bar width), slanted and blurred.
-   It is taller than the bar so the blur fades outside the bar, and the bar clips the overflow. */
+/* Fill: 4 bar-widths wide, slanted and blurred, clipped to the chip shape by the bar */
 .userMenuItem.userMenuExperiments::before {
   content: '';
   position: absolute;
@@ -1366,26 +1365,44 @@ h6 {
   opacity: 0;
   transition: opacity var(--motion-fast) linear;
   pointer-events: none;
-  /* Always "running" but paused, so leaving the bar freezes the flow while it fades out instead of snapping back */
   animation: experimentsFlow var(--motion-flow) linear infinite;
   animation-play-state: paused;
 }
 
-/* On hover the layer fades in and flows */
+/* Border: 1px ring of the same gradient, same chip shape */
+.userMenuItem.userMenuExperiments::after {
+  content: '';
+  position: absolute;
+  inset: 2px 6px;
+  padding: 1px;
+  border-radius: 8px;
+  background: var(--gradient-experiments-flow);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0;
+  transition: opacity var(--motion-fast) linear;
+  pointer-events: none;
+}
+
+/* On hover the fill fades in and flows, the border fades in */
 .userMenuItem.userMenuExperiments:hover::before {
   opacity: 0.32;
   animation-play-state: running;
   will-change: transform;
 }
 
-/* Moving by exactly one tile (25% of the 400% layer = one bar width) makes the loop seamless.
-   Transform is composited, so the blurred layer is painted once and only moved */
+.userMenuItem.userMenuExperiments:hover::after {
+  opacity: 0.5;
+}
+
+/* One tile (25% of the 400% layer = one bar width) = seamless loop */
 @keyframes experimentsFlow {
   from { transform: skewX(-20deg) translateX(0); }
   to { transform: skewX(-20deg) translateX(-25%); }
 }
 
-/* Reduced motion: the gradient shows, it just stays still */
+/* Reduced motion: the chip shows, it just stays still */
 @media (prefers-reduced-motion: reduce) {
   .userMenuItem.userMenuExperiments::before {
     animation: none;
