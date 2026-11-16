@@ -1338,59 +1338,6 @@ h6 {
   -webkit-text-fill-color: transparent;
 }
 
-/* Experiments bar: hover shows a smooth, translucent, fully blended gradient flowing behind the label (same feel as the Log out hover) */
-.userMenuItem.userMenuExperiments {
-  position: relative;
-  overflow: hidden;
-}
-
-/* The label and the flask stay above the gradient layer */
-.userMenuItem.userMenuExperiments > * {
-  position: relative;
-}
-
-/* Gradient layer: 3 tiles of 3 bar-widths each, so the bar only ever shows a slice of the color cycle.
-   Slanted and heavily blurred so the colors melt into each other. It is much taller than the bar so the
-   blur never fades at the bar's edges; the bar clips the overflow. */
-.userMenuItem.userMenuExperiments::before {
-  content: '';
-  position: absolute;
-  top: -64px;
-  bottom: -64px;
-  left: -400%;
-  width: 900%;
-  background: var(--gradient-experiments-flow);
-  background-size: 33.3333% 100%;
-  background-repeat: repeat-x;
-  transform: skewX(-20deg);
-  filter: blur(28px);
-  opacity: 0;
-  transition: opacity var(--motion-fast) linear;
-  pointer-events: none;
-  animation: experimentsFlow calc(var(--motion-flow) * 3) linear infinite;
-  animation-play-state: paused;
-}
-
-/* On hover the layer fades in and flows */
-.userMenuItem.userMenuExperiments:hover::before {
-  opacity: 0.32;
-  animation-play-state: running;
-  will-change: transform;
-}
-
-/* One tile (33.3333% of the 900% layer = 3 bar widths) = seamless loop. The duration is tripled above so the speed stays the same as before */
-@keyframes experimentsFlow {
-  from { transform: skewX(-20deg) translateX(0); }
-  to { transform: skewX(-20deg) translateX(-33.3333%); }
-}
-
-/* Reduced motion: the gradient shows, it just stays still */
-@media (prefers-reduced-motion: reduce) {
-  .userMenuItem.userMenuExperiments::before {
-    animation: none;
-  }
-}
-
 .userMenuItem.userMenuLogout {
   color: #ff6f6f;
 }
