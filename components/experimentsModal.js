@@ -2,7 +2,7 @@
 // experimentsModal.js
 // The Experiments modal (opened from "Experiments" in the user menu). It is the
 // same shared Modal as the Account modal; tone="experiments" gives it the flowing
-// white, azure, baby blue and purple surface (styles/experimentsStyles.css).
+// purple, dark purple, dark baby blue and teal surface (styles/experimentsStyles.css).
 // ============================================================================
 import { Modal } from './siteShell';
 
