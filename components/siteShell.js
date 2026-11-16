@@ -837,7 +837,7 @@ export function SiteShell({ title, description, children }) {
       {/* Account modal: avatar, username, display name and the staff login */}
       {accountOpen && authStatus === 'authenticated' && <AccountModal onClose={closeAccount} />}
 
-      {/* Experiments modal: same dialog as Account, with the flowing white, azure, baby blue and purple surface */}
+      {/* Experiments modal: same dialog as Account, with the flowing purple, dark purple, dark baby blue and teal surface */}
       {experimentsOpen && authStatus === 'authenticated' && <ExperimentsModal onClose={closeExperiments} />}
     </>
   );
