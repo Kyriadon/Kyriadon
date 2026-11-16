@@ -109,6 +109,31 @@ export function IconNameMc({ size = 18 }) {
   );
 }
 
+// Experiments flask with the light blue to azure gradient (user menu)
+export function IconExperiments({ size = 18 }) {
+  // Gradient colours come from siteDesign, like the K mark
+  const [a, b] = gradientStops.experiments;
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="experimentsGradient" gradientUnits="userSpaceOnUse" x1="4" y1="3" x2="20" y2="21">
+          <stop offset="0" stopColor={a} />
+          <stop offset="1" stopColor={b} />
+        </linearGradient>
+      </defs>
+      {/* Flask: neck, body and the liquid line */}
+      <path
+        d="M9 3h6M10 3v6.2L4.6 18.1A1.8 1.8 0 0 0 6.1 21h11.8a1.8 1.8 0 0 0 1.5-2.9L14 9.2V3M7.6 15h8.8"
+        fill="none"
+        stroke="url(#experimentsGradient)"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 // K mark with the bubblegum pink to blue gradient (footer slug)
 export function IconKMark({ size = 18 }) {
   const [a, b, c] = gradientStops.slugK;
@@ -728,6 +753,11 @@ export function SiteShell({ title, description, children }) {
                   </button>
                   <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
                     Notifications
+                  </button>
+                                        {/* Experiments: flask icon and a label in the light blue to azure gradient */}
+                  <button type="button" className="userMenuItem userMenuExperiments" onClick={() => setUserMenuOpen(false)}>
+                    <IconExperiments size={18} />
+                    <span>Experiments</span>
                   </button>
                   <button
                     type="button"
