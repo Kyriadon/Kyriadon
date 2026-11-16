@@ -1341,6 +1341,7 @@ h6 {
 /* Experiments bar: the hover gradient sits on a layer behind the label, so the label stays readable */
 .userMenuItem.userMenuExperiments {
   position: relative;
+  overflow: hidden;
 }
 
 /* The label and the flask stay above the gradient layer */
@@ -1348,33 +1349,45 @@ h6 {
   position: relative;
 }
 
-/* Gradient layer: invisible until hover, twice as wide as the bar so it can slide one full loop */
+/* Gradient layer: 4 bar-widths wide (4 tiles of exactly one bar width), slanted and blurred.
+   It is taller than the bar so the blur fades outside the bar, and the bar clips the overflow. */
 .userMenuItem.userMenuExperiments::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: -12px;
+  bottom: -12px;
+  left: -150%;
+  width: 400%;
   background: var(--gradient-experiments-flow);
-  background-size: 200% 100%;
+  background-size: 25% 100%;
+  background-repeat: repeat-x;
+  transform: skewX(-20deg);
+  filter: blur(10px);
   opacity: 0;
   transition: opacity var(--motion-fast) linear;
   pointer-events: none;
+  /* Always "running" but paused, so leaving the bar freezes the flow while it fades out instead of snapping back */
+  animation: experimentsFlow var(--motion-flow) linear infinite;
+  animation-play-state: paused;
 }
 
-/* On hover the layer fades in and flows, the same way the text selection gradient does */
+/* On hover the layer fades in and flows */
 .userMenuItem.userMenuExperiments:hover::before {
   opacity: 0.32;
-  animation: experimentsFlow var(--motion-flow) linear infinite;
+  animation-play-state: running;
+  will-change: transform;
 }
 
-/* Sliding by exactly one image width (200% of a 200% layer) makes the loop seamless */
+/* Moving by exactly one tile (25% of the 400% layer = one bar width) makes the loop seamless.
+   Transform is composited, so the blurred layer is painted once and only moved */
 @keyframes experimentsFlow {
-  from { background-position: 0 0; }
-  to { background-position: 200% 0; }
+  from { transform: skewX(-20deg) translateX(0); }
+  to { transform: skewX(-20deg) translateX(-25%); }
 }
 
 /* Reduced motion: the gradient shows, it just stays still */
 @media (prefers-reduced-motion: reduce) {
-  .userMenuItem.userMenuExperiments:hover::before {
+  .userMenuItem.userMenuExperiments::before {
     animation: none;
   }
 }
