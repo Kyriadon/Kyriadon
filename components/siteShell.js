@@ -138,7 +138,7 @@ export function IconExperiments({ size = 18 }) {
 }
 
 // Distinct highlight colors logo (Experiments modal). The drawing comes from siteDesign
-// (experimentIcons.distinctHighlight); its fill is every selection colour turning around the centre
+// (experimentIcons.distinctHighlight); its fill is the experiment's teal to cyan turning around the centre
 export function IconDistinctHighlight({ size = 28 }) {
   const logo = experimentIcons.distinctHighlight;
   // Every copy gets its own mask and gradient ids ("dhr1" instead of ":r1:")
