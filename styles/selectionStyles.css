@@ -10,7 +10,7 @@
    3. Text fields keep a native light blue highlight
    4. The two layers and their pills
    5. Reduced motion, forced colours and print
-   6. Colour tones: green, yellow, orange, pink, purple, grey and black (blue stays the default)
+   6. Colour tones: green, yellow, orange, red, pink, purple, grey and black, plus Cycle (blue stays the default)
    ============================================================================ */
 
 /* --------------------------------------------------------------------------
@@ -138,8 +138,9 @@ html[data-selection='custom'] .cmdInput::selection {
 /* --------------------------------------------------------------------------
    6. Colour tones. Blue is the default and is not touched by anything below: with no
    data-selection-tone on <html> (or the value "blue"), sections 1 to 5 apply exactly as they are.
-   Pick another tone with <html data-selection-tone="green">, one of: green, yellow, orange, pink,
-   purple, grey, black. A tone only re-points the three selection colours; the shapes, the 30
+   Pick another tone with <html data-selection-tone="green">, one of: green, yellow, orange, red, pink,
+   purple, grey, black, or cycle (flows through every colour, see the end of this file). The choice is made
+   in the Experiments modal and kept by lib/selectionTone.js. A tone only re-points the three selection colours; the shapes, the 30
    percent strength, the flow speed and every rule above stay the same. The tokens (built like
    the blue ones) come from lib/siteDesign.js.
    -------------------------------------------------------------------------- */
@@ -159,6 +160,12 @@ html[data-selection-tone='orange'] {
   --gradient-selection-tint: var(--selection-tone-orange-tint);
   --gradient-selection-flow: var(--selection-tone-orange-flow);
   --selection-native: var(--selection-tone-orange-native);
+}
+
+html[data-selection-tone='red'] {
+  --gradient-selection-tint: var(--selection-tone-red-tint);
+  --gradient-selection-flow: var(--selection-tone-red-flow);
+  --selection-native: var(--selection-tone-red-native);
 }
 
 html[data-selection-tone='pink'] {
@@ -202,4 +209,63 @@ html[data-selection-tone][data-selection='custom'] [contenteditable] *::selectio
 /* Black only: a thin light edge on the tint pill, so a black pill still shows on the dark site */
 html[data-selection-tone='black'] .selTintLayer .selPill {
   box-shadow: var(--selection-tone-black-edge);
+}
+
+/* --------------------------------------------------------------------------
+   Cycle: the highlight flows through every colour (blue, purple, pink, red, orange, yellow, green and
+   back to blue, one loop per --motion-cycle). Three registered colour properties travel through the
+   palette; the two gradients are built from them on the layers themselves, so only the selection
+   redraws, never the page. Without @property support the colour steps instead of gliding. Text fields
+   and the native fallback keep the default light blue.
+   -------------------------------------------------------------------------- */
+@property --selection-cycle-light {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #7cc4ff;
+}
+
+@property --selection-cycle-main {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #3b9bff;
+}
+
+@property --selection-cycle-soft {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #bfe6ff;
+}
+
+@keyframes selectionCycle {
+  0%, 100% { --selection-cycle-light: #7cc4ff; --selection-cycle-main: #3b9bff; --selection-cycle-soft: #bfe6ff; }
+  14.286% { --selection-cycle-light: #d9c2ff; --selection-cycle-main: #a56bff; --selection-cycle-soft: #efe6ff; }
+  28.571% { --selection-cycle-light: #ff9ad5; --selection-cycle-main: #ff6fb5; --selection-cycle-soft: #ffd6ec; }
+  42.857% { --selection-cycle-light: #fca5a5; --selection-cycle-main: #ef4444; --selection-cycle-soft: #fee2e2; }
+  57.143% { --selection-cycle-light: #ffbe84; --selection-cycle-main: #ff9f4a; --selection-cycle-soft: #ffe2c4; }
+  71.429% { --selection-cycle-light: #fde68a; --selection-cycle-main: #facc15; --selection-cycle-soft: #fef9c3; }
+  85.714% { --selection-cycle-light: #6ee7b7; --selection-cycle-main: #34d399; --selection-cycle-soft: #d1fae5; }
+}
+
+html[data-selection-tone='cycle'] .selLayer {
+  --gradient-selection-tint: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--selection-cycle-light) 30%, transparent),
+    color-mix(in srgb, var(--selection-cycle-main) 30%, transparent)
+  );
+  --gradient-selection-flow: linear-gradient(
+    90deg,
+    #ffffff,
+    var(--selection-cycle-soft),
+    var(--selection-cycle-main),
+    var(--selection-cycle-soft),
+    #ffffff
+  );
+  animation: selectionCycle var(--motion-cycle) linear infinite;
+}
+
+/* Reduced motion: Cycle stays on its first colour (blue) instead of changing */
+@media (prefers-reduced-motion: reduce) {
+  html[data-selection-tone='cycle'] .selLayer {
+    animation: none;
+  }
 }
