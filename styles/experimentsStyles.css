@@ -132,6 +132,17 @@
   to { transform: rotate(360deg); }
 }
 
+/* The text cursor blinks like a real one: it appears and reappears */
+.expLogoBlink {
+  animation: expLogoBlink 1.2s linear infinite;
+}
+
+@keyframes expLogoBlink {
+  0%, 45% { opacity: 1; }
+  55%, 90% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .expCardCopy {
   display: grid;
   gap: var(--space-1);
@@ -217,7 +228,7 @@
 .expChevron {
   display: grid;
   color: var(--exp-ink-soft);
-  transition: transform var(--motion-base) var(--motion-ease);
+  transition: transform var(--motion-slow) var(--motion-ease-in-out);
 }
 
 .expSelect[data-open='true'] .expChevron {
@@ -229,7 +240,7 @@
   display: grid;
   grid-template-rows: 0fr;
   visibility: hidden;
-  transition: grid-template-rows var(--motion-base) var(--motion-ease), visibility 0s linear var(--motion-base);
+  transition: grid-template-rows var(--motion-slow) var(--motion-ease-in-out), visibility 0s linear var(--motion-slow);
 }
 
 .expSelect[data-open='true'] .expMenu {
@@ -255,12 +266,18 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--color-border-strong) transparent;
-  background: var(--color-panel);
+  background: var(--color-modal);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
   box-shadow: inset 0 1px 0 var(--color-inset);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity var(--motion-base) linear, transform var(--motion-slow) var(--motion-ease);
+}
+
+.expSelect[data-open='true'] .expMenuList {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .expOption {
@@ -291,20 +308,22 @@
   background: color-mix(in srgb, var(--c-main) 24%, transparent);
 }
 
-.expSelect[data-open='true'] .expOption {
-  animation: expOptionIn var(--motion-base) var(--motion-ease) both;
-  animation-delay: calc(var(--i, 0) * 18ms);
-}
-
-@keyframes expOptionIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 .expMenuDivider {
   height: 1px;
   margin: var(--space-1) var(--space-2);
   background: var(--color-divider);
+}
+
+/* The dialog is pinned near the top instead of centred, so opening the menu only lets it grow
+   downwards: the sample sentence and its highlight above the menu never move */
+.studioBackdrop:has(> .sheetDialog[data-tone='experiments']) {
+  --exp-top: clamp(var(--space-4), 12dvh, 7rem);
+  align-items: flex-start;
+  padding-top: var(--exp-top);
+}
+
+.sheetDialog[data-tone='experiments'] {
+  max-height: min(calc(100dvh - var(--exp-top, var(--space-4)) - var(--space-4)), 52rem);
 }
 
 /* Reduced motion: the dialog's background stays still, the logo stops turning, the menu just appears */
@@ -314,11 +333,12 @@
   }
 
   .expLogoSpin,
-  .expSelect[data-open='true'] .expOption {
+  .expLogoBlink {
     animation: none;
   }
 
   .expMenu,
+  .expMenuList,
   .expChevron {
     transition: none;
   }
