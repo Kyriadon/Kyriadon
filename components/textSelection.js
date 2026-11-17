@@ -21,8 +21,12 @@
 // Text fields (inputs, textareas, editable content) keep the browser's own highlight, which
 // selectionStyles.css colours light blue. If anything in here ever throws, or the browser cannot
 // blend layers, the native light blue highlight takes over, so a selection never disappears.
+//
+// The colour is the person's choice (Experiments modal): the saved tone is put on <html> here, once,
+// and styles/selectionStyles.css recolours everything from that one attribute.
 // ============================================================================
 import { useEffect } from 'react';
+import { applySelectionTone, readSelectionTone, subscribeSelectionTone } from '../lib/selectionTone';
 
 // ----------------------------------------------------------------------------
 // Settings
@@ -92,13 +96,13 @@ function styleOf(element, now) {
 // Reads how long one flow loop lasts from the --motion-flow token, so every pill can start in the
 // same phase and the gradient looks like one continuous wave across all of them
 // ----------------------------------------------------------------------------
-function readFlowMs() {
+function readMotionMs(token, fallbackMs) {
   // Token value such as "5s"
-  const raw = getComputedStyle(document.documentElement).getPropertyValue('--motion-flow').trim();
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
   const value = parseFloat(raw);
 
-  // Falls back to the token's default of five seconds
-  if (!Number.isFinite(value) || value <= 0) return 5000;
+  // Falls back to the token's default
+  if (!Number.isFinite(value) || value <= 0) return fallbackMs;
   return raw.endsWith('ms') ? value : value * 1000;
 }
 
@@ -311,7 +315,8 @@ function startSelectionPainter() {
   if (!canBlend || forcedColors) return () => {};
 
   const root = document.documentElement;
-  const flowMs = readFlowMs();
+  const flowMs = readMotionMs('--motion-flow', 5000);
+  const cycleMs = readMotionMs('--motion-cycle', 16000);
 
   // The two click-through layers, anchored to the page: tint underneath, flowing letters on top
   const makeLayer = (name) => {
@@ -388,6 +393,14 @@ function startSelectionPainter() {
 
     // Empty layers are hidden, so nothing is blended while there is no selection
     const empty = shapes.length === 0;
+
+    // A layer that appears joins the Cycle colour flow at the global phase, so the colour carries on
+    // from where it was instead of starting again at blue with every new selection
+    if (!empty && tintLayer.hidden) {
+      const phase = `-${Math.round(performance.now() % cycleMs)}ms`;
+      tintLayer.style.animationDelay = phase;
+      flowLayer.style.animationDelay = phase;
+    }
     tintLayer.hidden = empty;
     flowLayer.hidden = empty;
     drawn = !empty;
@@ -569,7 +582,16 @@ function startSelectionPainter() {
 // The component: mounted once in pages/_app.js, it draws nothing itself
 // ----------------------------------------------------------------------------
 export default function TextSelection() {
-  // Starts the painter after the first render and stops it when the app unmounts
-  useEffect(() => startSelectionPainter(), []);
+  // Puts the saved colour on <html> and keeps it in step (Experiments modal, other tabs), then
+  // starts the painter after the first render and stops both when the app unmounts
+  useEffect(() => {
+    applySelectionTone(readSelectionTone());
+    const stopTone = subscribeSelectionTone(applySelectionTone);
+    const stopPainter = startSelectionPainter();
+    return () => {
+      stopTone();
+      stopPainter();
+    };
+  }, []);
   return null;
 }
