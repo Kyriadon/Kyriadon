@@ -2,10 +2,11 @@
 // experimentsModal.js
 // Experiments: features the site is trying out. Opened from the user menu (siteShell.js).
 // Experiment 1: Distinct highlight colors. The person picks the colour of the site-wide text
-// highlight, or lets it flow through every colour. The choice is kept by lib/selectionTone.js.
+// highlight from a dropdown, or lets it flow through every colour. The choice is kept by
+// lib/selectionTone.js. The sample sentence is selected, so the highlight is always on show.
 // ============================================================================
-import { useEffect, useState } from 'react';
-import { Modal, IconDistinctHighlight } from './siteShell';
+import { Fragment, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { IconCheck, IconChevronDown, IconDistinctHighlight, Modal } from './siteShell';
 import {
   CYCLE_SELECTION_TONE,
   readSelectionTone,
@@ -15,11 +16,140 @@ import {
   subscribeSelectionTone,
 } from '../lib/selectionTone';
 
+// Every choice in the menu: the colours, then Cycle in the plain ink colour
+const options = [...selectionToneOptions, { id: CYCLE_SELECTION_TONE, label: 'Flow through all colors', light: 'var(--exp-ink)', main: 'var(--exp-ink)' }];
+
+// ----------------------------------------------------------------------------
+// Dropdown (listbox): a field that shows the choice, and a menu that opens under it.
+// Keys: arrows, Home and End move; Enter or Space picks; Escape closes only the menu.
+// ----------------------------------------------------------------------------
+function ToneSelect({ tone, onChange, onSettle }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef(null);
+  const triggerRef = useRef(null);
+  const listRef = useRef(null);
+  const uid = useId().replace(/:/g, '');
+  const current = options.find((option) => option.id === tone) || options[0];
+
+  // While the menu is open: focus the chosen row, and close on a click outside
+  useEffect(() => {
+    if (!open) return undefined;
+    listRef.current?.querySelector('[aria-selected="true"]')?.focus();
+    const onDown = (event) => {
+      if (!wrapRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  // After every change the sample sentence is selected again
+  useEffect(() => {
+    onSettle();
+  }, [open, tone, onSettle]);
+
+  const choose = (id) => {
+    onChange(id);
+    setOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Escape' && open) {
+      // Only the menu closes; the dialog stays
+      event.preventDefault();
+      event.stopPropagation();
+      setOpen(false);
+      triggerRef.current?.focus();
+      return;
+    }
+    if (event.key === 'Tab' && open) {
+      setOpen(false);
+      return;
+    }
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    if (!open) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') setOpen(true);
+      return;
+    }
+    const rows = [...listRef.current.querySelectorAll('[role="option"]')];
+    const at = rows.indexOf(document.activeElement);
+    let next = at;
+    if (event.key === 'ArrowDown') next = at < 0 ? 0 : (at + 1) % rows.length;
+    if (event.key === 'ArrowUp') next = at < 0 ? rows.length - 1 : (at - 1 + rows.length) % rows.length;
+    if (event.key === 'Home') next = 0;
+    if (event.key === 'End') next = rows.length - 1;
+    rows[next]?.focus();
+  };
+
+  return (
+    <div className="expSelect" data-open={open} ref={wrapRef} onKeyDown={onKeyDown} style={{ '--c-light': current.light, '--c-main': current.main }}>
+      <span id={`${uid}Label`} className="expFieldLabel">
+        Highlight color
+      </span>
+      <button
+        type="button"
+        className="expSelectTrigger"
+        ref={triggerRef}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={`${uid}List`}
+        aria-labelledby={`${uid}Label ${uid}Value`}
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span id={`${uid}Value`}>{current.label}</span>
+        <span className="expChevron">
+          <IconChevronDown size={16} />
+        </span>
+      </button>
+
+      <div className="expMenu">
+        <div className="expMenuClip">
+          <div className="expMenuList" id={`${uid}List`} role="listbox" aria-labelledby={`${uid}Label`} ref={listRef}>
+            {options.map((option, index) => {
+              const selected = option.id === tone;
+              return (
+                <Fragment key={option.id}>
+                  {option.id === CYCLE_SELECTION_TONE && <div className="expMenuDivider" aria-hidden="true" />}
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    tabIndex={-1}
+                    className="expOption"
+                    style={{ '--i': index, '--c-light': option.light, '--c-main': option.main }}
+                    onClick={() => choose(option.id)}
+                  >
+                    <span>{option.label}</span>
+                    {selected && <IconCheck size={16} />}
+                  </button>
+                </Fragment>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ExperimentsModal({ onClose }) {
   const [tone, setTone] = useState(readSelectionTone);
+  const sampleRef = useRef(null);
 
   // Stays in step with changes made elsewhere (another tab, the Reset button)
   useEffect(() => subscribeSelectionTone(setTone), []);
+
+  // Selects the whole sample sentence, so the real site highlight is on show right away
+  const selectSample = useCallback(() => {
+    const node = sampleRef.current;
+    const selection = window.getSelection();
+    if (!node || !selection) return;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }, []);
 
   return (
     <Modal
@@ -44,7 +174,7 @@ export default function ExperimentsModal({ onClose }) {
         <section className="expCard" aria-labelledby="exp-highlight-title">
           <div className="expCardHead">
             <span className="expLogo">
-              <IconDistinctHighlight size={24} />
+              <IconDistinctHighlight size={26} />
             </span>
             <div className="expCardCopy">
               <h4 id="exp-highlight-title" className="expTitle">
@@ -54,25 +184,11 @@ export default function ExperimentsModal({ onClose }) {
             </div>
           </div>
 
-          <div className="segmented expSegmented" role="group" aria-label="Highlight color">
-            {selectionToneOptions.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className="segment expSegment"
-                aria-pressed={tone === option.id}
-                style={{ '--c-light': option.light, '--c-main': option.main }}
-                onClick={() => saveSelectionTone(option.id)}
-              >
-                {option.label}
-              </button>
-            ))}
-            <button type="button" className="segment expSegment" aria-pressed={tone === CYCLE_SELECTION_TONE} onClick={() => saveSelectionTone(CYCLE_SELECTION_TONE)}>
-              Flow through all colors
-            </button>
-          </div>
+          <ToneSelect tone={tone} onChange={saveSelectionTone} onSettle={selectSample} />
 
-          <p className="expTry">Try it: select this sentence to see your highlight.</p>
+          <p className="expTry" ref={sampleRef}>
+            Try it: select this sentence to see your highlight.
+          </p>
         </section>
       </div>
     </Modal>
