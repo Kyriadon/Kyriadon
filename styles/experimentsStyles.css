@@ -146,12 +146,23 @@
   color: var(--exp-ink);
 }
 
-.expDesc,
-.expTry {
+.expDesc {
   margin: 0;
   font-size: var(--type-helper-size);
   line-height: var(--type-helper-line-height);
   color: var(--exp-ink-soft);
+}
+
+/* The sample sentence sits in a read-only field, like the site's inputs, so its highlight reads clearly */
+.expSample {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--button-size);
+  line-height: 1.5;
+  color: var(--exp-ink);
+  background: var(--color-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
 }
 
 /* Dropdown: label, field, and a menu that opens right under the field */
@@ -233,10 +244,17 @@
 }
 
 .expMenuList {
+  position: relative;
   display: grid;
+  align-content: start;
   gap: 2px;
+  max-height: 11rem;
   margin-top: var(--space-1);
   padding: var(--space-1);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
   background: var(--color-panel);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-control);
@@ -251,11 +269,11 @@
   justify-content: space-between;
   gap: var(--space-3);
   width: 100%;
-  min-height: 2.25rem;
+  min-height: 2rem;
   padding: 0 var(--space-3);
-  font-family: var(--font-ui);
-  font-size: var(--button-size);
-  font-weight: var(--button-weight);
+  font-family: var(--type-label-family);
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
   color: var(--c-light);
   text-align: left;
   cursor: pointer;
