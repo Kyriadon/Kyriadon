@@ -3,7 +3,7 @@
 // Experiments: features the site is trying out. Opened from the user menu (siteShell.js).
 // Experiment 1: Distinct highlight colors. The person picks the colour of the site-wide text
 // highlight from a dropdown, or lets it flow through every colour. The choice is kept by
-// lib/selectionTone.js. The sample sentence is plain text the person can select to try the colour.
+// lib/selectionTone.js. The sample line is plain text the person can select to see the colour.
 // ============================================================================
 import { Fragment, useEffect, useId, useRef, useState } from 'react';
 import { IconCheck, IconChevronDown, IconDistinctHighlight, Modal } from './siteShell';
@@ -186,7 +186,7 @@ export default function ExperimentsModal({ onClose }) {
           </div>
 
           <p className="expSample">
-            Try it: select this sentence to see your highlight.
+            What your selected text will look like
           </p>
 
           <ToneSelect tone={tone} onChange={saveSelectionTone} />
