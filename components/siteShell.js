@@ -137,49 +137,33 @@ export function IconExperiments({ size = 18 }) {
   );
 }
 
-// Distinct highlight colors logo (Experiments modal). The drawing comes from siteDesign
-// (experimentIcons.distinctHighlight); its fill is the experiment's teal to cyan turning around the centre
+// Distinct highlight colors logo (Experiments modal): the text cursor. The drawing comes from siteDesign
+// (experimentIcons.distinctHighlight); its fill is the experiment's teal to cyan turning around the
+// centre, and the whole cursor blinks (both animations live in styles/experimentsStyles.css)
 export function IconDistinctHighlight({ size = 28 }) {
   const logo = experimentIcons.distinctHighlight;
   // Every copy gets its own mask and gradient ids ("dhr1" instead of ":r1:")
   const id = `dh${useId().replace(/:/g, '')}`;
   const last = logo.flow.length - 1;
-  const line = { fill: 'none', strokeWidth: logo.strokeWidth, strokeLinecap: 'round', strokeLinejoin: 'round' };
   return (
     <svg viewBox={logo.viewBox} width={size} height={size} aria-hidden="true" focusable="false">
       <defs>
-        <linearGradient id={`${id}Fill`} gradientUnits="userSpaceOnUse" x1="0" y1="12" x2="24" y2="12">
+        <linearGradient id={`${id}Fill`} gradientUnits="userSpaceOnUse" x1="6" y1="12" x2="18" y2="12">
           {logo.flow.map((color, index) => (
             <stop key={color} offset={index / last} stopColor={color} />
           ))}
         </linearGradient>
-        {/* White shows the gradient, black cuts it away: pill and plain lines in, text and cursor out */}
         <mask id={`${id}Mask`} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-          <g fill="#fff">
-            {logo.fill.map((d) => (
-              <path key={d} d={d} />
-            ))}
-          </g>
-          <g {...line} stroke="#fff">
-            {logo.lines.map((d) => (
-              <path key={d} d={d} />
-            ))}
-          </g>
-          <g {...line} stroke="#000">
-            {logo.cut.map((d) => (
+          <g fill="none" stroke="#fff" strokeWidth={logo.strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+            {logo.paths.map((d) => (
               <path key={d} d={d} />
             ))}
           </g>
         </mask>
       </defs>
       {/* The square is larger than the logo, so it covers it at every angle while it turns */}
-      <g mask={`url(#${id}Mask)`}>
+      <g className="expLogoBlink" mask={`url(#${id}Mask)`}>
         <rect className="expLogoSpin" x="-8" y="-8" width="40" height="40" fill={`url(#${id}Fill)`} />
-        <g {...line} strokeWidth="1" stroke="#fff" strokeOpacity="0.4">
-          {logo.gloss.map((d) => (
-            <path key={d} d={d} />
-          ))}
-        </g>
       </g>
     </svg>
   );
