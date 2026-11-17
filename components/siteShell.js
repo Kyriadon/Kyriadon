@@ -8,10 +8,10 @@ import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { signIn, signOut, useSession } from 'next-auth/react';
-import { behavior, gradientStops } from '../lib/siteDesign';
+import { behavior, experimentIcons, gradientStops } from '../lib/siteDesign';
 import { useAccount } from '../lib/accountClient';
 
 // The Account modal (avatar editor, names, staff login) loads only when it is opened
@@ -133,6 +133,37 @@ export function IconExperiments({ size = 18 }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+// Distinct highlight colors logo (Experiments modal). The drawing comes from siteDesign
+// (experimentIcons.distinctHighlight); its fill is every selection colour turning around the centre
+export function IconDistinctHighlight({ size = 28 }) {
+  const logo = experimentIcons.distinctHighlight;
+  // Every copy gets its own mask and gradient ids ("dhr1" instead of ":r1:")
+  const id = `dh${useId().replace(/:/g, '')}`;
+  const last = logo.flow.length - 1;
+  return (
+    <svg viewBox={logo.viewBox} width={size} height={size} aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id={`${id}Fill`} gradientUnits="userSpaceOnUse" x1="0" y1="12" x2="24" y2="12">
+          {logo.flow.map((color, index) => (
+            <stop key={color} offset={index / last} stopColor={color} />
+          ))}
+        </linearGradient>
+        <mask id={`${id}Mask`} maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+          <g fill="none" stroke="#fff" strokeWidth={logo.strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+            {logo.paths.map((d) => (
+              <path key={d} d={d} />
+            ))}
+          </g>
+        </mask>
+      </defs>
+      {/* The square is larger than the logo, so it covers it at every angle while it turns */}
+      <g mask={`url(#${id}Mask)`}>
+        <rect className="expLogoSpin" x="-8" y="-8" width="40" height="40" fill={`url(#${id}Fill)`} />
+      </g>
     </svg>
   );
 }
