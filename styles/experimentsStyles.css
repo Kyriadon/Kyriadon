@@ -82,9 +82,9 @@
 
 /* --------------------------------------------------------------------------
    Experiment: Distinct highlight colors
-   Built from the modal's own tokens (--exp-*), the site's radii, spacing and motion, and the same
-   tinted-surface construction as the purple == highlight. Hover never moves anything (Doctrine 10):
-   it only changes colour. Motion is used for the entrance, the choice being made and the flows.
+   A compact card of its own, built from the site's card, segmented control and helper text. Its
+   teal to cyan tint (--gradient-distinct-highlight) and the logo are the only teal and cyan in the
+   modal; the colour choices are flat, like the site's role chips (light text on a tint).
    -------------------------------------------------------------------------- */
 .expList {
   display: grid;
@@ -93,29 +93,28 @@
 
 .expCard {
   display: grid;
-  gap: var(--space-5);
-  padding: var(--space-5);
-  background: var(--color-card);
-  border: 1px solid var(--exp-line);
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: var(--gradient-distinct-highlight);
+  border: 1px solid color-mix(in srgb, var(--experiment-distinct-highlight-cyan) 26%, transparent);
   border-radius: var(--radius-card);
-  box-shadow: inset 0 1px 0 var(--color-inset);
 }
 
 .expCardHead {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-4);
+  align-items: center;
+  gap: var(--space-3);
 }
 
-/* Logo tile: the logo's colours turn around inside it (a circle flow) */
+/* Logo tile: the teal to cyan fill turns around inside it (a circle flow) */
 .expLogo {
   display: grid;
   flex: none;
   place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  background: color-mix(in srgb, var(--exp-accent-deep) 14%, transparent);
-  border: 1px solid var(--exp-line);
+  width: 2.5rem;
+  height: 2.5rem;
+  background: color-mix(in srgb, var(--experiment-distinct-highlight-teal) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--experiment-distinct-highlight-cyan) 30%, transparent);
   border-radius: var(--radius-control);
 }
 
@@ -137,276 +136,56 @@
 
 .expTitle {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.4;
   color: var(--exp-ink);
 }
 
-.expDesc {
+.expDesc,
+.expTry {
   margin: 0;
   font-size: var(--type-helper-size);
   line-height: var(--type-helper-line-height);
   color: var(--exp-ink-soft);
 }
 
-/* Choices */
-.expGroup {
-  display: grid;
-  gap: var(--space-3);
+/* The site's segmented control, wrapping onto more lines; each choice is light text on a flat tint
+   of its own colour (like .mention and .mdHl), with a fine ring when it is the one in use */
+.segmented.expSegmented {
+  display: flex;
+  flex-wrap: wrap;
 }
 
-.expSwatches {
-  display: grid;
-  grid-template-columns: repeat(9, minmax(0, 1fr));
-  gap: var(--space-1);
+.segmented .expSegment {
+  --c-light: var(--exp-ink);
+  --c-main: var(--exp-ink);
+  color: var(--c-light);
 }
 
-.expSwatch,
-.expCycle {
-  margin: 0;
-  font: inherit;
-  color: var(--exp-ink-soft);
-  cursor: pointer;
-  appearance: none;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-card);
-  transition: background-color var(--motion-fast) linear, border-color var(--motion-fast) linear, color var(--motion-fast) linear;
+.segmented .expSegment:hover {
+  color: var(--c-light);
+  background: color-mix(in srgb, var(--c-main) 14%, transparent);
 }
 
-.expSwatch {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  padding: var(--space-3) 0;
-  font-size: var(--type-helper-size);
-  animation: expSwatchIn var(--motion-base) var(--motion-ease) both;
-  animation-delay: calc(var(--i, 0) * 28ms + 60ms);
+.segmented .expSegment[aria-pressed='true'] {
+  color: var(--c-light);
+  background: color-mix(in srgb, var(--c-main) 24%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-light) 45%, transparent);
 }
 
-@keyframes expSwatchIn {
-  from { opacity: 0; transform: translateY(6px) scale(0.94); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.expSwatch:hover,
-.expCycle:hover {
-  color: var(--exp-ink);
-  background: var(--color-card-hover);
-  border-color: var(--exp-line);
-}
-
-.expSwatch[data-selected='true'] {
-  color: var(--exp-ink);
-  background: color-mix(in srgb, var(--sw-main) 12%, transparent);
-  border-color: color-mix(in srgb, var(--sw-main) 45%, transparent);
-}
-
-.expSwatch:focus-visible,
-.expCycle:focus-visible {
+.segmented .expSegment:focus-visible {
   outline: 2px solid var(--exp-accent);
   outline-offset: 2px;
 }
 
-/* The colour dot: light to main, with a soft glow of its own colour */
-.expDot {
-  position: relative;
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  color: var(--sw-ink, #0b0f16);
-  background: linear-gradient(135deg, var(--sw-light), var(--sw-main));
-  border-radius: var(--radius-pill);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 6px 18px -8px var(--sw-main);
-  isolation: isolate;
-  transition: transform var(--motion-base) var(--motion-ease), box-shadow var(--motion-base) var(--motion-ease);
-}
-
-.expSwatch[data-selected='true'] .expDot {
-  transform: scale(1.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 0 0 2px var(--color-bg-raised), 0 0 0 4px var(--sw-main), 0 8px 22px -8px var(--sw-main);
-  animation: expDotPop var(--motion-slow) var(--motion-ease);
-}
-
-@keyframes expDotPop {
-  0% { transform: scale(0.86); }
-  60% { transform: scale(1.18); }
-  100% { transform: scale(1.08); }
-}
-
-.expCheck {
-  position: relative;
-  stroke-dasharray: 22;
-  animation: expCheckDraw var(--motion-slow) var(--motion-ease) 60ms both;
-}
-
-@keyframes expCheckDraw {
-  from { stroke-dashoffset: 22; }
-  to { stroke-dashoffset: 0; }
-}
-
-/* Cycle choice: one row, with a conic ring of every colour turning inside its dot */
-.expCycle {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  text-align: left;
-  background: color-mix(in srgb, var(--exp-accent) 5%, transparent);
-  border-color: var(--exp-line);
-}
-
-.expCycle[data-selected='true'] {
-  color: var(--exp-ink);
-  background: color-mix(in srgb, var(--exp-accent) 14%, transparent);
-  border-color: color-mix(in srgb, var(--exp-accent) 55%, transparent);
-}
-
-.expDotCycle {
-  overflow: hidden;
-  background: none;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
-}
-
-.expDotCycle::before {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  content: '';
-  background: var(--ring);
-  animation: expDotSpin calc(var(--motion-cycle) / 2) linear infinite;
-}
-
-.expCycle[data-selected='true'] .expDotCycle {
-  transform: scale(1.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 0 0 2px var(--color-bg-raised), 0 0 0 4px var(--exp-accent);
-  animation: expDotPop var(--motion-slow) var(--motion-ease);
-}
-
-@keyframes expDotSpin {
-  to { transform: rotate(360deg); }
-}
-
-.expCycleCopy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-.expCycleTitle {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--exp-ink);
-}
-
-.expCycleText {
-  font-size: var(--type-helper-size);
-  line-height: var(--type-helper-line-height);
-  color: var(--exp-ink-soft);
-}
-
-/* Preview: a small piece of the page itself, painted the way the real selection is painted
-   (a pill of the tint, and letters that carry the flow gradient from left to right) */
-.expPreview {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  background: var(--color-bg-page);
-  border: 1px solid var(--exp-line);
-  border-radius: var(--radius-card);
-}
-
-.expPreviewLabel {
-  font-size: var(--type-helper-size);
-  color: var(--exp-ink-soft);
-}
-
-.expPreviewLine {
-  margin: 0;
-  line-height: 1.9;
-  color: var(--exp-ink);
-}
-
-.expPick {
-  padding: 0.08em 0.16em;
-  background: var(--p-tint);
-  border-radius: 0.3em;
-  box-shadow: var(--p-edge, none);
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-  animation: expPickIn var(--motion-slow) var(--motion-ease) both;
-}
-
-@keyframes expPickIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.expPickText {
-  color: transparent;
-  background-image: var(--p-flow);
-  background-repeat: repeat-x;
-  background-size: 9rem 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: expPickFlow var(--motion-flow) linear infinite;
-}
-
-/* One tile is exactly 9rem wide and the gradient starts and ends on white, so the loop has no seam */
-@keyframes expPickFlow {
-  from { background-position: 0 0; }
-  to { background-position: 9rem 0; }
-}
-
-/* Cycle: the preview uses the colour properties registered in selectionStyles.css */
-.expPreview[data-tone='cycle'] {
-  --p-tint: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--selection-cycle-light) 30%, transparent),
-    color-mix(in srgb, var(--selection-cycle-main) 30%, transparent)
-  );
-  --p-flow: linear-gradient(90deg, #ffffff, var(--selection-cycle-soft), var(--selection-cycle-main), var(--selection-cycle-soft), #ffffff);
-  animation: selectionCycle var(--motion-cycle) linear infinite;
-}
-
-.expStatus {
-  margin: 0;
-  font-size: var(--type-helper-size);
-  line-height: var(--type-helper-line-height);
-  color: var(--exp-ink-soft);
-}
-
-/* Small screens: three choices per row */
-@media (max-width: 40rem) {
-  .expCard {
-    padding: var(--space-4);
-  }
-
-  .expSwatches {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-/* Reduced motion: everything stays in place and the colours stay still */
+/* Reduced motion: the dialog's background stays still and the logo stops turning */
 @media (prefers-reduced-motion: reduce) {
   .sheetDialog[data-tone='experiments'] {
     animation: dialogIn var(--motion-base) var(--motion-ease) both;
   }
 
-  .expLogoSpin,
-  .expDotCycle::before,
-  .expSwatch,
-  .expSwatch[data-selected='true'] .expDot,
-  .expCycle[data-selected='true'] .expDotCycle,
-  .expCheck,
-  .expPick,
-  .expPickText,
-  .expPreview[data-tone='cycle'] {
+  .expLogoSpin {
     animation: none;
   }
 }
