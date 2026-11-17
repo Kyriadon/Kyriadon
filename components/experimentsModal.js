@@ -3,7 +3,7 @@
 // Experiments: features the site is trying out. Opened from the user menu (siteShell.js).
 // Experiment 1: Distinct highlight colors. The person picks the colour of the site-wide text
 // highlight from a dropdown, or lets it flow through every colour. The choice is kept by
-// lib/selectionTone.js. The sample sentence is selected once, when the dialog has finished opening.
+// lib/selectionTone.js. The sample sentence is plain text the person can select to try the colour.
 // ============================================================================
 import { Fragment, useEffect, useId, useRef, useState } from 'react';
 import { IconCheck, IconChevronDown, IconDistinctHighlight, Modal } from './siteShell';
@@ -48,7 +48,7 @@ function ToneSelect({ tone, onChange }) {
     const chosen = listRef.current?.querySelector('[aria-selected="true"]');
     chosen?.focus({ preventScroll: true });
     reveal(listRef.current, chosen, true);
-    const settle = window.setTimeout(() => wrapRef.current?.scrollIntoView({ block: 'nearest' }), 260);
+    const settle = window.setTimeout(() => wrapRef.current?.scrollIntoView({ block: 'nearest' }), 400);
     const onDown = (event) => {
       if (!wrapRef.current?.contains(event.target)) setOpen(false);
     };
@@ -148,25 +148,9 @@ function ToneSelect({ tone, onChange }) {
 
 export default function ExperimentsModal({ onClose }) {
   const [tone, setTone] = useState(readSelectionTone);
-  const sampleRef = useRef(null);
 
   // Stays in step with changes made elsewhere (another tab, the Reset button)
   useEffect(() => subscribeSelectionTone(setTone), []);
-
-  // Selects the sample sentence ONCE, after the dialog has finished opening, so the real site highlight
-  // is drawn a single time in its final place and is never redone while the person picks colors
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const node = sampleRef.current;
-      const selection = window.getSelection();
-      if (!node || !selection) return;
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }, 360);
-    return () => window.clearTimeout(timer);
-  }, []);
 
   return (
     <Modal
@@ -191,7 +175,7 @@ export default function ExperimentsModal({ onClose }) {
         <section className="expCard" aria-labelledby="exp-highlight-title">
           <div className="expCardHead">
             <span className="expLogo">
-              <IconDistinctHighlight size={26} />
+              <IconDistinctHighlight size={28} />
             </span>
             <div className="expCardCopy">
               <h4 id="exp-highlight-title" className="expTitle">
@@ -201,7 +185,7 @@ export default function ExperimentsModal({ onClose }) {
             </div>
           </div>
 
-          <p className="expSample" ref={sampleRef}>
+          <p className="expSample">
             Try it: select this sentence to see your highlight.
           </p>
 
