@@ -82,9 +82,11 @@
 
 /* --------------------------------------------------------------------------
    Experiment: Distinct highlight colors
-   A compact card of its own, built from the site's card, segmented control and helper text. Its
-   teal to cyan tint (--gradient-distinct-highlight) and the logo are the only teal and cyan in the
-   modal; the colour choices are flat, like the site's role chips (light text on a tint).
+   A compact card of its own. Its deep, wet teal to cyan tint (--gradient-distinct-highlight) and its
+   logo are the only teal and cyan in the modal. The colour choice is a simple dropdown built from the
+   site's own pieces: the field look of the inputs, the panel and rows of the user menu, and the
+   label style of the studio fields. Nothing in it moves on hover (Doctrine 10); the menu opens with
+   a short slide, and every animation stops under reduced motion.
    -------------------------------------------------------------------------- */
 .expList {
   display: grid;
@@ -96,8 +98,9 @@
   gap: var(--space-4);
   padding: var(--space-4);
   background: var(--gradient-distinct-highlight);
-  border: 1px solid color-mix(in srgb, var(--experiment-distinct-highlight-cyan) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--experiment-distinct-highlight-cyan) 40%, transparent);
   border-radius: var(--radius-card);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
 .expCardHead {
@@ -111,11 +114,12 @@
   display: grid;
   flex: none;
   place-items: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  background: color-mix(in srgb, var(--experiment-distinct-highlight-teal) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--experiment-distinct-highlight-cyan) 30%, transparent);
+  width: 2.75rem;
+  height: 2.75rem;
+  background: color-mix(in srgb, var(--experiment-distinct-highlight-teal) 34%, #04100f);
+  border: 1px solid color-mix(in srgb, var(--experiment-distinct-highlight-cyan) 45%, transparent);
   border-radius: var(--radius-control);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .expLogoSpin {
@@ -150,42 +154,154 @@
   color: var(--exp-ink-soft);
 }
 
-/* The site's segmented control, wrapping onto more lines; each choice is light text on a flat tint
-   of its own colour (like .mention and .mdHl), with a fine ring when it is the one in use */
-.segmented.expSegmented {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.segmented .expSegment {
+/* Dropdown: label, field, and a menu that opens right under the field */
+.expSelect {
   --c-light: var(--exp-ink);
   --c-main: var(--exp-ink);
-  color: var(--c-light);
+  display: grid;
+  gap: var(--space-2);
 }
 
-.segmented .expSegment:hover {
-  color: var(--c-light);
-  background: color-mix(in srgb, var(--c-main) 14%, transparent);
+.expFieldLabel {
+  font-family: var(--type-label-family);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-label-weight);
+  color: var(--exp-ink-soft);
 }
 
-.segmented .expSegment[aria-pressed='true'] {
+.expSelectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  height: var(--button-height);
+  padding: 0 var(--space-3) 0 var(--space-4);
+  font-family: var(--font-ui);
+  font-size: var(--button-size);
+  font-weight: var(--button-weight);
   color: var(--c-light);
-  background: color-mix(in srgb, var(--c-main) 24%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-light) 45%, transparent);
+  text-align: left;
+  cursor: pointer;
+  background: var(--color-input);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  transition: background-color var(--motion-fast) linear, border-color var(--motion-fast) linear;
 }
 
-.segmented .expSegment:focus-visible {
-  outline: 2px solid var(--exp-accent);
+.expSelectTrigger:hover {
+  background: var(--color-card-hover);
+}
+
+.expSelect[data-open='true'] .expSelectTrigger {
+  border-color: color-mix(in srgb, var(--experiment-distinct-highlight-cyan) 60%, transparent);
+}
+
+.expSelectTrigger:focus-visible,
+.expOption:focus-visible {
+  outline: 2px solid var(--experiment-distinct-highlight-cyan);
   outline-offset: 2px;
 }
 
-/* Reduced motion: the dialog's background stays still and the logo stops turning */
+.expChevron {
+  display: grid;
+  color: var(--exp-ink-soft);
+  transition: transform var(--motion-base) var(--motion-ease);
+}
+
+.expSelect[data-open='true'] .expChevron {
+  transform: rotate(180deg);
+}
+
+/* The menu pushes the card open instead of floating over it, so the modal never clips it */
+.expMenu {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+  transition: grid-template-rows var(--motion-base) var(--motion-ease), visibility 0s linear var(--motion-base);
+}
+
+.expSelect[data-open='true'] .expMenu {
+  grid-template-rows: 1fr;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.expMenuClip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.expMenuList {
+  display: grid;
+  gap: 2px;
+  margin-top: var(--space-1);
+  padding: var(--space-1);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  box-shadow: inset 0 1px 0 var(--color-inset);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.expOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  font-family: var(--font-ui);
+  font-size: var(--button-size);
+  font-weight: var(--button-weight);
+  color: var(--c-light);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-subtle);
+  transition: background-color var(--motion-fast) linear;
+}
+
+.expOption:hover {
+  background: color-mix(in srgb, var(--c-main) 16%, transparent);
+}
+
+.expOption[aria-selected='true'] {
+  background: color-mix(in srgb, var(--c-main) 24%, transparent);
+}
+
+.expSelect[data-open='true'] .expOption {
+  animation: expOptionIn var(--motion-base) var(--motion-ease) both;
+  animation-delay: calc(var(--i, 0) * 18ms);
+}
+
+@keyframes expOptionIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.expMenuDivider {
+  height: 1px;
+  margin: var(--space-1) var(--space-2);
+  background: var(--color-divider);
+}
+
+/* Reduced motion: the dialog's background stays still, the logo stops turning, the menu just appears */
 @media (prefers-reduced-motion: reduce) {
   .sheetDialog[data-tone='experiments'] {
     animation: dialogIn var(--motion-base) var(--motion-ease) both;
   }
 
-  .expLogoSpin {
+  .expLogoSpin,
+  .expSelect[data-open='true'] .expOption {
     animation: none;
+  }
+
+  .expMenu,
+  .expChevron {
+    transition: none;
   }
 }
