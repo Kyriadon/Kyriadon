@@ -3,9 +3,9 @@
 // Experiments: features the site is trying out. Opened from the user menu (siteShell.js).
 // Experiment 1: Distinct highlight colors. The person picks the colour of the site-wide text
 // highlight from a dropdown, or lets it flow through every colour. The choice is kept by
-// lib/selectionTone.js. The sample sentence is selected, so the highlight is always on show.
+// lib/selectionTone.js. The sample sentence is selected once, when the dialog has finished opening.
 // ============================================================================
-import { Fragment, useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Fragment, useEffect, useId, useRef, useState } from 'react';
 import { IconCheck, IconChevronDown, IconDistinctHighlight, Modal } from './siteShell';
 import {
   CYCLE_SELECTION_TONE,
@@ -19,11 +19,21 @@ import {
 // Every choice in the menu: the colours, then Cycle in the plain ink colour
 const options = [...selectionToneOptions, { id: CYCLE_SELECTION_TONE, label: 'Flow through all colors', light: 'var(--exp-ink)', main: 'var(--exp-ink)' }];
 
+// Scrolls only the menu's own list so a row is in view (the dialog and the page never jump)
+function reveal(list, row, centre = false) {
+  if (!list || !row) return;
+  const top = row.offsetTop;
+  const bottom = top + row.offsetHeight;
+  if (centre) list.scrollTop = top - (list.clientHeight - row.offsetHeight) / 2;
+  else if (top < list.scrollTop) list.scrollTop = top;
+  else if (bottom > list.scrollTop + list.clientHeight) list.scrollTop = bottom - list.clientHeight;
+}
+
 // ----------------------------------------------------------------------------
 // Dropdown (listbox): a field that shows the choice, and a menu that opens under it.
 // Keys: arrows, Home and End move; Enter or Space picks; Escape closes only the menu.
 // ----------------------------------------------------------------------------
-function ToneSelect({ tone, onChange, onSettle }) {
+function ToneSelect({ tone, onChange }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   const triggerRef = useRef(null);
@@ -31,21 +41,23 @@ function ToneSelect({ tone, onChange, onSettle }) {
   const uid = useId().replace(/:/g, '');
   const current = options.find((option) => option.id === tone) || options[0];
 
-  // While the menu is open: focus the chosen row, and close on a click outside
+  // While the menu is open: focus the chosen row, bring the whole menu into view once it has slid
+  // open (only if the dialog is short), and close on a click outside
   useEffect(() => {
     if (!open) return undefined;
-    listRef.current?.querySelector('[aria-selected="true"]')?.focus();
+    const chosen = listRef.current?.querySelector('[aria-selected="true"]');
+    chosen?.focus({ preventScroll: true });
+    reveal(listRef.current, chosen, true);
+    const settle = window.setTimeout(() => wrapRef.current?.scrollIntoView({ block: 'nearest' }), 260);
     const onDown = (event) => {
       if (!wrapRef.current?.contains(event.target)) setOpen(false);
     };
     document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
+    return () => {
+      window.clearTimeout(settle);
+      document.removeEventListener('mousedown', onDown);
+    };
   }, [open]);
-
-  // After every change the sample sentence is selected again
-  useEffect(() => {
-    onSettle();
-  }, [open, tone, onSettle]);
 
   const choose = (id) => {
     onChange(id);
@@ -79,7 +91,8 @@ function ToneSelect({ tone, onChange, onSettle }) {
     if (event.key === 'ArrowUp') next = at < 0 ? rows.length - 1 : (at - 1 + rows.length) % rows.length;
     if (event.key === 'Home') next = 0;
     if (event.key === 'End') next = rows.length - 1;
-    rows[next]?.focus();
+    rows[next]?.focus({ preventScroll: true });
+    reveal(listRef.current, rows[next]);
   };
 
   return (
@@ -140,15 +153,19 @@ export default function ExperimentsModal({ onClose }) {
   // Stays in step with changes made elsewhere (another tab, the Reset button)
   useEffect(() => subscribeSelectionTone(setTone), []);
 
-  // Selects the whole sample sentence, so the real site highlight is on show right away
-  const selectSample = useCallback(() => {
-    const node = sampleRef.current;
-    const selection = window.getSelection();
-    if (!node || !selection) return;
-    const range = document.createRange();
-    range.selectNodeContents(node);
-    selection.removeAllRanges();
-    selection.addRange(range);
+  // Selects the sample sentence ONCE, after the dialog has finished opening, so the real site highlight
+  // is drawn a single time in its final place and is never redone while the person picks colors
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const node = sampleRef.current;
+      const selection = window.getSelection();
+      if (!node || !selection) return;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }, 360);
+    return () => window.clearTimeout(timer);
   }, []);
 
   return (
@@ -184,11 +201,11 @@ export default function ExperimentsModal({ onClose }) {
             </div>
           </div>
 
-          <ToneSelect tone={tone} onChange={saveSelectionTone} onSettle={selectSample} />
-
-          <p className="expTry" ref={sampleRef}>
+          <p className="expSample" ref={sampleRef}>
             Try it: select this sentence to see your highlight.
           </p>
+
+          <ToneSelect tone={tone} onChange={saveSelectionTone} />
         </section>
       </div>
     </Modal>
