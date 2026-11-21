@@ -8,12 +8,13 @@
 
    Parts:
    1. The stage: the caption and the card
-   2. The demo profile
+   2. The demo profile (blank fields, floating teal and cyan gradients)
    3. The effect layer (shared by every effect)
    4. Heer
    ============================================================================ */
 
-/* 1. The stage: a small caption over one card, centred in the site shell */
+/* 1. The stage: a small caption over one card, centred in the site shell. The caption is announcement
+   markup (components/announcementMarkup.js), so its heading, chip and link look like the rest of the site. */
 
 .fxPage {
   display: grid;
@@ -23,54 +24,29 @@
 }
 
 .fxCaption {
-  display: grid;
-  justify-items: center;
-  gap: var(--space-2);
   max-width: 26rem;
   text-align: center;
 }
 
-.fxTitleRow {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
+.fxCaption .annoMd {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
 }
 
-.fxTitle {
+.fxCaption .annoH,
+.fxCaption .mdP {
   margin: 0;
-  font-family: var(--type-h3-family);
-  font-size: var(--type-h3-size);
-  font-weight: var(--type-h3-weight);
-  color: var(--color-text-primary);
 }
 
-.fxChip {
-  padding: 0.1rem 0.55rem;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-pill);
-  background: var(--color-card);
-  font-family: var(--type-caption-family);
-  font-size: var(--type-caption-size);
+.fxCaption .mdP {
   color: var(--color-text-secondary);
 }
 
-.fxLine {
-  margin: 0;
-  font-family: var(--type-body-secondary-family);
-  font-size: var(--type-body-secondary-size);
-  color: var(--color-text-secondary);
-}
-
-.fxCredit {
-  margin: 0;
-  font-family: var(--type-meta-family);
-  font-size: var(--type-meta-size);
-  color: var(--color-text-muted);
-}
-
-/* 2. The demo profile: banner, avatar with a status bubble, name, handle, badges, buttons, bio.
-   The card is a size container, so cqw is a hundredth of its width. The layout keeps the right quarter
-   of the name, handle and badge rows free, which is where the effect may play. */
+/* 2. The demo profile: a long, blank Discord style card. Banner, avatar with a status bubble, name,
+   handle, buttons and sections, every field an empty rounded rectangle. The card is a size container, so
+   cqw is a hundredth of its width. Name and handle keep the right quarter free, which is where the effect
+   may play. Two floating teal and cyan gradients drift slowly behind everything. */
 
 .fxProfile {
   position: relative;
@@ -79,172 +55,135 @@
   overflow: hidden;
   isolation: isolate;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-panel);
-  background: var(--color-panel);
+  border-radius: var(--radius-card);
+  background: var(--effect-profile-surface);
   box-shadow: var(--shadow-panel), inset 0 1px 0 var(--color-inset);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
   text-align: left;
 }
 
-/* The banner: a quiet teal-blue gradient with a soft light at the top right */
-.fxProfileBanner {
-  height: 25cqw;
+/* The floating gradients: two oversized layers of soft teal and cyan light that drift in opposite
+   directions. They sit behind the banner and the body, and the card clips them. */
+.fxProfile::before,
+.fxProfile::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: -20cqw;
+  pointer-events: none;
+}
+
+.fxProfile::before {
   background:
-    radial-gradient(ellipse 70% 120% at 80% 0%, color-mix(in srgb, var(--effect-banner-to) 70%, transparent), transparent 70%),
+    radial-gradient(ellipse 46% 11% at 16% 10%, color-mix(in srgb, var(--effect-profile-teal) 46%, transparent), transparent 100%),
+    radial-gradient(ellipse 40% 10% at 88% 32%, color-mix(in srgb, var(--effect-profile-cyan) 38%, transparent), transparent 100%),
+    radial-gradient(ellipse 36% 8% at 26% 60%, color-mix(in srgb, var(--effect-profile-teal) 30%, transparent), transparent 100%);
+  animation: fxFloatA 18s ease-in-out infinite alternate;
+}
+
+.fxProfile::after {
+  background:
+    radial-gradient(ellipse 40% 9% at 80% 50%, color-mix(in srgb, var(--effect-profile-teal) 34%, transparent), transparent 100%),
+    radial-gradient(ellipse 44% 10% at 18% 78%, color-mix(in srgb, var(--effect-profile-cyan) 36%, transparent), transparent 100%),
+    radial-gradient(ellipse 34% 7% at 76% 92%, color-mix(in srgb, var(--effect-profile-cyan-pale) 22%, transparent), transparent 100%);
+  animation: fxFloatB 23s ease-in-out infinite alternate;
+}
+
+@keyframes fxFloatA {
+  from { transform: translate3d(-3cqw, -2cqw, 0) scale(1); }
+  to { transform: translate3d(4cqw, 5cqw, 0) scale(1.06); }
+}
+
+@keyframes fxFloatB {
+  from { transform: translate3d(3cqw, 4cqw, 0) scale(1); }
+  to { transform: translate3d(-4cqw, -3cqw, 0) scale(1.05); }
+}
+
+/* The banner: teal to cyan with a pale light at the top right and a teal glow at the lower left */
+.fxProfileBanner {
+  position: relative;
+  z-index: 1;
+  height: 28cqw;
+  background:
+    radial-gradient(ellipse 60% 120% at 78% 0%, color-mix(in srgb, var(--effect-profile-cyan-pale) 38%, transparent), transparent 70%),
+    radial-gradient(ellipse 55% 130% at 12% 100%, color-mix(in srgb, var(--effect-profile-teal) 55%, transparent), transparent 72%),
     linear-gradient(120deg, var(--effect-banner-from), var(--effect-banner-to));
 }
 
-/* The body sits above the effect's tint but below the effect's own layer */
+/* The body sits above the floating gradients but below the effect's own layer */
 .fxProfileBody {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 3cqw;
-  padding: 0 5.5cqw 7cqw;
+  gap: 4.5cqw;
+  padding: 0 5.5cqw 8cqw;
+}
+
+/* One blank field: an empty rounded rectangle in the dark of the site's panels */
+.fxField {
+  display: block;
+  width: var(--w, 100%);
+  height: var(--h, 8cqw);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--color-bg-raised) 82%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 4%, transparent);
 }
 
 /* The avatar overlaps the banner by half, with the status bubble beside it */
 .fxAvatarRow {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 3cqw;
-  margin-top: -11.5cqw;
+  margin-top: -12.5cqw;
 }
 
 .fxAvatarWrap {
   position: relative;
   flex: none;
-  width: 22.7cqw;
+  width: 24cqw;
 }
 
-/* The avatar: a round silhouette on a soft gradient, cut out of the banner by a ring in the page colour */
+/* The avatar and the status dot: blank circles, cut out of the banner by a ring in the card colour */
 .fxAvatar {
   width: 100%;
   aspect-ratio: 1;
-  overflow: hidden;
   border-radius: 50%;
-  color: color-mix(in srgb, var(--color-text-primary) 38%, transparent);
-  background: linear-gradient(160deg, var(--color-card-hover), var(--color-bg-raised));
-  box-shadow: 0 0 0 1.4cqw var(--color-bg-page);
+  background: var(--color-bg-raised);
+  box-shadow: 0 0 0 1.6cqw var(--effect-profile-surface);
 }
 
-/* The status dot at the avatar's lower right */
 .fxStatus {
   position: absolute;
-  right: 0.4cqw;
-  bottom: 0.8cqw;
-  width: 5.6cqw;
+  right: 0.6cqw;
+  bottom: 1cqw;
+  width: 6.4cqw;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--color-success);
-  box-shadow: 0 0 0 1cqw var(--color-bg-page);
+  background: var(--color-bg-raised);
+  box-shadow: 0 0 0 1.2cqw var(--effect-profile-surface);
 }
 
-/* The status bubble, with two small dots leading to the avatar like a thought */
+/* The status bubble is a field that straddles the lower edge of the banner */
 .fxBubble {
-  position: relative;
-  margin: 0 0 1cqw;
-  padding: 1.4cqw 3.2cqw;
-  max-width: 40cqw;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-card);
-  font-family: var(--type-caption-family);
-  font-size: var(--type-caption-size);
-  color: var(--color-text-secondary);
-  white-space: nowrap;
+  --w: 36cqw;
+  --h: 8cqw;
+  margin-top: 7cqw;
 }
 
-.fxBubble::before,
-.fxBubble::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
+/* Name and handle */
+.fxIdentity {
+  display: grid;
+  gap: 2cqw;
 }
 
-.fxBubble::before {
-  left: -2.4cqw;
-  bottom: 0.4cqw;
-  width: 1.8cqw;
-  height: 1.8cqw;
-}
-
-.fxBubble::after {
-  left: -4.6cqw;
-  bottom: -1cqw;
-  width: 1.1cqw;
-  height: 1.1cqw;
-}
-
-/* The display name, in a green to blue gradient */
 .fxName {
-  margin: 0;
-  max-width: 70cqw;
-  font-family: var(--type-h3-family);
-  font-size: 6.4cqw;
-  font-weight: 700;
-  line-height: 1.15;
-  color: transparent;
-  background: linear-gradient(90deg, var(--color-success), var(--color-light-blue));
-  -webkit-background-clip: text;
-  background-clip: text;
+  --w: 56%;
+  --h: 7cqw;
 }
 
-/* Handle, a dot, a role and a small tag */
 .fxHandle {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0 2cqw;
-  margin: 0;
-  padding-right: 24cqw;
-  font-family: var(--type-meta-family);
-  font-size: var(--type-meta-size);
-  color: var(--color-text-primary);
+  --w: 40%;
+  --h: 4.6cqw;
 }
-
-.fxDot {
-  width: 0.9cqw;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--color-text-muted);
-}
-
-.fxTag {
-  padding: 0.2cqw 1.8cqw;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-subtle);
-  background: var(--color-card);
-  font-size: var(--type-caption-size);
-  color: var(--color-text-secondary);
-}
-
-/* Six small badges */
-.fxBadges {
-  display: flex;
-  gap: 1.6cqw;
-  margin: 0;
-  padding: 0 24cqw 0 0;
-  list-style: none;
-}
-
-.fxBadges li {
-  width: 6.2cqw;
-  aspect-ratio: 1;
-  border-radius: 1.6cqw;
-  background: var(--badge, var(--color-card-hover));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 12%, transparent);
-}
-
-.fxBadges li[data-tone='mint'] { --badge: linear-gradient(135deg, #7ff0b8, #10b981); }
-.fxBadges li[data-tone='azure'] { --badge: linear-gradient(135deg, #7cc4ff, #3b9bff); }
-.fxBadges li[data-tone='lime'] { --badge: linear-gradient(135deg, #d9ff8a, #8fd14f); }
-.fxBadges li[data-tone='sky'] { --badge: linear-gradient(135deg, #a8e8ff, #4cc3e8); }
-.fxBadges li[data-tone='violet'] { --badge: linear-gradient(135deg, #c4b5fd, #8b7cf6); }
-.fxBadges li[data-tone='sand'] { --badge: linear-gradient(135deg, #ffe6a8, #e9b949); }
 
 /* The buttons: one wide, two square. They only look like buttons. */
 .fxActions {
@@ -252,50 +191,42 @@
   gap: 2.4cqw;
 }
 
-.fxBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.8cqw;
-  height: 9.6cqw;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-control);
-  background: var(--color-card);
-  font-family: var(--type-label-family);
-  font-size: var(--type-label-size);
-  font-weight: var(--type-label-weight);
-  color: var(--color-text-primary);
-}
-
 .fxBtnMain {
-  padding: 0 4cqw;
-  background: color-mix(in srgb, var(--color-success) 16%, var(--color-card));
+  --w: auto;
+  --h: 10cqw;
+  flex: 1;
 }
 
 .fxBtnIcon {
-  width: 9.6cqw;
-  color: var(--color-text-secondary);
+  --w: 10cqw;
+  --h: 10cqw;
+  flex: none;
 }
 
-/* Bio and member since */
+.fxRule {
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* A section: a small field for its title, then its fields with a slim gap like the rules page */
 .fxSection {
   display: grid;
-  gap: 1cqw;
+  gap: 2.2cqw;
 }
 
-.fxSection h3 {
-  margin: 0;
-  font-family: var(--type-label-family);
-  font-size: var(--type-caption-size);
-  font-weight: var(--type-label-weight);
-  color: var(--color-text-muted);
+.fxLabel {
+  --h: 3.2cqw;
+  border-radius: var(--radius-subtle);
 }
 
-.fxSection p {
-  margin: 0;
-  font-family: var(--type-body-secondary-family);
-  font-size: var(--type-body-secondary-size);
-  color: var(--color-text-primary);
+.fxRow {
+  display: flex;
+  gap: 2.2cqw;
+}
+
+.fxRow .fxField {
+  flex: 1;
+  --w: auto;
 }
 
 /* 3. The effect layer: exactly the size of the card, above the profile, clipped to its corners, never
@@ -869,6 +800,8 @@
 /* Reduced motion: no animation at all. The night stands still with Heer in it, softly lit, and the parts of
    the story that only exist to move (the veil, the motes, the sparks, the ripple) stay away. */
 @media (prefers-reduced-motion: reduce) {
+  .fxProfile::before,
+  .fxProfile::after,
   .fxEffect *,
   .fxEffect span {
     animation: none;
