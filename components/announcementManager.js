@@ -127,7 +127,7 @@ const GUIDE_MARKDOWN = [
   ['**bold**  *italic*  __underline__  ~~strike~~  ==highlight==', 'Text styles'],
   ['- first\n- second\n  - nested\n1. one\n2. two\n- [x] done\n- [ ] to do', 'Lists and tasks'],
   ['> A quote', 'Quote'],
-  ['||Hidden until it is clicked||', 'Spoiler: grey and hidden until someone clicks it. With a mouse, an aurora glows over it on hover.'],
+  ['||Hidden until it is clicked||', 'Spoiler: grey and hidden until someone clicks it. With a mouse, curtains of aurora light rise over it on hover.'],
   ['||![Server icon](/Server-Icon.jpg)||', 'Spoiler image or video: put the picture between the two || bars and it is covered the same way.'],
   ['[Discord](https://discord.gg/B6czYB7wa7)', 'Link'],
   ['![A picture](https://)', 'Image or video from a link'],
