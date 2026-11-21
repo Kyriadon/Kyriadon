@@ -2379,25 +2379,19 @@ a.annoGalleryItem:hover img {
 /* ============================================================================
 
    The spoiler: ||hidden text|| in the markdown, and covered images, videos and resources.
-   Built like the purple == highlight (.mdHl): a smooth two-stop gradient, here in grey, with the same
-   0.3em rounded corners and the same padding. Drawn by components/spoiler.js. Colours and timing are
-   tokens from lib/siteDesign.js (--spoiler-*).
-
-   On hover an aurora lies ON TOP of the grey cover: distinct curtains of green, sky, azure, purple and
-   pink light with rays sliding through them, over a night tint with twinkling stars and a few warm
-   embers. It is built like a Discord profile effect (Star Struck): an overlay of layered parts, dark at
-   the edges and calm in the middle, cool light with a few small warm sparks, and an intro (the curtains
-   rise one after another) before it settles into its loop. The parts are real elements that
-   spoiler.js puts inside the spoiler (.mdSpoilerSky), they are not part of the cover's background.
+   It is the purple == highlight (.mdHl) in grey: the same smooth two-stop gradient, the same 0.3em
+   rounded corners, the same padding, and one cover per line when it wraps. The grey runs from #c4cad6
+   to #8a93a3 (--spoiler-cover-light and --spoiler-cover-main in lib/siteDesign.js). One click clears the
+   cover smoothly and the content fades in. Drawn by components/spoiler.js.
 
    Parts:
    1. One animated number (the cover)
-   2. The cover, and the aurora on top of it (night, stars, curtains, embers)
+   2. The cover
    3. The kinds: text, image, video and box (resource cards and gallery items)
    4. The content: hidden until the reveal, then it fades in
-   5. Hover and keyboard focus: the aurora opens
-   6. Revealed: the cover and the aurora clear for good
-   7. Focus ring, reduced motion and forced colours
+   5. Locked: a spoiler inside a link or a button
+   6. Revealed: the cover clears
+   7. Focus ring and forced colours
    8. The Spoiler switch on a resource row in the announcement editor
    ============================================================================ */
 
@@ -2411,14 +2405,10 @@ a.annoGalleryItem:hover img {
   initial-value: 1;
 }
 
-/* 2. The cover: smooth grey, light to main (the same construction as .mdHl). Everything on top of it
-   belongs to the aurora, which is paused until the spoiler is opened by hover or focus (--spoiler-play),
-   because a paused animation costs nothing. */
+/* 2. The cover: smooth grey, light to main (the same construction as .mdHl) */
 
 .mdSpoiler {
-  position: relative;
   --spoiler-cover-alpha: 1;
-  --spoiler-play: paused;
 
   color: inherit;
   cursor: pointer;
@@ -2429,320 +2419,18 @@ a.annoGalleryItem:hover img {
     color-mix(in srgb, var(--spoiler-cover-main) calc(var(--spoiler-cover-alpha) * 42%), transparent)
   );
   transition: --spoiler-cover-alpha var(--spoiler-motion-fade) ease;
-
-  /* The ray patterns of the curtains: thin bright rays with dim gaps, each pattern different. A pattern
-     is a mask, wider than its curtain, that slides sideways inside it. */
-  --spoiler-rays-a: linear-gradient(90deg, #0002 0%, #0004 2.2%, #0008 3.7%, #0004 5.2%, #0004 5.6%, #000 7.4%, #0003 9.2%, #0002 9.6%, #000a 11.1%, #0004 12.5%, #0002 14.4%, #000 15.4%, #0002 16.4%, #0004 17.8%, #000a 19.3%, #0003 20.9%, #0003 21.8%, #000 23.0%, #0004 24.1%, #0002 25.5%, #000d 26.7%, #0003 27.8%, #0002 29.7%, #000 30.6%, #0004 31.4%, #0002 32.1%, #000 34.0%, #0003 36.0%, #0004 36.7%, #000 38.0%, #0004 39.3%, #0003 39.7%, #000d 41.4%, #0002 43.0%, #0002 44.5%, #000 46.2%, #0003 47.9%, #0004 48.4%, #0008 49.8%, #0003 51.2%, #0003 51.6%, #000a 53.6%, #0004 55.5%, #0003 56.6%, #000 57.7%, #0003 58.8%, #0002 59.2%, #000 61.0%, #0002 62.8%, #0003 63.1%, #000a 64.8%, #0003 66.5%, #0003 66.6%, #0008 68.1%, #0002 69.7%, #0004 71.3%, #000a 72.3%, #0003 73.3%, #0003 73.4%, #000 75.1%, #0003 77.0%, #0004 79.4%, #0008 80.4%, #0004 81.5%, #0003 82.1%, #000a 83.0%, #0003 84.0%, #0002 100%);
-  --spoiler-rays-b: linear-gradient(90deg, #0002 0%, #0002 2.5%, #0008 4.5%, #0002 6.4%, #0003 7.4%, #000a 8.6%, #0003 9.9%, #0002 10.5%, #000a 12.4%, #0002 14.2%, #0003 15.1%, #000 16.8%, #0002 18.5%, #0003 19.7%, #0008 21.3%, #0003 22.9%, #0003 23.9%, #000a 25.4%, #0002 26.9%, #0003 27.5%, #000 29.3%, #0003 31.0%, #0002 32.4%, #000 33.9%, #0002 35.3%, #0003 36.0%, #000 37.9%, #0003 39.9%, #0004 40.8%, #000d 42.0%, #0003 43.2%, #0004 44.7%, #000d 45.7%, #0003 46.7%, #0004 48.5%, #000a 50.0%, #0003 51.5%, #0002 52.3%, #000 53.6%, #0003 55.0%, #0002 56.6%, #000 58.4%, #0004 60.2%, #0003 62.2%, #000 63.5%, #0002 64.7%, #0004 65.5%, #000 67.2%, #0003 68.9%, #0003 69.8%, #000 71.3%, #0003 72.9%, #0003 74.8%, #000 76.1%, #0004 77.5%, #0003 79.3%, #000a 80.6%, #0003 81.9%, #0002 83.4%, #000 84.9%, #0003 86.4%, #0004 86.4%, #000 88.0%, #0003 90.0%, #0002 90.6%, #0008 92.1%, #0003 93.6%, #0002 100%);
-  --spoiler-rays-c: linear-gradient(90deg, #0002 0%, #0002 3.1%, #000a 4.1%, #0003 5.0%, #0003 5.3%, #000a 6.9%, #0004 8.6%, #0002 9.9%, #000a 11.9%, #0002 13.8%, #0004 14.5%, #0008 15.7%, #0003 17.0%, #0004 18.8%, #000 20.4%, #0002 21.9%, #0003 22.9%, #000d 24.2%, #0002 25.5%, #0002 25.5%, #000d 27.4%, #0003 29.2%, #0002 30.0%, #000d 31.9%, #0003 33.8%, #0002 35.3%, #000a 36.4%, #0004 37.5%, #0003 38.9%, #000a 40.1%, #0002 41.2%, #0003 42.7%, #0008 43.6%, #0002 44.5%, #0003 45.7%, #000 46.9%, #0004 48.0%, #0003 49.5%, #000 50.7%, #0002 51.9%, #0002 52.5%, #000d 54.4%, #0003 56.3%, #0003 58.0%, #000a 59.2%, #0004 60.3%, #0002 60.3%, #000 62.2%, #0003 64.1%, #0003 65.8%, #0008 67.5%, #0003 69.1%, #0003 70.4%, #000 72.0%, #0003 73.6%, #0003 74.7%, #000 76.6%, #0004 78.4%, #0003 79.8%, #000 81.3%, #0003 82.9%, #0004 84.7%, #0008 85.6%, #0003 86.6%, #0004 87.7%, #000 88.9%, #0003 90.1%, #0002 100%);
-}
-
-/* The aurora layer: exactly the size of the spoiler, clipped to its corners, never clickable. It is
-   invisible until the spoiler is opened, and it fades with the cover. isolation keeps the screen
-   blending of the curtains inside the layer and keeps the rounded clip right on every browser. */
-.mdSpoilerSky {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  isolation: isolate;
-  border-radius: inherit;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity var(--spoiler-motion-fade) ease,
-    visibility 0s linear var(--spoiler-motion-fade);
-}
-
-/* The night: a deep indigo tint, darker at the top, a green light rising from the bottom edge, and
-   dark edges that frame the middle, like the dark frame of the effect it is modelled on */
-.mdSkyNight {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(ellipse 85% 60% at 50% 105%, color-mix(in srgb, var(--spoiler-aurora-green) 30%, transparent), transparent),
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--spoiler-night) 72%, transparent),
-      color-mix(in srgb, var(--spoiler-night) 30%, transparent)
-    );
-  box-shadow: inset 0 0 0.9em 0.05em color-mix(in srgb, var(--spoiler-night) 92%, transparent);
-}
-
-/* The stars: three layers of dots on tiles of different sizes, so the pattern never repeats in an
-   obvious way. Each layer twinkles on its own clock. The far stars are tiny, the near ones glow. */
-.mdSkyStars {
-  position: absolute;
-  inset: 0;
-  opacity: 0.8;
-  background-repeat: repeat;
-  animation: spoilerTwinkle calc(var(--spoiler-motion-twinkle) * var(--sky-k)) ease-in-out var(--sky-lag) infinite alternate;
-  animation-play-state: var(--spoiler-play);
-}
-
-.mdSkyStars[data-layer='far'] {
-  --sky-k: 1.1;
-  --sky-lag: -0.4s;
-  background-size: 4.3em 2.9em;
-  background-image:
-    radial-gradient(circle at 12% 22%, var(--spoiler-star) 0, var(--spoiler-star) 0.55px, transparent 1.16px),
-    radial-gradient(circle at 41% 64%, var(--spoiler-star) 0, var(--spoiler-star) 0.55px, transparent 1.16px),
-    radial-gradient(circle at 73% 18%, var(--spoiler-star) 0, var(--spoiler-star) 0.55px, transparent 1.16px),
-    radial-gradient(circle at 88% 71%, var(--spoiler-star) 0, var(--spoiler-star) 0.55px, transparent 1.16px),
-    radial-gradient(circle at 27% 88%, var(--spoiler-star) 0, var(--spoiler-star) 0.55px, transparent 1.16px),
-    radial-gradient(circle at 58% 41%, var(--spoiler-star) 0, var(--spoiler-star) 0.55px, transparent 1.16px);
-}
-
-.mdSkyStars[data-layer='mid'] {
-  --sky-k: 1.5;
-  --sky-lag: -1.3s;
-  background-size: 6.7em 4.1em;
-  background-image:
-    radial-gradient(circle at 20% 35%, var(--spoiler-star) 0, var(--spoiler-star) 0.9px, transparent 1.89px),
-    radial-gradient(circle at 64% 12%, var(--spoiler-star) 0, var(--spoiler-star) 0.9px, transparent 1.89px),
-    radial-gradient(circle at 82% 60%, var(--spoiler-star) 0, var(--spoiler-star) 0.9px, transparent 1.89px),
-    radial-gradient(circle at 38% 82%, var(--spoiler-star) 0, var(--spoiler-star) 0.9px, transparent 1.89px);
-}
-
-.mdSkyStars[data-layer='near'] {
-  --sky-k: 2.1;
-  --sky-lag: -2.7s;
-  background-size: 9.1em 5.3em;
-  background-image:
-    radial-gradient(circle at 36% 30%, var(--spoiler-star) 0, var(--spoiler-star) 0.8px, color-mix(in srgb, var(--spoiler-star) 40%, transparent) 1.4px, transparent 3.4px),
-    radial-gradient(circle at 78% 68%, var(--spoiler-star) 0, var(--spoiler-star) 0.8px, color-mix(in srgb, var(--spoiler-star) 40%, transparent) 1.4px, transparent 3.4px);
-}
-
-@keyframes spoilerTwinkle {
-  from {
-    opacity: 0.2;
-  }
-
-  55% {
-    opacity: 0.85;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-/* A curtain: a tall frame whose sides fade out (the mask), blended with screen so overlapping curtains
-   glow brighter where they cross. It sways sideways and leans, and it starts collapsed at its lower edge
-   and rises when the aurora opens, one curtain after another (--sky-delay). Inside it, the rays layer
-   holds the colour: bright at the lower edge, changing colour and fading towards the top. */
-.mdSkyCurtain {
-  position: absolute;
-  left: var(--sky-x);
-  bottom: var(--sky-b);
-  width: var(--sky-w);
-  height: 120%;
-  transform-origin: 50% 100%;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
-  filter: blur(0.035em);
-  mix-blend-mode: screen;
-  scale: 1 0;
-  transition: scale var(--spoiler-motion-rise) var(--motion-ease) var(--sky-delay);
-  animation: spoilerSway calc(var(--spoiler-motion-flow) * var(--sky-k)) ease-in-out var(--sky-lag) infinite alternate;
-  animation-play-state: var(--spoiler-play);
-}
-
-/* The rays layer of a curtain: the colour, bottom to top, seen only through the ray pattern, which
-   slides sideways and back */
-.mdSkyRays {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--sky-c1) 92%, transparent) 0%,
-    color-mix(in srgb, var(--sky-c2) 62%, transparent) 30%,
-    color-mix(in srgb, var(--sky-c3) 32%, transparent) 64%,
-    transparent 100%
-  );
-  -webkit-mask-image: var(--sky-rays);
-  mask-image: var(--sky-rays);
-  -webkit-mask-size: 220% 100%;
-  mask-size: 220% 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: 0% 0;
-  mask-position: 0% 0;
-  animation: spoilerRays calc(var(--spoiler-motion-rays) * var(--sky-k)) ease-in-out var(--sky-lag) infinite alternate;
-  animation-play-state: var(--spoiler-play);
-}
-
-/* The five curtains: where they hang, how wide they are, how high their lower edge is, how fast they
-   move (--sky-k times the flow), where in its loop each one starts (--sky-lag), when each one rises
-   (--sky-delay), its three colours from the lower edge up, and its ray pattern */
-.mdSkyCurtain[data-n='1'] {
-  --sky-x: -12%;
-  --sky-w: 46%;
-  --sky-b: -6%;
-  --sky-k: 1;
-  --sky-lag: -1.5s;
-  --sky-delay: 0ms;
-  --sky-c1: var(--spoiler-aurora-green);
-  --sky-c2: var(--spoiler-aurora-sky);
-  --sky-c3: var(--spoiler-aurora-azure);
-  --sky-rays: var(--spoiler-rays-a);
-}
-
-.mdSkyCurtain[data-n='2'] {
-  --sky-x: 12%;
-  --sky-w: 38%;
-  --sky-b: 6%;
-  --sky-k: 1.3;
-  --sky-lag: -4s;
-  --sky-delay: 90ms;
-  --sky-c1: var(--spoiler-aurora-sky);
-  --sky-c2: var(--spoiler-aurora-azure);
-  --sky-c3: var(--spoiler-aurora-purple);
-  --sky-rays: var(--spoiler-rays-b);
-}
-
-.mdSkyCurtain[data-n='3'] {
-  --sky-x: 33%;
-  --sky-w: 42%;
-  --sky-b: 0%;
-  --sky-k: 0.9;
-  --sky-lag: -0.6s;
-  --sky-delay: 180ms;
-  --sky-c1: var(--spoiler-aurora-green);
-  --sky-c2: var(--spoiler-aurora-sky);
-  --sky-c3: var(--spoiler-aurora-pink);
-  --sky-rays: var(--spoiler-rays-c);
-}
-
-.mdSkyCurtain[data-n='4'] {
-  --sky-x: 55%;
-  --sky-w: 36%;
-  --sky-b: 10%;
-  --sky-k: 1.5;
-  --sky-lag: -6s;
-  --sky-delay: 270ms;
-  --sky-c1: var(--spoiler-aurora-azure);
-  --sky-c2: var(--spoiler-aurora-purple);
-  --sky-c3: var(--spoiler-aurora-pink);
-  --sky-rays: var(--spoiler-rays-a);
-}
-
-.mdSkyCurtain[data-n='5'] {
-  --sky-x: 72%;
-  --sky-w: 44%;
-  --sky-b: 2%;
-  --sky-k: 1.15;
-  --sky-lag: -2.4s;
-  --sky-delay: 360ms;
-  --sky-c1: var(--spoiler-aurora-green);
-  --sky-c2: var(--spoiler-aurora-sky);
-  --sky-c3: var(--spoiler-aurora-purple);
-  --sky-rays: var(--spoiler-rays-b);
-}
-
-/* The sway: a curtain drifts sideways by almost half its own width, leans, and breathes in width, so
-   the folds of the five curtains pass over each other */
-@keyframes spoilerSway {
-  from {
-    transform: translate3d(-45%, 2%, 0) skewX(-8deg) scaleX(0.92);
-  }
-
-  to {
-    transform: translate3d(45%, -3%, 0) skewX(8deg) scaleX(1.08);
-  }
-}
-
-/* The rays slide through their curtain, so the light seems to ripple inside it */
-@keyframes spoilerRays {
-  from {
-    -webkit-mask-position: 0% 0;
-    mask-position: 0% 0;
-  }
-
-  to {
-    -webkit-mask-position: 100% 0;
-    mask-position: 100% 0;
-  }
-}
-
-/* The embers: three small warm lights that float up through the aurora and fade, the one warm accent
-   against the cool light. They climb as far as the spoiler is tall (top is a share of its height). */
-.mdSkyEmber {
-  position: absolute;
-  left: var(--sky-x);
-  top: 112%;
-  width: 0.36em;
-  height: 0.36em;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--spoiler-ember) 70%, #fff) 0 22%,
-    color-mix(in srgb, var(--spoiler-ember) 60%, transparent) 48%,
-    transparent 72%
-  );
-  mix-blend-mode: screen;
-  opacity: 0;
-  animation: spoilerEmber calc(var(--spoiler-motion-ember) * var(--sky-k)) ease-in-out var(--sky-lag) infinite;
-  animation-play-state: var(--spoiler-play);
-}
-
-.mdSkyEmber[data-n='1'] {
-  --sky-x: 18%;
-  --sky-k: 1;
-  --sky-lag: -0.5s;
-  --sky-drift: 0.9em;
-}
-
-.mdSkyEmber[data-n='2'] {
-  --sky-x: 52%;
-  --sky-k: 1.3;
-  --sky-lag: -2.6s;
-  --sky-drift: -0.7em;
-}
-
-.mdSkyEmber[data-n='3'] {
-  --sky-x: 81%;
-  --sky-k: 0.85;
-  --sky-lag: -4.1s;
-  --sky-drift: 0.5em;
-}
-
-@keyframes spoilerEmber {
-  0% {
-    top: 112%;
-    opacity: 0;
-    transform: translateX(0) scale(0.6);
-  }
-
-  15% {
-    opacity: 1;
-  }
-
-  70% {
-    opacity: 0.9;
-  }
-
-  100% {
-    top: -22%;
-    opacity: 0;
-    transform: translateX(var(--sky-drift)) scale(1);
-  }
 }
 
 /* 3. The kinds: text, image, video and box (resource cards and gallery items) */
 
-/* Text: sits in the line like a word, with the same 0.3em corners and padding as the == highlight. It is
-   one box, so the aurora has a clean rectangle to lie on: a short spoiler is just a word in the line, a
-   very long one moves to its own line and wraps inside its box, never wider than its column. The padding
-   stays after the reveal, so the text never shifts. */
+/* Text: part of the line, wraps with it, and gets one cover per line like the == highlight. The
+   padding stays after the reveal, so the text never shifts. */
 .mdSpoiler[data-kind='text'] {
-  display: inline-block;
-  max-width: 100%;
   padding: 0 0.3em;
   overflow-wrap: anywhere;
   border-radius: 0.3em;
-  vertical-align: baseline;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* Image and video: a block of the picture's own size, never wider than its column. The picture's
@@ -2798,19 +2486,6 @@ a.annoGalleryItem:hover img {
   align-items: stretch;
 }
 
-/* The sparkles are sized for a line of text. On pictures, videos and cards the stars are bigger and
-   wider apart, so a large cover does not look like a dotted line of tiny stars. */
-.mdSpoiler[data-kind='image'],
-.mdSpoiler[data-kind='video'] {
-  --spoiler-star-size: 1.1em;
-  --spoiler-star-scale: 3.2;
-}
-
-.mdSpoiler[data-kind='box'] {
-  --spoiler-star-size: 0.9em;
-  --spoiler-star-scale: 2.4;
-}
-
 /* 4. The content. While covered it is not painted, cannot be selected or copied, cannot be tabbed
    to and is not read out (visibility), and a click on it lands on the spoiler. On the reveal it
    becomes visible at once and fades in. The space it takes never changes, so nothing moves. */
@@ -2832,65 +2507,25 @@ a.annoGalleryItem:hover img {
   user-select: auto;
 }
 
-/* 5. Hover (mouse) and keyboard focus: the aurora opens. Its layer fades in, and the curtains rise one
-   after another while everything starts to move. Touch screens have no hover, so a tap simply opens the
-   spoiler. A spoiler inside a link or a button (a card title) is locked, belongs to that control and
-   stays quiet. */
-
-@media (hover: hover) and (pointer: fine) {
-  .mdSpoiler[data-revealed='false']:not([data-locked='true']):hover {
-    --spoiler-play: running;
-  }
-
-  .mdSpoiler[data-revealed='false']:not([data-locked='true']):hover > .mdSpoilerSky {
-    opacity: 1;
-    visibility: visible;
-    transition-delay: 0s;
-  }
-
-  .mdSpoiler[data-revealed='false']:not([data-locked='true']):hover > .mdSpoilerSky .mdSkyCurtain {
-    scale: 1 1;
-  }
-}
-
-.mdSpoiler[data-revealed='false']:not([data-locked='true']):focus-visible {
-  --spoiler-play: running;
-}
-
-.mdSpoiler[data-revealed='false']:not([data-locked='true']):focus-visible > .mdSpoilerSky {
-  opacity: 1;
-  visibility: visible;
-  transition-delay: 0s;
-}
-
-.mdSpoiler[data-revealed='false']:not([data-locked='true']):focus-visible > .mdSpoilerSky .mdSkyCurtain {
-  scale: 1 1;
-}
-
+/* 5. Locked: a spoiler inside a link or a button (a card title) belongs to that control, so it keeps
+   the control's own cursor and stays covered. */
 .mdSpoiler[data-locked='true'] {
   cursor: inherit;
 }
 
-/* 6. Revealed: one click clears the cover and removes the aurora. The cover fades to nothing and the
-   aurora layer fades out where it stands (it is no longer opened, so it is simply faded, and hidden at
-   the end of the fade). spoiler.js takes it out of the page a moment later. */
+/* 6. Revealed: one click clears the cover smoothly, and the content fades in (part 4). */
 .mdSpoiler[data-revealed='true'] {
   --spoiler-cover-alpha: 0;
   cursor: inherit;
 }
 
-/* 7. Focus ring, forced colours and reduced motion. */
+/* 7. Focus ring and forced colours. */
 
 /* Forced colours remove backgrounds, so a covered spoiler keeps a thin outline. The focus ring below
    comes after it and wins. */
 @media (forced-colors: active) {
   .mdSpoiler[data-revealed='false'] {
     outline: 1px solid CanvasText;
-  }
-
-  /* Its colours would be overridden anyway, so the aurora is left out */
-  .mdSpoilerSky {
-    display: none;
   }
 }
 
@@ -2907,24 +2542,6 @@ a.annoGalleryItem:hover img {
 /* A spoiler that was just opened with the keyboard keeps focus, without a ring */
 .mdSpoiler[data-revealed='true']:focus {
   outline: none;
-}
-
-/* Reduced motion: the aurora still appears on hover, with the curtains standing at full height, the
-   rays still and the stars steady. Nothing moves, and the embers, which only exist to move, stay away. */
-@media (prefers-reduced-motion: reduce) {
-  .mdSpoilerSky,
-  .mdSpoilerSky * {
-    animation: none;
-  }
-
-  .mdSkyCurtain {
-    scale: 1 1;
-    transition: none;
-  }
-
-  .mdSkyEmber {
-    display: none;
-  }
 }
 
 /* 8. The Spoiler switch on a resource row in the announcement editor. It takes a row of its own under
