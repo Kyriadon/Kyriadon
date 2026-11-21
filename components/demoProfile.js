@@ -1,96 +1,76 @@
 // ============================================================================
 // demoProfile.js
-// A neutral demo profile for showing a profile effect: banner, avatar with a status dot, a status bubble,
-// name, handle, badges, buttons, bio and member since. It is a display only, so nothing in it is a
-// control. The effect lies on top of the whole card (components/profileEffect.js).
+// A blank demo profile for showing a profile effect. It follows the layout of a long Discord profile:
+// banner, avatar with a status dot and a status bubble, name, handle, three buttons, then the sections
+// (bio, member since, connections, roles, mutual servers, note, activity). Every field is an empty,
+// rounded rectangle like the panels of this site, with no text and no badges. It is a display only, so
+// nothing in it is a control. The effect lies on top of the whole card (components/profileEffect.js).
 // ============================================================================
 import { ProfileEffect } from './profileEffect';
 
-// Six small badges; the tone picks the colour in the CSS
-const BADGE_TONES = ['mint', 'azure', 'lime', 'sky', 'violet', 'sand'];
+// The sections under the buttons. label is the width of the small field above the section, and every row
+// is one field: h is its height in cqw (a hundredth of the card's width), w is an optional width and cols
+// splits the row into that many fields side by side.
+const SECTIONS = [
+  { key: 'bio', label: '12cqw', rows: [{ h: 24 }] },
+  { key: 'since', label: '22cqw', rows: [{ h: 9, w: '58%' }] },
+  { key: 'connections', label: '26cqw', rows: [{ h: 11 }, { h: 11 }, { h: 11 }] },
+  { key: 'roles', label: '14cqw', rows: [{ h: 8, cols: 3 }, { h: 8, cols: 2 }] },
+  { key: 'mutual', label: '30cqw', rows: [{ h: 11 }, { h: 11 }] },
+  { key: 'note', label: '10cqw', rows: [{ h: 16 }] },
+  { key: 'activity', label: '18cqw', rows: [{ h: 22 }] },
+];
 
-// Message bubble, for the main button
-function IconMessage() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" />
-    </svg>
-  );
-}
-
-// Four squares, for the second button
-function IconGrid() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
-      <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
-      <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
-      <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
-    </svg>
-  );
-}
-
-// Three dots, for the third button
-function IconMore() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <circle cx="5.5" cy="12" r="1.7" />
-      <circle cx="12" cy="12" r="1.7" />
-      <circle cx="18.5" cy="12" r="1.7" />
-    </svg>
-  );
+// One blank field. The size comes from the custom properties, the look from .fxField.
+function Field({ w, h, className = '' }) {
+  return <span className={`fxField ${className}`.trim()} style={{ '--w': w, '--h': h }} />;
 }
 
 export function DemoProfile({ effectSlug }) {
   return (
-    <article className="fxProfile" aria-label="Demo profile with the effect on top">
+    <article className="fxProfile" aria-label="Blank demo profile with the effect on top">
       <div className="fxProfileBanner" aria-hidden="true" />
 
-      <div className="fxProfileBody">
+      <div className="fxProfileBody" aria-hidden="true">
         {/* Avatar, status dot and the status bubble beside it */}
         <div className="fxAvatarRow">
           <div className="fxAvatarWrap">
-            <div className="fxAvatar" aria-hidden="true">
-              <svg viewBox="0 0 100 100" width="100%" height="100%" focusable="false">
-                <circle cx="50" cy="39" r="17" fill="currentColor" />
-                <path d="M16 100c2-25 16-38 34-38s32 13 34 38Z" fill="currentColor" />
-              </svg>
-            </div>
-            <span className="fxStatus" aria-hidden="true" />
+            <div className="fxAvatar" />
+            <span className="fxStatus" />
           </div>
-          <p className="fxBubble">Your status here</p>
+          <Field className="fxBubble" />
         </div>
 
         {/* Name and handle. They stay clear of the right edge, where effects are allowed to play. */}
-        <h2 className="fxName">Display name</h2>
-        <p className="fxHandle">
-          <span>username</span>
-          <span className="fxDot" aria-hidden="true" />
-          <span>Role</span>
-          <span className="fxTag">TAG</span>
-        </p>
-
-        <ul className="fxBadges" aria-hidden="true">
-          {BADGE_TONES.map((tone) => (
-            <li key={tone} data-tone={tone} />
-          ))}
-        </ul>
-
-        <div className="fxActions" aria-hidden="true">
-          <span className="fxBtn fxBtnMain"><IconMessage />Message</span>
-          <span className="fxBtn fxBtnIcon"><IconGrid /></span>
-          <span className="fxBtn fxBtnIcon"><IconMore /></span>
+        <div className="fxIdentity">
+          <Field className="fxName" />
+          <Field className="fxHandle" />
         </div>
 
-        <section className="fxSection">
-          <h3>Bio</h3>
-          <p>A short line about you goes here, and the effect plays on top of it.</p>
-        </section>
+        <div className="fxActions">
+          <Field className="fxBtnMain" />
+          <Field className="fxBtnIcon" />
+          <Field className="fxBtnIcon" />
+        </div>
 
-        <section className="fxSection">
-          <h3>Member since</h3>
-          <p>1 Jan 2026</p>
-        </section>
+        <div className="fxRule" />
+
+        {SECTIONS.map((section) => (
+          <section key={section.key} className="fxSection">
+            <Field className="fxLabel" w={section.label} />
+            {section.rows.map((row, index) =>
+              row.cols ? (
+                <div key={index} className="fxRow">
+                  {Array.from({ length: row.cols }, (_, n) => (
+                    <Field key={n} h={`${row.h}cqw`} />
+                  ))}
+                </div>
+              ) : (
+                <Field key={index} h={`${row.h}cqw`} w={row.w} />
+              )
+            )}
+          </section>
+        ))}
       </div>
 
       <ProfileEffect slug={effectSlug} />
