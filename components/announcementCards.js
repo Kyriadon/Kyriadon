@@ -15,6 +15,7 @@ import { TYPE_META } from '../lib/announcementMarkup';
 import { fetchAnnouncement, formatDate, formatWhen, sendView, timeLeft } from '../lib/announcementsClient';
 import { IconCheck, IconChevron, IconCopy, IconMegaphone, IconSparkle, IconWarning, Modal } from './siteShell';
 import { AnnoInline, AnnoMarkup } from './announcementMarkup';
+import { Spoiler } from './spoiler';
 
 // ----------------------------------------------------------------------------
 // Icons (stroke style, the same as the rest of the site)
@@ -180,8 +181,9 @@ function ResourceItem({ resource }) {
     </>
   );
 
-  return (
-    <li className="annoResourceItem">
+  // The link and its copy button, one row inside the card's own frame
+  const row = (
+    <>
       {internal ? (
         <Link className="annoResource" href={resource.url}>{inner}</Link>
       ) : (
@@ -190,7 +192,32 @@ function ResourceItem({ resource }) {
       <button type="button" className="annoResourceCopy" onClick={copy} aria-label={`Copy the link to ${resource.label}`} title={copied ? 'Copied' : 'Copy link'}>
         {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
       </button>
+    </>
+  );
+
+  // A spoiler resource keeps its frame, only the row inside is covered until it is clicked
+  return (
+    <li className="annoResourceItem">
+      {resource.spoiler ? <Spoiler as="div" kind="box" className="annoResourceSpoiler">{row}</Spoiler> : row}
     </li>
+  );
+}
+
+// An uploaded picture or video of the gallery, with its label
+function GalleryItem({ resource }) {
+  if (resource.kind === 'image') {
+    return (
+      <a className="annoGalleryItem" href={resource.url} target="_blank" rel="noopener noreferrer">
+        <img src={resource.url} alt={resource.label} loading="lazy" decoding="async" />
+        <span>{resource.label}</span>
+      </a>
+    );
+  }
+  return (
+    <figure className="annoGalleryItem" data-kind="video">
+      <video src={resource.url} controls preload="metadata" playsInline aria-label={resource.label} />
+      <figcaption>{resource.label}</figcaption>
+    </figure>
   );
 }
 
@@ -231,6 +258,8 @@ export function AnnouncementContent({ item }) {
   const resources = item.resources || [];
   const media = resources.filter((resource) => resource.kind === 'image' || resource.kind === 'video');
   const links = resources.filter((resource) => resource.kind === 'link');
+  // "Copy all" leaves out the links that are still covered by a spoiler
+  const copyable = links.filter((resource) => !resource.spoiler);
 
   return (
     <div className="annoContent">
@@ -239,17 +268,14 @@ export function AnnouncementContent({ item }) {
 
       {media.length > 0 && (
         <div className="annoGallery">
+          {/* A spoiler picture or video is covered, label and all, until it is clicked */}
           {media.map((resource, index) =>
-            resource.kind === 'image' ? (
-              <a key={index} className="annoGalleryItem" href={resource.url} target="_blank" rel="noopener noreferrer">
-                <img src={resource.url} alt={resource.label} loading="lazy" decoding="async" />
-                <span>{resource.label}</span>
-              </a>
+            resource.spoiler ? (
+              <Spoiler key={index} as="div" kind="box" className="annoGallerySpoiler">
+                <GalleryItem resource={resource} />
+              </Spoiler>
             ) : (
-              <figure key={index} className="annoGalleryItem" data-kind="video">
-                <video src={resource.url} controls preload="metadata" playsInline aria-label={resource.label} />
-                <figcaption>{resource.label}</figcaption>
-              </figure>
+              <GalleryItem key={index} resource={resource} />
             ),
           )}
         </div>
@@ -263,7 +289,7 @@ export function AnnouncementContent({ item }) {
               Resources
               <span className="annoResourcesCount">{links.length}</span>
             </h4>
-            {links.length > 1 && <CopyAllResources links={links} />}
+            {copyable.length > 1 && <CopyAllResources links={copyable} />}
           </div>
           <ul className="annoResources">
             {links.map((resource, index) => (
