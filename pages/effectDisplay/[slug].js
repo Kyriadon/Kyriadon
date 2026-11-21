@@ -2,11 +2,12 @@
 // effectDisplay/[slug].js
 // The profile effect showcase. People see it at /api/preview/profile/effects/display/[slug] (a rewrite in
 // next.config.js), so it never meets the later store pages. It uses the shared site shell (header,
-// footer and background) and shows one small card: the effect on top of a demo profile, with nothing to
+// footer and background) and shows one card: a caption, then the effect on top of a blank demo profile, with nothing to
 // press. An unknown slug is a 404.
 // ============================================================================
 import Head from 'next/head';
 import { SiteShell } from '../../components/siteShell';
+import { AnnoMarkup } from '../../components/announcementMarkup';
 import { DemoProfile } from '../../components/demoProfile';
 import { effects, effectSlugs } from '../../lib/effectRegistry';
 
@@ -32,12 +33,7 @@ export default function EffectDisplayPage({ slug }) {
 
       <div className="fxPage">
         <header className="fxCaption">
-          <div className="fxTitleRow">
-            <h1 className="fxTitle">{effect.name}</h1>
-            <span className="fxChip">Pure CSS</span>
-          </div>
-          <p className="fxLine">{effect.description}</p>
-          <p className="fxCredit">Inspired by {effect.inspiredBy}</p>
+          <AnnoMarkup text={effect.caption} />
         </header>
 
         <DemoProfile effectSlug={slug} />
