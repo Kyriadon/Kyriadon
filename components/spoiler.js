@@ -3,7 +3,7 @@
 // The spoiler: ||hidden text|| in the markdown, and a switch on resources.
 // It is covered by a smooth grey. With a mouse, an aurora glow flows over it on hover (and on keyboard
 // focus). One click, tap or Enter / Space clears the cover and the glow for good, and the content
-// fades in. Styles live in styles/announcementsStyles.css, colours and timing in lib/siteDesign.js.
+// fades in. Styles live in styles/announcementStyles.css, colours and timing in lib/siteDesign.js.
 //
 // The same component covers every kind of content, chosen with `kind`:
 //   text    a run of text inside a line (wraps with the line, like the == highlight)
