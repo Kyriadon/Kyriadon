@@ -38,6 +38,7 @@ const SNIPPETS = [
   { id: 'link', label: 'Link', make: (text) => `[${text || 'label'}](https://)` },
   { id: 'code', label: 'Code', make: (text) => `\`${text || 'code'}\`` },
   { id: 'colr', label: 'Colour', make: (text) => `:colr:blue/${text || 'text'}/` },
+  { id: 'spoiler', label: 'Spoiler', make: (text) => `||${text || 'text'}||` },
   { id: 'colrs', label: 'Gradient', make: (text) => `:colrs:blue,red,green/${text || 'text'}/` },
   { id: 'chip', label: 'Chip', make: (text) => `:chip:blue/${text || 'text'}/:chip:` },
   { id: 'flow', label: 'Flowing chip', make: (text) => `:chip:blue,red,purple/${text || 'text'}/:chip:` },
@@ -97,7 +98,7 @@ const cleanResources = (resources) =>
     .filter((resource) => resource.url.trim())
     .map((resource) => {
       const kind = ['image', 'video', 'link'].includes(resource.kind) ? resource.kind : guessKind(resource.url);
-      return { kind, label: resource.label.trim(), url: resource.url.trim() };
+      return { kind, label: resource.label.trim(), url: resource.url.trim(), ...(resource.spoiler ? { spoiler: true } : {}) };
     });
 
 // ----------------------------------------------------------------------------
@@ -126,6 +127,8 @@ const GUIDE_MARKDOWN = [
   ['**bold**  *italic*  __underline__  ~~strike~~  ==highlight==', 'Text styles'],
   ['- first\n- second\n  - nested\n1. one\n2. two\n- [x] done\n- [ ] to do', 'Lists and tasks'],
   ['> A quote', 'Quote'],
+  ['||Hidden until it is clicked||', 'Spoiler: grey and hidden until someone clicks it. With a mouse, an aurora glows over it on hover.'],
+  ['||![Server icon](/Server-Icon.jpg)||', 'Spoiler image or video: put the picture between the two || bars and it is covered the same way.'],
   ['[Discord](https://discord.gg/B6czYB7wa7)', 'Link'],
   ['![A picture](https://)', 'Image or video from a link'],
   ['`/command`', 'Inline code'],
@@ -152,6 +155,7 @@ const GUIDE_RAW = [
   [':image: "https://..."', 'The picture on the card and in the full view.'],
   [':resource: "Patch notes" | "https://..." | "link"', 'One line per resource. The last part is image, video or link.'],
   ['Everything else you type', 'Is the main announcement, shown when the card is opened. Markdown works.', false],
+  [':resource: "Boss fight" | "https://..." | "image" | "spoiler"', 'Add | "spoiler" at the end to cover that resource until someone clicks it. In Advanced mode tick Spoiler on its row.'],
 ];
 
 function GuideTable({ rows }) {
@@ -277,6 +281,7 @@ function GuideView() {
           <li>For bigger videos, add the link as a resource instead.</li>
           <li>Up to {LIMITS.resources} resources. Links are shown as cards under the text, with the site name and a copy button.</li>
           <li>The preview next to the editor shows the card and the opened view as people will see them.</li>
+          <li>Spoilers cover text, pictures, videos and resources until someone clicks them, and the cover never comes back. In a title or description a spoiler stays covered on the cards, where a click opens the announcement, and opens on the announcement itself. &quot;Copy all&quot; leaves spoiler links out.</li>
           <li>Save as draft for later keeps an unfinished announcement. Only you (and the admins) see it, as a ghost card at the top of the announcements page and in Drafts here.</li>
         </ul>
       </section>
@@ -368,8 +373,7 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved, onDrafte
       date: new Date(createdAt.current).toISOString(),
       favourited: false,
       body: fields.body,
-      resources: fields.resources.filter((resource) => safeUrl(resource.url)).map((resource) => ({ kind: ['image', 'video', 'link'].includes(resource.kind) ? resource.kind : guessKind(resource.url), label: resource.label || resource.url, url: safeUrl(resource.url) })),
-    };
+      resources: fields.resources.filter((resource) => safeUrl(resource.url)).map((resource) => ({ kind: ['image', 'video', 'link'].includes(resource.kind) ? resource.kind : guessKind(resource.url), label: resource.label || resource.url, url: safeUrl(resource.url), ...(resource.spoiler ? { spoiler: true } : {}) })),
   }, [fields, editing.authorName, viewer.name]);
 
   // Uploads
@@ -678,6 +682,11 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved, onDrafte
                           <span className="annoResourceHint" data-state={state} role={state === 'bad' ? 'alert' : undefined}>
                             {state === 'ok' ? `\u2713 ${describeResource(checked).site}` : state === 'bad' ? 'Needs a valid link' : 'Type or paste a link'}
                           </span>
+                          {/* Covers the resource until a visitor clicks it */}
+                          <label className="fieldOption annoSpoilerToggle">
+                            <input type="checkbox" checked={Boolean(resource.spoiler)} onChange={(event) => updateResource(index, { spoiler: event.target.checked })} />
+                            Spoiler: hidden until clicked
+                          </label>
                         </li>
                       );
                     })}
