@@ -281,7 +281,7 @@ function GuideView() {
           <li>For bigger videos, add the link as a resource instead.</li>
           <li>Up to {LIMITS.resources} resources. Links are shown as cards under the text, with the site name and a copy button.</li>
           <li>The preview next to the editor shows the card and the opened view as people will see them.</li>
-          <li>Spoilers cover text, pictures, videos and resources until someone clicks them, and the cover never comes back. In a title or description a spoiler stays covered on the cards, where a click opens the announcement, and opens on the announcement itself. &quot;Copy all&quot; leaves spoiler links out.</li>
+          <li>Spoilers cover text, pictures, videos and resources until someone clicks them, and the cover never comes back. In a card title and in the home panel a spoiler stays covered, because a click there opens the announcement, and it opens on the announcement itself. &quot;Copy all&quot; leaves spoiler links out.</li>
           <li>Save as draft for later keeps an unfinished announcement. Only you (and the admins) see it, as a ghost card at the top of the announcements page and in Drafts here.</li>
         </ul>
       </section>
