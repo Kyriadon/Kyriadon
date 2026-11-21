@@ -1,0 +1,892 @@
+/* ============================================================================
+   profileEffects.css
+   The profile effect showcase (/api/preview/profile/effects/display/[slug], a page in pages/effectDisplay)
+   and the effects themselves. Every effect is pure CSS: a stack of empty elements, listed in
+   lib/effectRegistry.js and built by components/profileEffect.js, drawn and animated here. Colours and
+   timing are tokens from lib/siteDesign.js (--effect-*). Everything is sized in cqw (one hundredth of
+   the card's width), so an effect looks the same on a phone and on a desktop.
+
+   Parts:
+   1. The stage: the caption and the card
+   2. The demo profile
+   3. The effect layer (shared by every effect)
+   4. Heer
+   ============================================================================ */
+
+/* 1. The stage: a small caption over one card, centred in the site shell */
+
+.fxPage {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--space-4) var(--space-10);
+}
+
+.fxCaption {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  max-width: 26rem;
+  text-align: center;
+}
+
+.fxTitleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.fxTitle {
+  margin: 0;
+  font-family: var(--type-h3-family);
+  font-size: var(--type-h3-size);
+  font-weight: var(--type-h3-weight);
+  color: var(--color-text-primary);
+}
+
+.fxChip {
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-card);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+}
+
+.fxLine {
+  margin: 0;
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  color: var(--color-text-secondary);
+}
+
+.fxCredit {
+  margin: 0;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-muted);
+}
+
+/* 2. The demo profile: banner, avatar with a status bubble, name, handle, badges, buttons, bio.
+   The card is a size container, so cqw is a hundredth of its width. The layout keeps the right quarter
+   of the name, handle and badge rows free, which is where the effect may play. */
+
+.fxProfile {
+  position: relative;
+  container-type: inline-size;
+  width: min(100%, 22rem);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-panel);
+  box-shadow: var(--shadow-panel), inset 0 1px 0 var(--color-inset);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  text-align: left;
+}
+
+/* The banner: a quiet teal-blue gradient with a soft light at the top right */
+.fxProfileBanner {
+  height: 25cqw;
+  background:
+    radial-gradient(ellipse 70% 120% at 80% 0%, color-mix(in srgb, var(--effect-banner-to) 70%, transparent), transparent 70%),
+    linear-gradient(120deg, var(--effect-banner-from), var(--effect-banner-to));
+}
+
+/* The body sits above the effect's tint but below the effect's own layer */
+.fxProfileBody {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 3cqw;
+  padding: 0 5.5cqw 7cqw;
+}
+
+/* The avatar overlaps the banner by half, with the status bubble beside it */
+.fxAvatarRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 3cqw;
+  margin-top: -11.5cqw;
+}
+
+.fxAvatarWrap {
+  position: relative;
+  flex: none;
+  width: 22.7cqw;
+}
+
+/* The avatar: a round silhouette on a soft gradient, cut out of the banner by a ring in the page colour */
+.fxAvatar {
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  color: color-mix(in srgb, var(--color-text-primary) 38%, transparent);
+  background: linear-gradient(160deg, var(--color-card-hover), var(--color-bg-raised));
+  box-shadow: 0 0 0 1.4cqw var(--color-bg-page);
+}
+
+/* The status dot at the avatar's lower right */
+.fxStatus {
+  position: absolute;
+  right: 0.4cqw;
+  bottom: 0.8cqw;
+  width: 5.6cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 0 1cqw var(--color-bg-page);
+}
+
+/* The status bubble, with two small dots leading to the avatar like a thought */
+.fxBubble {
+  position: relative;
+  margin: 0 0 1cqw;
+  padding: 1.4cqw 3.2cqw;
+  max-width: 40cqw;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-card);
+  font-family: var(--type-caption-family);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.fxBubble::before,
+.fxBubble::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+}
+
+.fxBubble::before {
+  left: -2.4cqw;
+  bottom: 0.4cqw;
+  width: 1.8cqw;
+  height: 1.8cqw;
+}
+
+.fxBubble::after {
+  left: -4.6cqw;
+  bottom: -1cqw;
+  width: 1.1cqw;
+  height: 1.1cqw;
+}
+
+/* The display name, in a green to blue gradient */
+.fxName {
+  margin: 0;
+  max-width: 70cqw;
+  font-family: var(--type-h3-family);
+  font-size: 6.4cqw;
+  font-weight: 700;
+  line-height: 1.15;
+  color: transparent;
+  background: linear-gradient(90deg, var(--color-success), var(--color-light-blue));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Handle, a dot, a role and a small tag */
+.fxHandle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 2cqw;
+  margin: 0;
+  padding-right: 24cqw;
+  font-family: var(--type-meta-family);
+  font-size: var(--type-meta-size);
+  color: var(--color-text-primary);
+}
+
+.fxDot {
+  width: 0.9cqw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+.fxTag {
+  padding: 0.2cqw 1.8cqw;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-subtle);
+  background: var(--color-card);
+  font-size: var(--type-caption-size);
+  color: var(--color-text-secondary);
+}
+
+/* Six small badges */
+.fxBadges {
+  display: flex;
+  gap: 1.6cqw;
+  margin: 0;
+  padding: 0 24cqw 0 0;
+  list-style: none;
+}
+
+.fxBadges li {
+  width: 6.2cqw;
+  aspect-ratio: 1;
+  border-radius: 1.6cqw;
+  background: var(--badge, var(--color-card-hover));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #fff 12%, transparent);
+}
+
+.fxBadges li[data-tone='mint'] { --badge: linear-gradient(135deg, #7ff0b8, #10b981); }
+.fxBadges li[data-tone='azure'] { --badge: linear-gradient(135deg, #7cc4ff, #3b9bff); }
+.fxBadges li[data-tone='lime'] { --badge: linear-gradient(135deg, #d9ff8a, #8fd14f); }
+.fxBadges li[data-tone='sky'] { --badge: linear-gradient(135deg, #a8e8ff, #4cc3e8); }
+.fxBadges li[data-tone='violet'] { --badge: linear-gradient(135deg, #c4b5fd, #8b7cf6); }
+.fxBadges li[data-tone='sand'] { --badge: linear-gradient(135deg, #ffe6a8, #e9b949); }
+
+/* The buttons: one wide, two square. They only look like buttons. */
+.fxActions {
+  display: flex;
+  gap: 2.4cqw;
+}
+
+.fxBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.8cqw;
+  height: 9.6cqw;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-card);
+  font-family: var(--type-label-family);
+  font-size: var(--type-label-size);
+  font-weight: var(--type-label-weight);
+  color: var(--color-text-primary);
+}
+
+.fxBtnMain {
+  padding: 0 4cqw;
+  background: color-mix(in srgb, var(--color-success) 16%, var(--color-card));
+}
+
+.fxBtnIcon {
+  width: 9.6cqw;
+  color: var(--color-text-secondary);
+}
+
+/* Bio and member since */
+.fxSection {
+  display: grid;
+  gap: 1cqw;
+}
+
+.fxSection h3 {
+  margin: 0;
+  font-family: var(--type-label-family);
+  font-size: var(--type-caption-size);
+  font-weight: var(--type-label-weight);
+  color: var(--color-text-muted);
+}
+
+.fxSection p {
+  margin: 0;
+  font-family: var(--type-body-secondary-family);
+  font-size: var(--type-body-secondary-size);
+  color: var(--color-text-primary);
+}
+
+/* 3. The effect layer: exactly the size of the card, above the profile, clipped to its corners, never
+   clickable. Every layer inside it is positioned by the effect itself. isolation keeps the screen
+   blending of an effect inside the layer, and contain keeps the painting inside it. */
+
+.fxEffect {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  isolation: isolate;
+  contain: paint;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.fxEffect span {
+  position: absolute;
+  display: block;
+}
+
+/* The intro: the night fades in, once, before the story begins */
+@keyframes fxIntro {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* The intro for the grass: it rises from below while it fades in */
+@keyframes fxIntroRise {
+  from { opacity: 0; transform: translate3d(0, 8cqw, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+/* 4. Heer. The night is alive all the time (mist, stars, grass, fireflies). On top of it runs one story of
+   --effect-heer-loop: Heer appears from her feet up with sparks and a ripple of light, stands and sways,
+   senses something, the dark veil sweeps in from the right, takes her, and she unravels from the head
+   down into motes that follow it up towards the moon. Then the night is empty for a moment, and it
+   starts again. Every part of the story shares the same duration and starts after the intro. */
+
+/* The number that reveals her. 0 to 100 percent is her height from the feet up: it grows to show her
+   and falls to take her away, head first. */
+@property --heer-reveal {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: -25%;
+}
+
+/* The living night fades in at the start */
+.heerSky,
+.heerMist,
+.heerStars,
+.heerMoon,
+.heerFlies,
+.heerFrame {
+  animation: fxIntro var(--effect-intro) ease-out both;
+}
+
+.heerReeds {
+  animation: fxIntroRise var(--effect-intro) ease-out both;
+}
+
+/* The sky: deep green, darkest at the top, with a mint light around the moon */
+.heerSky {
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 30% at 84% 4%, color-mix(in srgb, var(--effect-heer-mint) 22%, transparent), transparent 70%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--effect-heer-night) 88%, transparent) 0%,
+      color-mix(in srgb, var(--effect-heer-deep) 56%, transparent) 30%,
+      color-mix(in srgb, var(--effect-heer-deep) 24%, transparent) 62%,
+      color-mix(in srgb, var(--effect-heer-night) 54%, transparent) 100%
+    );
+}
+
+/* Two slow clouds of green light that drift across the night in opposite directions */
+.heerMist {
+  inset: 0;
+}
+
+.heerMistA {
+  left: -30cqw;
+  top: -8cqw;
+  width: 120cqw;
+  height: 70cqw;
+  background: radial-gradient(ellipse at 40% 50%, color-mix(in srgb, var(--effect-heer-emerald) 30%, transparent), transparent 62%);
+  mix-blend-mode: screen;
+  animation: heerMistA 19s ease-in-out infinite alternate;
+}
+
+.heerMistB {
+  right: -34cqw;
+  top: 26cqw;
+  width: 110cqw;
+  height: 78cqw;
+  background: radial-gradient(
+    ellipse at 55% 50%,
+    color-mix(in srgb, var(--effect-heer-lime) 14%, transparent),
+    color-mix(in srgb, var(--effect-heer-mint) 10%, transparent) 40%,
+    transparent 66%
+  );
+  mix-blend-mode: screen;
+  animation: heerMistB 23s ease-in-out infinite alternate;
+}
+
+@keyframes heerMistA {
+  from { transform: translate3d(-6cqw, 0, 0) scale(1); }
+  to { transform: translate3d(10cqw, 5cqw, 0) scale(1.18); }
+}
+
+@keyframes heerMistB {
+  from { transform: translate3d(8cqw, 0, 0) scale(1.1); }
+  to { transform: translate3d(-9cqw, -4cqw, 0) scale(1); }
+}
+
+/* The stars: three layers of dots on tiles of different sizes, only in the upper part of the card, fading
+   out downwards so the text stays clear. Each layer twinkles on its own clock. */
+.heerStars {
+  inset: 0 0 auto 0;
+  height: 78cqw;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%);
+}
+
+.heerStarsFar,
+.heerStarsMid,
+.heerStarsNear {
+  inset: 0;
+  background-repeat: repeat;
+  animation: heerTwinkle var(--st-d) ease-in-out var(--st-l) infinite alternate;
+}
+
+.heerStarsFar {
+  --st-d: 3.4s;
+  --st-l: -0.4s;
+  background-size: 14cqw 9cqw;
+  background-image:
+    radial-gradient(circle at 12% 22%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.2cqw, transparent 0.44cqw),
+    radial-gradient(circle at 41% 64%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.2cqw, transparent 0.44cqw),
+    radial-gradient(circle at 73% 18%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.2cqw, transparent 0.44cqw),
+    radial-gradient(circle at 88% 71%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.2cqw, transparent 0.44cqw),
+    radial-gradient(circle at 27% 88%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.2cqw, transparent 0.44cqw),
+    radial-gradient(circle at 58% 41%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.2cqw, transparent 0.44cqw);
+}
+
+.heerStarsMid {
+  --st-d: 4.6s;
+  --st-l: -1.6s;
+  background-size: 22cqw 13cqw;
+  background-image:
+    radial-gradient(circle at 20% 35%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.28cqw, transparent 0.62cqw),
+    radial-gradient(circle at 64% 12%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.28cqw, transparent 0.62cqw),
+    radial-gradient(circle at 82% 60%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.28cqw, transparent 0.62cqw),
+    radial-gradient(circle at 38% 82%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.28cqw, transparent 0.62cqw);
+}
+
+.heerStarsNear {
+  --st-d: 6.1s;
+  --st-l: -2.9s;
+  background-size: 31cqw 17cqw;
+  background-image:
+    radial-gradient(circle at 36% 30%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.3cqw, color-mix(in srgb, var(--effect-heer-star) 40%, transparent) 0.54cqw, transparent 1.20cqw),
+    radial-gradient(circle at 78% 68%, var(--effect-heer-star) 0, var(--effect-heer-star) 0.3cqw, color-mix(in srgb, var(--effect-heer-star) 40%, transparent) 0.54cqw, transparent 1.20cqw);
+}
+
+@keyframes heerTwinkle {
+  from { opacity: 0.2; }
+  55% { opacity: 0.85; }
+  to { opacity: 1; }
+}
+
+/* The moon: a thin crescent with a soft breathing halo, top right */
+.heerMoon {
+  right: 10cqw;
+  top: 5cqw;
+  width: 7.5cqw;
+  height: 7.5cqw;
+}
+
+.heerMoonHalo {
+  inset: -12cqw;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--effect-heer-mint) 34%, transparent) 0%,
+    color-mix(in srgb, var(--effect-heer-mint) 10%, transparent) 38%,
+    transparent 68%
+  );
+  animation: heerBreath 7s ease-in-out infinite alternate;
+}
+
+.heerMoonDisc {
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 1.5cqw -0.4cqw 0 0 var(--effect-heer-pale);
+  filter: drop-shadow(0 0 0.8cqw color-mix(in srgb, var(--effect-heer-mint) 70%, transparent));
+  transform: rotate(-24deg);
+}
+
+@keyframes heerBreath {
+  from { opacity: 0.55; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1.06); }
+}
+
+/* Fireflies: five small green lights that wander slowly near the edges and blink */
+.heerFlies {
+  inset: 0;
+}
+
+.heerFly {
+  width: 1.1cqw;
+  height: 1.1cqw;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--effect-heer-lime) 80%, #fff) 0 25%,
+    color-mix(in srgb, var(--effect-heer-lime) 55%, transparent) 50%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
+  animation:
+    heerFly var(--fd) ease-in-out var(--fl) infinite alternate,
+    heerBlink var(--bd) ease-in-out var(--fl) infinite;
+}
+
+.heerFly:nth-child(1) { left: 3cqw; bottom: 24cqw; --dx: 3cqw; --dy: -4cqw; --fd: 9.0s; --fl: -1.0s; --bd: 3.2s; }
+.heerFly:nth-child(2) { left: 8cqw; bottom: 40cqw; --dx: -2cqw; --dy: 5cqw; --fd: 11.0s; --fl: -4.0s; --bd: 4.1s; }
+.heerFly:nth-child(3) { right: 5cqw; bottom: 30cqw; --dx: 3cqw; --dy: -5cqw; --fd: 8.0s; --fl: -2.0s; --bd: 3.6s; }
+.heerFly:nth-child(4) { right: 12cqw; bottom: 46cqw; --dx: -3cqw; --dy: 4cqw; --fd: 10.0s; --fl: -5.0s; --bd: 2.8s; }
+.heerFly:nth-child(5) { left: 14cqw; bottom: 12cqw; --dx: 4cqw; --dy: 3cqw; --fd: 7.5s; --fl: -3.0s; --bd: 4.4s; }
+
+@keyframes heerFly {
+  to { transform: translate3d(var(--dx), var(--dy), 0); }
+}
+
+@keyframes heerBlink {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 1; }
+}
+
+/* The grass that frames the bottom corners: tall pointed blades, black green with a green rim at the tips,
+   each swaying on its own. The right side is taller, because the text is on the left. */
+.heerReeds {
+  bottom: 0;
+  width: 30cqw;
+  height: 26cqw;
+}
+
+.heerReedsLeft {
+  left: 0;
+}
+
+.heerReedsRight {
+  right: 0;
+}
+
+.heerReed {
+  left: var(--x);
+  bottom: -1cqw;
+  width: var(--w);
+  height: var(--h);
+  background: linear-gradient(
+    0deg,
+    #010a08 0%,
+    color-mix(in srgb, var(--effect-heer-night) 92%, #000) 55%,
+    color-mix(in srgb, var(--effect-heer-emerald) 38%, var(--effect-heer-night)) 100%
+  );
+  clip-path: polygon(0 100%, 30% 38%, 52% 0, 72% 42%, 100% 100%);
+  transform-origin: 50% 100%;
+  animation: heerSway var(--sd) ease-in-out var(--sl) infinite alternate;
+}
+
+.heerReedsLeft .heerReed:nth-child(1) { --x: 0cqw; --w: 3.6cqw; --h: 9cqw; --a: 2.2deg; --sd: 4.4s; --sl: -0.4s; }
+.heerReedsLeft .heerReed:nth-child(2) { --x: 3cqw; --w: 3.0cqw; --h: 12cqw; --a: 3.0deg; --sd: 5.2s; --sl: -1.8s; }
+.heerReedsLeft .heerReed:nth-child(3) { --x: 6cqw; --w: 3.2cqw; --h: 7cqw; --a: 2.6deg; --sd: 3.8s; --sl: -3.1s; }
+.heerReedsLeft .heerReed:nth-child(4) { --x: 9.5cqw; --w: 3.4cqw; --h: 11cqw; --a: 3.2deg; --sd: 4.8s; --sl: -0.9s; }
+.heerReedsLeft .heerReed:nth-child(5) { --x: 13cqw; --w: 2.8cqw; --h: 8cqw; --a: 2.4deg; --sd: 5.6s; --sl: -2.6s; }
+.heerReedsLeft .heerReed:nth-child(6) { --x: 17cqw; --w: 2.6cqw; --h: 6cqw; --a: 3.0deg; --sd: 4.0s; --sl: -4.0s; }
+.heerReedsLeft .heerReed:nth-child(7) { --x: 21cqw; --w: 2.2cqw; --h: 4cqw; --a: 2.6deg; --sd: 5.0s; --sl: -1.3s; }
+.heerReedsRight .heerReed:nth-child(1) { --x: 1cqw; --w: 3.4cqw; --h: 22cqw; --a: 2.0deg; --sd: 5.4s; --sl: -0.7s; }
+.heerReedsRight .heerReed:nth-child(2) { --x: 4.5cqw; --w: 3.0cqw; --h: 16cqw; --a: 2.8deg; --sd: 4.6s; --sl: -2.2s; }
+.heerReedsRight .heerReed:nth-child(3) { --x: 8cqw; --w: 3.8cqw; --h: 24cqw; --a: 2.2deg; --sd: 5.8s; --sl: -3.5s; }
+.heerReedsRight .heerReed:nth-child(4) { --x: 11.5cqw; --w: 2.8cqw; --h: 14cqw; --a: 3.2deg; --sd: 4.2s; --sl: -1.1s; }
+.heerReedsRight .heerReed:nth-child(5) { --x: 15cqw; --w: 3.4cqw; --h: 19cqw; --a: 2.4deg; --sd: 5.2s; --sl: -2.9s; }
+.heerReedsRight .heerReed:nth-child(6) { --x: 18.5cqw; --w: 2.6cqw; --h: 12cqw; --a: 3.0deg; --sd: 4.8s; --sl: -0.3s; }
+.heerReedsRight .heerReed:nth-child(7) { --x: 22cqw; --w: 2.6cqw; --h: 9cqw; --a: 2.6deg; --sd: 4.0s; --sl: -3.8s; }
+.heerReedsRight .heerReed:nth-child(8) { --x: 25.5cqw; --w: 2.2cqw; --h: 6cqw; --a: 3.0deg; --sd: 5.0s; --sl: -1.6s; }
+
+@keyframes heerSway {
+  from { transform: rotate(calc(var(--a) * -1)); }
+  to { transform: rotate(var(--a)); }
+}
+
+/* The halo of light she brings: a tall soft glow behind her that swells when she is taken. It follows the story. */
+.heerGlow {
+  right: -3cqw;
+  top: 33cqw;
+  width: 36cqw;
+  height: 52cqw;
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 56%,
+    color-mix(in srgb, var(--effect-heer-mint) 30%, transparent),
+    color-mix(in srgb, var(--effect-heer-emerald) 12%, transparent) 46%,
+    transparent 72%
+  );
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: heerGlow var(--effect-heer-loop) ease-in-out var(--effect-heer-start) infinite both;
+}
+
+@keyframes heerGlow {
+  0%, 6% { opacity: 0; transform: translate3d(0, 2cqw, 0) scale(0.7); }
+  19% { opacity: 0.85; transform: translate3d(0, 0, 0) scale(1); }
+  44% { opacity: 0.7; transform: translate3d(0, 0, 0) scale(1.04); }
+  56% { opacity: 1; transform: translate3d(1cqw, -1cqw, 0) scale(1.25); }
+  68% { opacity: 0.45; transform: translate3d(7cqw, -9cqw, 0) scale(1.35); }
+  80%, 100% { opacity: 0; transform: translate3d(12cqw, -16cqw, 0) scale(1.1); }
+}
+
+/* The ripple at her feet: a ring of light that spreads when she appears, and again when she is gone */
+.heerRipple {
+  right: 2.5cqw;
+  top: 74.5cqw;
+  width: 25cqw;
+  height: 6cqw;
+  border: 0.35cqw solid color-mix(in srgb, var(--effect-heer-mint) 60%, transparent);
+  border-radius: 50%;
+  opacity: 0;
+  animation: heerRipple var(--effect-heer-loop) ease-out var(--effect-heer-start) infinite both;
+}
+
+@keyframes heerRipple {
+  0%, 4% { opacity: 0; transform: scale(0.3); }
+  7% { opacity: 0.9; transform: scale(0.35); }
+  18% { opacity: 0; transform: scale(1.15); }
+  19%, 70% { opacity: 0; transform: scale(0.3); }
+  72% { opacity: 0.9; transform: scale(0.35); }
+  86%, 100% { opacity: 0; transform: scale(1.25); }
+}
+
+/* Sparks rise from her feet as she appears */
+.heerSparks {
+  inset: 0;
+}
+
+.heerSpark {
+  right: var(--sx);
+  top: 74cqw;
+  width: 1cqw;
+  height: 1cqw;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 25%, var(--effect-heer-mint) 45%, transparent 72%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: heerSpark var(--effect-heer-loop) ease-out infinite both;
+  animation-delay: calc(var(--effect-heer-start) + var(--sd));
+}
+
+.heerSpark:nth-child(1) { --sx: 11.6cqw; --sdx: 1.0cqw; --sd: 0.27s; }
+.heerSpark:nth-child(2) { --sx: 17.8cqw; --sdx: -0.4cqw; --sd: 0.64s; }
+.heerSpark:nth-child(3) { --sx: 8.5cqw; --sdx: -1.1cqw; --sd: 0.73s; }
+.heerSpark:nth-child(4) { --sx: 12.0cqw; --sdx: -0.4cqw; --sd: 0.65s; }
+.heerSpark:nth-child(5) { --sx: 18.9cqw; --sdx: -0.8cqw; --sd: 0.63s; }
+.heerSpark:nth-child(6) { --sx: 12.3cqw; --sdx: 1.0cqw; --sd: 0.9s; }
+.heerSpark:nth-child(7) { --sx: 7.6cqw; --sdx: 1.1cqw; --sd: 0.42s; }
+
+@keyframes heerSpark {
+  0%, 4% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.5); }
+  9% { opacity: 1; }
+  21%, 100% { opacity: 0; transform: translate3d(var(--sdx), -15cqw, 0) scale(1); }
+}
+
+/* Heer herself, drawn with shapes: hair, scarf, gown and head, all pale mint light. The outer box plays the
+   story (she appears from her feet up, then is taken head first, brightening as the veil touches her).
+   The box inside it only sways, so the two movements never fight. A soft green glow follows her outline. */
+.heerFigure {
+  right: 4cqw;
+  top: 41cqw;
+  width: 20cqw;
+  height: 38cqw;
+  opacity: 0;
+  --heer-reveal: -25%;
+  -webkit-mask-image: linear-gradient(to top, #000 var(--heer-reveal), transparent calc(var(--heer-reveal) + 24%));
+  mask-image: linear-gradient(to top, #000 var(--heer-reveal), transparent calc(var(--heer-reveal) + 24%));
+  will-change: transform, opacity, filter;
+  animation: heerFigure var(--effect-heer-loop) ease-in-out var(--effect-heer-start) infinite both;
+}
+
+@keyframes heerFigure {
+  0%, 4% { opacity: 0; --heer-reveal: -25%; transform: translate3d(0, 2cqw, 0) scale(0.97); filter: brightness(1.5) blur(0.5cqw); }
+  8% { opacity: 1; }
+  19% { opacity: 1; --heer-reveal: 125%; transform: translate3d(0, 0, 0) scale(1); filter: brightness(1.25) blur(0); }
+  25%, 44% { opacity: 1; --heer-reveal: 125%; transform: translate3d(0, 0, 0) scale(1); filter: brightness(1) blur(0); }
+  50% { opacity: 1; --heer-reveal: 125%; transform: translate3d(-0.8cqw, 0, 0) scale(1.02); filter: brightness(1.1) blur(0); }
+  57% { opacity: 1; --heer-reveal: 125%; transform: translate3d(2cqw, -1.2cqw, 0) scale(1.04, 0.98); filter: brightness(1.9) blur(0); }
+  64% { opacity: 0.9; --heer-reveal: 55%; transform: translate3d(6cqw, -4cqw, 0) scale(0.92, 1.04); filter: brightness(2.3) blur(0.4cqw); }
+  72%, 100% { opacity: 0; --heer-reveal: -25%; transform: translate3d(12cqw, -9cqw, 0) scale(0.8, 1.08); filter: brightness(2.6) blur(1cqw); }
+}
+
+.heerSway {
+  inset: 0;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 1.4cqw color-mix(in srgb, var(--effect-heer-mint) 65%, transparent));
+  animation: heerIdle 5.2s ease-in-out infinite alternate;
+}
+
+@keyframes heerIdle {
+  from { transform: translate3d(-0.3cqw, 0, 0) rotate(-1.1deg); }
+  to { transform: translate3d(0.3cqw, 0, 0) rotate(1.1deg); }
+}
+
+/* The hair: long and dark green, falling behind her, so the pale head and gown stand out against it */
+.heerHair {
+  left: 29%;
+  top: 2.5%;
+  width: 38%;
+  height: 36%;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--effect-heer-emerald) 70%, var(--effect-heer-night)), var(--effect-heer-deep));
+  clip-path: polygon(50% 0, 82% 10%, 90% 30%, 80% 60%, 70% 100%, 56% 84%, 44% 100%, 30% 62%, 12% 34%, 20% 10%);
+}
+
+/* The scarf: a long ribbon from her shoulder that trails to the right and flows in the wind */
+.heerScarf {
+  left: 50%;
+  top: 17%;
+  width: 56%;
+  height: 60%;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--effect-heer-lime) 78%, transparent),
+    color-mix(in srgb, var(--effect-heer-mint) 70%, transparent) 55%,
+    color-mix(in srgb, var(--effect-heer-emerald) 40%, transparent)
+  );
+  clip-path: polygon(0 0, 30% 4%, 62% 14%, 88% 34%, 100% 62%, 92% 100%, 84% 70%, 60% 40%, 30% 22%, 0 10%);
+  transform-origin: 18% 12%;
+  animation: heerScarf 3.4s ease-in-out infinite alternate;
+}
+
+@keyframes heerScarf {
+  from { transform: rotate(-4deg) skewX(-5deg); }
+  to { transform: rotate(6deg) skewX(7deg); }
+}
+
+/* The gown: narrow shoulders, a small waist and a wide skirt with a wavy hem */
+.heerGown {
+  left: 18%;
+  top: 14%;
+  width: 64%;
+  height: 82%;
+  background: linear-gradient(
+    180deg,
+    var(--effect-heer-pale) 0%,
+    var(--effect-heer-mint) 38%,
+    color-mix(in srgb, var(--effect-heer-emerald) 82%, var(--effect-heer-mint)) 100%
+  );
+  clip-path: polygon(40% 0, 60% 0, 72% 6%, 66% 14%, 62% 36%, 82% 70%, 96% 100%, 84% 96%, 72% 100%, 60% 96%, 48% 100%, 36% 96%, 24% 100%, 12% 96%, 4% 100%, 18% 70%, 38% 36%, 34% 14%, 28% 6%);
+}
+
+/* The head: a pale round light */
+.heerHead {
+  left: 36%;
+  top: 4%;
+  width: 21%;
+  height: 11.05%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, var(--effect-heer-pale), var(--effect-heer-mint));
+}
+
+/* The veil that takes her: a dark cloth with long ragged fingers that reach left. It waits off the right
+   edge, sweeps in, closes over her, and leaves upwards with her light inside. */
+.heerVeil {
+  right: -6cqw;
+  top: 26cqw;
+  width: 44cqw;
+  height: 66cqw;
+  opacity: 0;
+  transform: translate3d(60cqw, 4cqw, 0) skewX(-8deg) scaleY(0.9);
+  filter: drop-shadow(0 0 1cqw color-mix(in srgb, var(--effect-heer-mint) 28%, transparent));
+  will-change: transform, opacity;
+  animation: heerVeil var(--effect-heer-loop) ease-in-out var(--effect-heer-start) infinite both;
+}
+
+@keyframes heerVeil {
+  0%, 42% { opacity: 0; transform: translate3d(60cqw, 4cqw, 0) skewX(-8deg) scaleY(0.9); }
+  47% { opacity: 0.95; transform: translate3d(46cqw, 2cqw, 0) skewX(-6deg) scaleY(0.95); }
+  55% { opacity: 1; transform: translate3d(-2cqw, 0, 0) skewX(4deg) scaleY(1.03); }
+  60% { opacity: 1; transform: translate3d(-5cqw, -2cqw, 0) skewX(6deg) scaleY(1.05); }
+  66% { opacity: 1; transform: translate3d(8cqw, -22cqw, 0) skewX(-4deg) scaleY(1.1); }
+  74% { opacity: 0.6; transform: translate3d(22cqw, -52cqw, 0) skewX(-10deg) scaleY(1.2); }
+  78%, 100% { opacity: 0; transform: translate3d(30cqw, -70cqw, 0) skewX(-12deg) scaleY(1.25); }
+}
+
+/* The smoke behind the veil: a soft dark cloud that breathes */
+.heerVeilSmoke {
+  inset: -6% -4%;
+  background: radial-gradient(ellipse at 70% 50%, color-mix(in srgb, var(--effect-heer-veil) 80%, transparent), transparent 70%);
+  animation: heerSmoke 4s ease-in-out infinite alternate;
+}
+
+@keyframes heerSmoke {
+  from { opacity: 0.75; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1.06); }
+}
+
+/* The cloth itself: ragged fingers on the left, a faint green light catching their tips */
+.heerVeilBody {
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 45%, color-mix(in srgb, var(--effect-heer-mint) 22%, transparent), transparent 40%),
+    linear-gradient(270deg, var(--effect-heer-veil) 0%, #031c15 62%, #0b3d2e 100%);
+  clip-path: polygon(100% 0, 100% 100%, 34% 100%, 18% 92%, 36% 86%, 8% 76%, 34% 68%, 0 56%, 32% 48%, 6% 38%, 34% 30%, 12% 18%, 38% 12%, 26% 0);
+  transform-origin: 100% 50%;
+  animation: heerFlutter 2.6s ease-in-out infinite alternate;
+}
+
+@keyframes heerFlutter {
+  from { transform: skewY(-2.5deg) scaleX(0.97); }
+  to { transform: skewY(2.5deg) scaleX(1.03); }
+}
+
+/* The motes: fourteen points of her light that stream away with the veil, up towards the moon, and fade */
+.heerMotes {
+  inset: 0;
+}
+
+.heerMote {
+  right: 12cqw;
+  top: 52cqw;
+  width: var(--ms);
+  height: var(--ms);
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 22%, var(--effect-heer-mint) 48%, transparent 72%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: heerMote var(--effect-heer-loop) ease-in-out infinite both;
+  animation-delay: calc(var(--effect-heer-start) + var(--md));
+}
+
+.heerMote:nth-child(1) { --ox: 2.1cqw; --oy: 15.9cqw; --mx: 8.7cqw; --my: -57.6cqw; --md: 0.33s; --ms: 0.74cqw; }
+.heerMote:nth-child(2) { --ox: -1.5cqw; --oy: 1.3cqw; --mx: 8.2cqw; --my: -41.7cqw; --md: 0.61s; --ms: 0.93cqw; }
+.heerMote:nth-child(3) { --ox: -1.5cqw; --oy: -5.6cqw; --mx: 13.7cqw; --my: -54.5cqw; --md: 0.17s; --ms: 1.22cqw; }
+.heerMote:nth-child(4) { --ox: -2.7cqw; --oy: -10.7cqw; --mx: 10.1cqw; --my: -63.4cqw; --md: 0.69s; --ms: 1.21cqw; }
+.heerMote:nth-child(5) { --ox: -1.8cqw; --oy: 18.7cqw; --mx: 20.5cqw; --my: -51.4cqw; --md: 0.09s; --ms: 1.21cqw; }
+.heerMote:nth-child(6) { --ox: 1.1cqw; --oy: -4.6cqw; --mx: 23.9cqw; --my: -53.0cqw; --md: 0.16s; --ms: 1.0cqw; }
+.heerMote:nth-child(7) { --ox: 3.4cqw; --oy: -7.5cqw; --mx: 13.0cqw; --my: -53.9cqw; --md: 0.75s; --ms: 1.3cqw; }
+.heerMote:nth-child(8) { --ox: -0.4cqw; --oy: -6.6cqw; --mx: 18.5cqw; --my: -38.2cqw; --md: 0.27s; --ms: 0.82cqw; }
+.heerMote:nth-child(9) { --ox: 1.9cqw; --oy: -8.9cqw; --mx: 21.2cqw; --my: -63.9cqw; --md: 0.12s; --ms: 1.12cqw; }
+.heerMote:nth-child(10) { --ox: -1.5cqw; --oy: -9.4cqw; --mx: 20.5cqw; --my: -56.8cqw; --md: 0.37s; --ms: 0.86cqw; }
+.heerMote:nth-child(11) { --ox: 0.2cqw; --oy: 2.0cqw; --mx: 23.5cqw; --my: -58.0cqw; --md: 0.06s; --ms: 0.88cqw; }
+.heerMote:nth-child(12) { --ox: -3.6cqw; --oy: 9.2cqw; --mx: 10.5cqw; --my: -61.0cqw; --md: 0.17s; --ms: 0.82cqw; }
+.heerMote:nth-child(13) { --ox: -1.1cqw; --oy: 4.5cqw; --mx: 10.0cqw; --my: -53.4cqw; --md: 0.56s; --ms: 1.18cqw; }
+.heerMote:nth-child(14) { --ox: 0.8cqw; --oy: 17.8cqw; --mx: 15.8cqw; --my: -35.9cqw; --md: 0.58s; --ms: 1.08cqw; }
+
+@keyframes heerMote {
+  0%, 54% { opacity: 0; transform: translate3d(var(--ox), var(--oy), 0) scale(0.4); }
+  58% { opacity: 1; transform: translate3d(var(--ox), var(--oy), 0) scale(0.9); }
+  72% { opacity: 0.95; transform: translate3d(calc(var(--ox) + var(--mx) * 0.55), calc(var(--oy) + var(--my) * 0.55), 0) scale(1); }
+  86%, 100% { opacity: 0; transform: translate3d(calc(var(--ox) + var(--mx)), calc(var(--oy) + var(--my)), 0) scale(0.3); }
+}
+
+/* The dark frame of the night: soft shadow at the edges, heavier at the bottom */
+.heerFrame {
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 6cqw 1cqw color-mix(in srgb, var(--effect-heer-night) 92%, transparent),
+    inset 0 -10cqw 8cqw -4cqw color-mix(in srgb, var(--effect-heer-night) 70%, transparent);
+}
+
+/* Reduced motion: no animation at all. The night stands still with Heer in it, softly lit, and the parts of
+   the story that only exist to move (the veil, the motes, the sparks, the ripple) stay away. */
+@media (prefers-reduced-motion: reduce) {
+  .fxEffect *,
+  .fxEffect span {
+    animation: none;
+  }
+
+  .heerFigure {
+    opacity: 1;
+    --heer-reveal: 125%;
+  }
+
+  .heerGlow {
+    opacity: 0.7;
+  }
+
+  .heerVeil,
+  .heerMotes,
+  .heerSparks,
+  .heerRipple {
+    display: none;
+  }
+}
