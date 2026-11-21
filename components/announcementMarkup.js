@@ -6,11 +6,13 @@
 //   AnnoInline   one line: titles and descriptions (bold, links, colours and chips work too)
 // The parser lives in lib/announcementMarkup.js. Styles live in styles/announcementStyles.css.
 // Custom tags:  :colr:blue/text/   :colrs:blue,red/text/   :chip:blue/text/:chip:
+// Spoiler:      ||hidden text||   ||![a picture](https://)||   (drawn by components/spoiler.js)
 // ============================================================================
 import Link from 'next/link';
 import { Fragment, useMemo } from 'react';
 import { chipGradientOf, gradientOf, guessKind, parseBlocks, parseInline } from '../lib/announcementMarkup';
 import { CopyButton } from './guideKit';
+import { Spoiler } from './spoiler';
 
 // Chips without a usable colour use the grey of the other chips on the site
 const FALLBACK_COLOR = '#aab4c3';
@@ -57,6 +59,9 @@ function renderNodes(nodes, prefix = '') {
         return <del key={key}>{children}</del>;
       case 'mark':
         return <mark key={key} className="mdHl">{children}</mark>;
+      // ||hidden|| covered until it is clicked (the kind says text, image or video)
+      case 'spoiler':
+        return <Spoiler key={key} kind={node.kind}>{children}</Spoiler>;
       case 'code':
         return <code key={key} className="mdCode">{node.text}</code>;
       case 'plain':
