@@ -2372,3 +2372,265 @@ a.annoGalleryItem:hover img {
   color: var(--color-text-muted);
 }
 
+/* --------------------------------------------------------------------------
+   20. The spoiler styles for images, resources and announcements
+   -------------------------------------------------------------------------- */
+
+/* ============================================================================
+
+   The spoiler: ||hidden text|| in the markdown, and covered images, videos and resources.
+   Built like the purple == highlight (.mdHl): a smooth two-stop gradient, here in grey, with the same
+   0.3em rounded corners and the same padding. Drawn by components/spoiler.js. Colours and timing are
+   tokens from lib/siteDesign.js (--spoiler-cover-*, --spoiler-aurora-*, --spoiler-motion-*).
+
+   Parts:
+   1. Two animated values (the cover strength and the glow strength)
+   2. The cover and the aurora (one set of background layers, shared by every kind)
+   3. The kinds: text, image, video and box (resource cards and gallery items)
+   4. The content: hidden until the reveal, then it fades in
+   5. Hover and keyboard focus: the aurora glows and flows
+   6. Revealed: the cover and the aurora clear for good
+   7. Focus ring, reduced motion and forced colours
+   8. The Spoiler switch on a resource row in the announcement editor
+   ============================================================================ */
+
+
+   /* 1. Two numbers that can be animated. The cover and the glow are built from them, so a transition
+   on a number fades a gradient, which a plain background transition cannot do. Without @property
+   support the cover and the glow still end up right, they just change in one step while the
+   content itself still fades. */
+   
+@property --spoiler-cover-alpha {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 1;
+}
+
+@property --spoiler-glow-alpha {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+/* 2. The cover and the aurora. Four layers, top to bottom:
+      aurora A   green, azure, purple     slides one way
+      aurora B   pink, sky, green         slides the other way, on a longer tile
+      sheen      a soft light edge at the top, like the curtain of an aurora
+      cover      smooth grey, light to main (the same construction as .mdHl)
+   Both aurora tiles start and end on the same colour, so the loop has no seam. Their size is in em,
+   so the glow scales with the text. Only the aurora layers move, and only while it is hovered. */
+
+.mdSpoiler {
+  --spoiler-cover-alpha: 1;
+  --spoiler-glow-alpha: 0;
+  --spoiler-tile-a: 22em;
+  --spoiler-tile-b: 32em;
+
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  background-image:
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--spoiler-aurora-green) calc(var(--spoiler-glow-alpha) * 38%), transparent),
+      color-mix(in srgb, var(--spoiler-aurora-azure) calc(var(--spoiler-glow-alpha) * 38%), transparent),
+      color-mix(in srgb, var(--spoiler-aurora-purple) calc(var(--spoiler-glow-alpha) * 38%), transparent),
+      color-mix(in srgb, var(--spoiler-aurora-green) calc(var(--spoiler-glow-alpha) * 38%), transparent)
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--spoiler-aurora-pink) calc(var(--spoiler-glow-alpha) * 30%), transparent),
+      color-mix(in srgb, var(--spoiler-aurora-sky) calc(var(--spoiler-glow-alpha) * 30%), transparent),
+      color-mix(in srgb, var(--spoiler-aurora-green) calc(var(--spoiler-glow-alpha) * 30%), transparent),
+      color-mix(in srgb, var(--spoiler-aurora-pink) calc(var(--spoiler-glow-alpha) * 30%), transparent)
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-text-primary) calc(var(--spoiler-glow-alpha) * 12%), transparent),
+      transparent 70%
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--spoiler-cover-light) calc(var(--spoiler-cover-alpha) * 42%), transparent),
+      color-mix(in srgb, var(--spoiler-cover-main) calc(var(--spoiler-cover-alpha) * 42%), transparent)
+    );
+  background-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
+  background-size: var(--spoiler-tile-a) 100%, var(--spoiler-tile-b) 100%, 100% 100%, 100% 100%;
+  background-position: 0 0, 0 0, 0 0, 0 0;
+  transition:
+    --spoiler-cover-alpha var(--spoiler-motion-fade) ease,
+    --spoiler-glow-alpha var(--spoiler-motion-fade) ease;
+
+  /* Always attached, but paused until it is hovered: a paused animation costs nothing, and when the
+     pointer leaves, the glow fades out while the flow stands still instead of jumping back */
+  animation: spoilerAurora var(--spoiler-motion-flow) linear infinite paused;
+}
+
+@keyframes spoilerAurora {
+  from {
+    background-position: 0 0, 0 0, 0 0, 0 0;
+  }
+
+  to {
+    background-position: calc(var(--spoiler-tile-a) * -1) 0, var(--spoiler-tile-b) 0, 0 0, 0 0;
+  }
+}
+
+/* 3. The kinds: text, image, video and box (resource cards and gallery items) */
+
+/* Text: part of the line, wraps with it, and gets one cover per line like the == highlight. The
+   padding stays after the reveal, so the text never shifts. */
+.mdSpoiler[data-kind='text'] {
+  padding: 0 0.3em;
+  overflow-wrap: anywhere;
+  border-radius: 0.3em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* Image and video: a block of the picture's own size, never wider than its column. The picture's
+   own margin moves to the wrapper, so the cover has no empty band around the picture. */
+.mdSpoiler[data-kind='image'],
+.mdSpoiler[data-kind='video'] {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: var(--space-2) 0;
+  border-radius: var(--radius-card);
+}
+
+.mdSpoiler[data-kind='video'] {
+  width: 100%;
+}
+
+.mdSpoiler[data-kind='image'] > .mdSpoilerBody,
+.mdSpoiler[data-kind='video'] > .mdSpoilerBody {
+  display: block;
+}
+
+.mdSpoiler[data-kind='image'] .annoImg,
+.mdSpoiler[data-kind='video'] .annoVideo {
+  margin: 0;
+}
+
+/* Box: something with its own look (a resource card, a gallery item). It fills the space it is given
+   and cannot grow past it. */
+.mdSpoiler[data-kind='box'] {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.mdSpoiler[data-kind='box'] > .mdSpoilerBody {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* A gallery item has no frame of its own, so the cover wears the gallery's corners */
+.mdSpoiler.annoGallerySpoiler[data-kind='box'] {
+  border-radius: var(--radius-control);
+}
+
+/* A link card sits inside the card's own frame (border, corners, background), and keeps its row of
+   link and copy button */
+.mdSpoiler.annoResourceSpoiler[data-kind='box'] > .mdSpoilerBody {
+  display: flex;
+  align-items: stretch;
+}
+
+/* 4. The content. While covered it is not painted, cannot be selected or copied, cannot be tabbed
+   to and is not read out (visibility), and a click on it lands on the spoiler. On the reveal it
+   becomes visible at once and fades in. The space it takes never changes, so nothing moves. */
+
+.mdSpoilerBody {
+  opacity: 0;
+  visibility: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    opacity var(--spoiler-motion-fade) ease,
+    visibility var(--spoiler-motion-fade) linear;
+}
+
+.mdSpoiler[data-revealed='true'] > .mdSpoilerBody {
+  opacity: 1;
+  visibility: visible;
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* 5. Hover (mouse) and keyboard focus: the aurora glows and starts to flow. Touch screens have no
+   hover, so a tap simply opens the spoiler. A spoiler inside a link or a button (a card title) is
+   locked, belongs to that control and stays quiet. */
+
+@media (hover: hover) and (pointer: fine) {
+  .mdSpoiler[data-revealed='false']:not([data-locked='true']):hover {
+    --spoiler-glow-alpha: 1;
+    animation-play-state: running;
+  }
+}
+
+.mdSpoiler[data-revealed='false']:not([data-locked='true']):focus-visible {
+  --spoiler-glow-alpha: 1;
+  animation-play-state: running;
+}
+
+.mdSpoiler[data-locked='true'] {
+  cursor: inherit;
+}
+
+/* 6. Revealed: one click clears the cover and removes the aurora. Both numbers glide to zero, and the
+   flow stands still while the glow fades, so nothing jumps. */
+.mdSpoiler[data-revealed='true'] {
+  --spoiler-cover-alpha: 0;
+  --spoiler-glow-alpha: 0;
+  cursor: inherit;
+}
+
+/* 7. Focus ring, forced colours and reduced motion. */
+
+/* Forced colours remove backgrounds, so a covered spoiler keeps a thin outline. The focus ring below
+   comes after it and wins. */
+@media (forced-colors: active) {
+  .mdSpoiler[data-revealed='false'] {
+    outline: 1px solid CanvasText;
+  }
+}
+
+.mdSpoiler:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* A box clips its children, and sits inside a frame, so its ring goes inside */
+.mdSpoiler[data-kind='box']:focus-visible {
+  outline-offset: -2px;
+}
+
+/* A spoiler that was just opened with the keyboard keeps focus, without a ring */
+.mdSpoiler[data-revealed='true']:focus {
+  outline: none;
+}
+
+/* Reduced motion: the aurora still glows on hover, it just stops flowing */
+@media (prefers-reduced-motion: reduce) {
+  .mdSpoiler {
+    animation: none;
+  }
+}
+
+/* 8. The Spoiler switch on a resource row in the announcement editor. It takes a row of its own under
+   the link hint (the row is a grid), and stays last on phones, where the hint and the tools are
+   reordered. */
+
+.annoSpoilerToggle {
+  grid-column: 1 / -1;
+  order: 3;
+  justify-self: start;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
