@@ -2381,25 +2381,31 @@ a.annoGalleryItem:hover img {
    The spoiler: ||hidden text|| in the markdown, and covered images, videos and resources.
    Built like the purple == highlight (.mdHl): a smooth two-stop gradient, here in grey, with the same
    0.3em rounded corners and the same padding. Drawn by components/spoiler.js. Colours and timing are
-   tokens from lib/siteDesign.js (--spoiler-cover-*, --spoiler-aurora-*, --spoiler-motion-*).
+   tokens from lib/siteDesign.js (--spoiler-cover-*, --spoiler-aurora-*, --spoiler-star, --spoiler-motion-*).
+
+   On hover an aurora plays over the grey: curtains of green, sky, azure, purple and pink that drift
+   past each other, with a few white stars twinkling in front. It follows the structure of a Discord
+   profile effect: a decorative layer that lies on the surface and never reaches the content, a short
+   intro (the curtains rise and fade in), one seamless loop (the curtains drift and sway at their own
+   speeds, the stars twinkle out of step), a soft glow layer under the curtains, and a calm still version
+   for reduced motion.
 
    Parts:
-   1. Two animated values (the cover strength and the glow strength)
-   2. The cover and the aurora (one set of background layers, shared by every kind)
+   1. Animated numbers (cover, glow, rise of the curtains, twinkle of the stars)
+   2. The cover and the aurora (one stack of 13 background layers, shared by every kind)
    3. The kinds: text, image, video and box (resource cards and gallery items)
    4. The content: hidden until the reveal, then it fades in
-   5. Hover and keyboard focus: the aurora glows and flows
+   5. Hover and keyboard focus: the aurora rises and starts to flow
    6. Revealed: the cover and the aurora clear for good
    7. Focus ring, reduced motion and forced colours
    8. The Spoiler switch on a resource row in the announcement editor
    ============================================================================ */
 
+/* 1. Numbers that can be animated. The cover, the glow, the rise of the curtains and the twinkle of
+   each star are built from them, so a transition or an animation on a number fades or moves a gradient,
+   which a plain background transition cannot do. Without @property support the aurora still ends up
+   right, it just changes in one step while the content itself still fades. */
 
-   /* 1. Two numbers that can be animated. The cover and the glow are built from them, so a transition
-   on a number fades a gradient, which a plain background transition cannot do. Without @property
-   support the cover and the glow still end up right, they just change in one step while the
-   content itself still fades. */
-   
 @property --spoiler-cover-alpha {
   syntax: '<number>';
   inherits: false;
@@ -2412,68 +2418,233 @@ a.annoGalleryItem:hover img {
   initial-value: 0;
 }
 
-/* 2. The cover and the aurora. Four layers, top to bottom:
-      aurora A   green, azure, purple     slides one way
-      aurora B   pink, sky, green         slides the other way, on a longer tile
-      sheen      a soft light edge at the top, like the curtain of an aurora
-      cover      smooth grey, light to main (the same construction as .mdHl)
-   Both aurora tiles start and end on the same colour, so the loop has no seam. Their size is in em,
-   so the glow scales with the text. Only the aurora layers move, and only while it is hovered. */
+/* How far the curtains have risen: 0 is short, 1 is the full height */
+@property --spoiler-rise {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+/* How bright each of the three stars is right now */
+@property --spoiler-twinkle-a {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0.8;
+}
+
+@property --spoiler-twinkle-b {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0.7;
+}
+
+@property --spoiler-twinkle-c {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0.9;
+}
+
+/* 2. The cover and the aurora. One stack of 13 background layers, top to bottom:
+      stars       three sparkles, each two crossing streaks, twinkling at their own pace      6 layers
+      curtains    pink, purple, azure, sky, green: tall soft ribbons that drift sideways at   5 layers
+                  their own speeds and sway up and down. They are blended with screen, so
+                  they glow brighter where they cross
+      glow        a soft light under the curtains (the glow layer of the effect)              1 layer
+      cover       smooth grey, light to main (the same construction as .mdHl)                 1 layer
+   Every curtain is narrower than its tile, so it fades out before the tile ends and the loop has no
+   seam. The curtain tiles are 150 percent tall, which gives the sway room to move, and the stars stay
+   in their place while the curtains pass. All sizes are in em, so the aurora scales with the text,
+   and nothing can reach outside the spoiler (a background is clipped to its box). Everything that
+   moves is paused until the spoiler is hovered. */
 
 .mdSpoiler {
+  /* The animated numbers (see part 1) */
   --spoiler-cover-alpha: 1;
   --spoiler-glow-alpha: 0;
-  --spoiler-tile-a: 22em;
-  --spoiler-tile-b: 32em;
+  --spoiler-rise: 0;
+  --spoiler-twinkle-a: 0.8;
+  --spoiler-twinkle-b: 0.7;
+  --spoiler-twinkle-c: 0.9;
+
+  /* The width of one tile of each curtain. Each curtain is a different width, so one trip of the
+     loop moves them at different speeds, and they slide over and under each other */
+  --spoiler-tile-pink: 20em;
+  --spoiler-tile-purple: 15.5em;
+  --spoiler-tile-azure: 12em;
+  --spoiler-tile-sky: 9.5em;
+  --spoiler-tile-green: 7em;
+
+  /* The stars: the length of a sparkle's streaks, their thickness, and how far apart the sparkles are.
+     Pictures, videos and cards make them bigger and wider apart (part 3) */
+  --spoiler-star-size: 0.6em;
+  --spoiler-star-w: calc(var(--spoiler-star-size) * 0.16);
+  --spoiler-star-scale: 1;
+  --spoiler-star-tile-a: calc(4.6em * var(--spoiler-star-scale));
+  --spoiler-star-tile-b: calc(6.1em * var(--spoiler-star-scale));
+  --spoiler-star-tile-c: calc(8.3em * var(--spoiler-star-scale));
+
+  /* Every colour at its strength right now. The glow number fades all of them in and out together */
+  --spoiler-tint-green: color-mix(in srgb, var(--spoiler-aurora-green) calc(var(--spoiler-glow-alpha) * 52%), transparent);
+  --spoiler-tint-sky: color-mix(in srgb, var(--spoiler-aurora-sky) calc(var(--spoiler-glow-alpha) * 40%), transparent);
+  --spoiler-tint-azure: color-mix(in srgb, var(--spoiler-aurora-azure) calc(var(--spoiler-glow-alpha) * 46%), transparent);
+  --spoiler-tint-purple: color-mix(in srgb, var(--spoiler-aurora-purple) calc(var(--spoiler-glow-alpha) * 44%), transparent);
+  --spoiler-tint-pink: color-mix(in srgb, var(--spoiler-aurora-pink) calc(var(--spoiler-glow-alpha) * 38%), transparent);
+  --spoiler-tint-glow: color-mix(in srgb, var(--spoiler-aurora-sky) calc(var(--spoiler-glow-alpha) * 22%), transparent);
+
+  /* Every star at its own twinkle, and as bright as the glow */
+  --spoiler-star-a: color-mix(in srgb, var(--spoiler-star) calc(var(--spoiler-glow-alpha) * var(--spoiler-twinkle-a) * 95%), transparent);
+  --spoiler-star-b: color-mix(in srgb, var(--spoiler-star) calc(var(--spoiler-glow-alpha) * var(--spoiler-twinkle-b) * 95%), transparent);
+  --spoiler-star-c: color-mix(in srgb, var(--spoiler-star) calc(var(--spoiler-glow-alpha) * var(--spoiler-twinkle-c) * 95%), transparent);
 
   color: inherit;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+
+  /* The 13 layers. A curtain is a tall, narrow ellipse of colour: brightest at its lower edge, fading
+     upwards and to the sides. Its height is the rise, so the curtains grow upwards on hover. */
   background-image:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--spoiler-aurora-green) calc(var(--spoiler-glow-alpha) * 38%), transparent),
-      color-mix(in srgb, var(--spoiler-aurora-azure) calc(var(--spoiler-glow-alpha) * 38%), transparent),
-      color-mix(in srgb, var(--spoiler-aurora-purple) calc(var(--spoiler-glow-alpha) * 38%), transparent),
-      color-mix(in srgb, var(--spoiler-aurora-green) calc(var(--spoiler-glow-alpha) * 38%), transparent)
+    /* Star 1: a vertical and a horizontal streak that cross */
+    radial-gradient(ellipse var(--spoiler-star-w) var(--spoiler-star-size) at 30% 32%, var(--spoiler-star-a), transparent),
+    radial-gradient(ellipse var(--spoiler-star-size) var(--spoiler-star-w) at 30% 32%, var(--spoiler-star-a), transparent),
+    /* Star 2 */
+    radial-gradient(ellipse var(--spoiler-star-w) var(--spoiler-star-size) at 68% 70%, var(--spoiler-star-b), transparent),
+    radial-gradient(ellipse var(--spoiler-star-size) var(--spoiler-star-w) at 68% 70%, var(--spoiler-star-b), transparent),
+    /* Star 3 */
+    radial-gradient(ellipse var(--spoiler-star-w) var(--spoiler-star-size) at 50% 22%, var(--spoiler-star-c), transparent),
+    radial-gradient(ellipse var(--spoiler-star-size) var(--spoiler-star-w) at 50% 22%, var(--spoiler-star-c), transparent),
+    /* Curtain pink: the widest, slowest, and the furthest back */
+    radial-gradient(
+      ellipse 42% calc(35% + var(--spoiler-rise) * 65%) at 50% 62%,
+      var(--spoiler-tint-pink),
+      color-mix(in srgb, var(--spoiler-tint-pink) 40%, transparent) 42%,
+      transparent
     ),
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, var(--spoiler-aurora-pink) calc(var(--spoiler-glow-alpha) * 30%), transparent),
-      color-mix(in srgb, var(--spoiler-aurora-sky) calc(var(--spoiler-glow-alpha) * 30%), transparent),
-      color-mix(in srgb, var(--spoiler-aurora-green) calc(var(--spoiler-glow-alpha) * 30%), transparent),
-      color-mix(in srgb, var(--spoiler-aurora-pink) calc(var(--spoiler-glow-alpha) * 30%), transparent)
+    /* Curtain purple */
+    radial-gradient(
+      ellipse 42% calc(35% + var(--spoiler-rise) * 65%) at 50% 68%,
+      var(--spoiler-tint-purple),
+      color-mix(in srgb, var(--spoiler-tint-purple) 40%, transparent) 42%,
+      transparent
     ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-text-primary) calc(var(--spoiler-glow-alpha) * 12%), transparent),
-      transparent 70%
+    /* Curtain azure */
+    radial-gradient(
+      ellipse 42% calc(35% + var(--spoiler-rise) * 65%) at 50% 64%,
+      var(--spoiler-tint-azure),
+      color-mix(in srgb, var(--spoiler-tint-azure) 40%, transparent) 42%,
+      transparent
     ),
+    /* Curtain sky */
+    radial-gradient(
+      ellipse 42% calc(35% + var(--spoiler-rise) * 65%) at 50% 66%,
+      var(--spoiler-tint-sky),
+      color-mix(in srgb, var(--spoiler-tint-sky) 40%, transparent) 42%,
+      transparent
+    ),
+    /* Curtain green: the narrowest and fastest, and the brightest, as in a real aurora */
+    radial-gradient(
+      ellipse 42% calc(35% + var(--spoiler-rise) * 65%) at 50% 70%,
+      var(--spoiler-tint-green),
+      color-mix(in srgb, var(--spoiler-tint-green) 40%, transparent) 42%,
+      transparent
+    ),
+    /* The glow layer: a soft light that rises from the bottom edge */
+    radial-gradient(ellipse 90% 85% at 50% 108%, var(--spoiler-tint-glow), transparent),
+    /* The cover: smooth grey, light to main */
     linear-gradient(
       90deg,
       color-mix(in srgb, var(--spoiler-cover-light) calc(var(--spoiler-cover-alpha) * 42%), transparent),
       color-mix(in srgb, var(--spoiler-cover-main) calc(var(--spoiler-cover-alpha) * 42%), transparent)
     );
-  background-repeat: repeat-x, repeat-x, no-repeat, no-repeat;
-  background-size: var(--spoiler-tile-a) 100%, var(--spoiler-tile-b) 100%, 100% 100%, 100% 100%;
-  background-position: 0 0, 0 0, 0 0, 0 0;
+
+  /* The stars and curtains repeat sideways, the glow and the cover cover the whole box once */
+  background-repeat:
+    repeat-x, repeat-x, repeat-x, repeat-x, repeat-x, repeat-x,
+    repeat-x, repeat-x, repeat-x, repeat-x, repeat-x,
+    no-repeat, no-repeat;
+
+  /* One tile per layer: the star tiles are as tall as the box, the curtain tiles 150 percent of it */
+  background-size:
+    var(--spoiler-star-tile-a) 100%, var(--spoiler-star-tile-a) 100%,
+    var(--spoiler-star-tile-b) 100%, var(--spoiler-star-tile-b) 100%,
+    var(--spoiler-star-tile-c) 100%, var(--spoiler-star-tile-c) 100%,
+    var(--spoiler-tile-pink) 150%, var(--spoiler-tile-purple) 150%, var(--spoiler-tile-azure) 150%,
+    var(--spoiler-tile-sky) 150%, var(--spoiler-tile-green) 150%,
+    100% 100%, 100% 100%;
+  background-position: 0 50%;
+
+  /* Screen makes the translucent colours add up like light, so the curtains glow where they cross */
+  background-blend-mode: screen;
+
+  /* The cover and the glow fade, the curtains rise (the intro) */
   transition:
     --spoiler-cover-alpha var(--spoiler-motion-fade) ease,
-    --spoiler-glow-alpha var(--spoiler-motion-fade) ease;
+    --spoiler-glow-alpha var(--spoiler-motion-fade) ease,
+    --spoiler-rise var(--spoiler-motion-rise) var(--motion-ease);
 
-  /* Always attached, but paused until it is hovered: a paused animation costs nothing, and when the
-     pointer leaves, the glow fades out while the flow stands still instead of jumping back */
-  animation: spoilerAurora var(--spoiler-motion-flow) linear infinite paused;
+  /* The loop: the curtains drift and sway, and each star twinkles on its own clock. Always attached,
+     but paused until it is hovered: a paused animation costs nothing, and when the pointer leaves,
+     the aurora fades out while the flow stands still instead of jumping back. */
+  animation:
+    spoilerDrift var(--spoiler-motion-flow) linear infinite,
+    spoilerSway var(--spoiler-motion-sway) ease-in-out infinite alternate,
+    spoilerTwinkleA var(--spoiler-motion-twinkle) ease-in-out infinite,
+    spoilerTwinkleB calc(var(--spoiler-motion-twinkle) * 1.3) ease-in-out -1.1s infinite,
+    spoilerTwinkleC calc(var(--spoiler-motion-twinkle) * 1.7) ease-in-out -2.3s infinite;
+  animation-play-state: paused;
 }
 
-@keyframes spoilerAurora {
+/* The drift: each curtain moves exactly one tile, so the loop has no seam. The pink and the azure and
+   the green go left, the purple and the sky go right. The stars, the glow and the cover stand still. */
+@keyframes spoilerDrift {
   from {
-    background-position: 0 0, 0 0, 0 0, 0 0;
+    background-position-x: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
   }
 
   to {
-    background-position: calc(var(--spoiler-tile-a) * -1) 0, var(--spoiler-tile-b) 0, 0 0, 0 0;
+    background-position-x:
+      0, 0, 0, 0, 0, 0,
+      calc(var(--spoiler-tile-pink) * -1), var(--spoiler-tile-purple), calc(var(--spoiler-tile-azure) * -1),
+      var(--spoiler-tile-sky), calc(var(--spoiler-tile-green) * -1),
+      0, 0;
   }
+}
+
+/* The sway: every curtain moves up and down on its own path, so the hems of the curtains never line up.
+   The stars, the glow and the cover have tiles as tall as the box, so they do not move. */
+@keyframes spoilerSway {
+  from {
+    background-position-y: 50%, 50%, 50%, 50%, 50%, 50%, 30%, 70%, 40%, 60%, 25%, 50%, 50%;
+  }
+
+  to {
+    background-position-y: 50%, 50%, 50%, 50%, 50%, 50%, 75%, 25%, 65%, 30%, 70%, 50%, 50%;
+  }
+}
+
+/* The twinkle: a quick flash, a fade, a smaller flash. The three stars run at different lengths, so
+   they never flash together. */
+@keyframes spoilerTwinkleA {
+  0%, 100% { --spoiler-twinkle-a: 0.1; }
+  18% { --spoiler-twinkle-a: 1; }
+  36% { --spoiler-twinkle-a: 0.3; }
+  60% { --spoiler-twinkle-a: 0.15; }
+  78% { --spoiler-twinkle-a: 0.8; }
+}
+
+@keyframes spoilerTwinkleB {
+  0%, 100% { --spoiler-twinkle-b: 0.15; }
+  22% { --spoiler-twinkle-b: 1; }
+  42% { --spoiler-twinkle-b: 0.25; }
+  66% { --spoiler-twinkle-b: 0.1; }
+  84% { --spoiler-twinkle-b: 0.75; }
+}
+
+@keyframes spoilerTwinkleC {
+  0%, 100% { --spoiler-twinkle-c: 0.1; }
+  14% { --spoiler-twinkle-c: 0.9; }
+  32% { --spoiler-twinkle-c: 0.2; }
+  58% { --spoiler-twinkle-c: 0.1; }
+  74% { --spoiler-twinkle-c: 1; }
 }
 
 /* 3. The kinds: text, image, video and box (resource cards and gallery items) */
@@ -2541,6 +2712,19 @@ a.annoGalleryItem:hover img {
   align-items: stretch;
 }
 
+/* The sparkles are sized for a line of text. On pictures, videos and cards the stars are bigger and
+   wider apart, so a large cover does not look like a dotted line of tiny stars. */
+.mdSpoiler[data-kind='image'],
+.mdSpoiler[data-kind='video'] {
+  --spoiler-star-size: 1.1em;
+  --spoiler-star-scale: 3.2;
+}
+
+.mdSpoiler[data-kind='box'] {
+  --spoiler-star-size: 0.9em;
+  --spoiler-star-scale: 2.4;
+}
+
 /* 4. The content. While covered it is not painted, cannot be selected or copied, cannot be tabbed
    to and is not read out (visibility), and a click on it lands on the spoiler. On the reveal it
    becomes visible at once and fades in. The space it takes never changes, so nothing moves. */
@@ -2562,19 +2746,21 @@ a.annoGalleryItem:hover img {
   user-select: auto;
 }
 
-/* 5. Hover (mouse) and keyboard focus: the aurora glows and starts to flow. Touch screens have no
-   hover, so a tap simply opens the spoiler. A spoiler inside a link or a button (a card title) is
-   locked, belongs to that control and stays quiet. */
+/* 5. Hover (mouse) and keyboard focus: the curtains rise and the aurora starts to flow. Touch screens
+   have no hover, so a tap simply opens the spoiler. A spoiler inside a link or a button (a card title)
+   is locked, belongs to that control and stays quiet. */
 
 @media (hover: hover) and (pointer: fine) {
   .mdSpoiler[data-revealed='false']:not([data-locked='true']):hover {
     --spoiler-glow-alpha: 1;
+    --spoiler-rise: 1;
     animation-play-state: running;
   }
 }
 
 .mdSpoiler[data-revealed='false']:not([data-locked='true']):focus-visible {
   --spoiler-glow-alpha: 1;
+  --spoiler-rise: 1;
   animation-play-state: running;
 }
 
@@ -2582,11 +2768,12 @@ a.annoGalleryItem:hover img {
   cursor: inherit;
 }
 
-/* 6. Revealed: one click clears the cover and removes the aurora. Both numbers glide to zero, and the
-   flow stands still while the glow fades, so nothing jumps. */
+/* 6. Revealed: one click clears the cover and removes the aurora. The numbers glide to zero while the
+   curtains keep their height and stand still, so nothing jumps and nothing shrinks. */
 .mdSpoiler[data-revealed='true'] {
   --spoiler-cover-alpha: 0;
   --spoiler-glow-alpha: 0;
+  --spoiler-rise: 1;
   cursor: inherit;
 }
 
@@ -2615,10 +2802,12 @@ a.annoGalleryItem:hover img {
   outline: none;
 }
 
-/* Reduced motion: the aurora still glows on hover, it just stops flowing */
+/* Reduced motion: the aurora still glows on hover, with the curtains at full height and the stars
+   steady, it just stops moving */
 @media (prefers-reduced-motion: reduce) {
   .mdSpoiler {
     animation: none;
+    --spoiler-rise: 1;
   }
 }
 
