@@ -374,6 +374,7 @@ function Editor({ editing, viewer, volatile, dirtyRef, onBack, onSaved, onDrafte
       favourited: false,
       body: fields.body,
       resources: fields.resources.filter((resource) => safeUrl(resource.url)).map((resource) => ({ kind: ['image', 'video', 'link'].includes(resource.kind) ? resource.kind : guessKind(resource.url), label: resource.label || resource.url, url: safeUrl(resource.url), ...(resource.spoiler ? { spoiler: true } : {}) })),
+      };
   }, [fields, editing.authorName, viewer.name]);
 
   // Uploads
