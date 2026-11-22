@@ -1,13 +1,11 @@
 // ============================================================================
 // demoProfile.js
-// A blank demo profile for showing a profile effect. It follows the layout of a long Discord profile:
+// A blank demo profile. It follows the layout of a long Discord profile:
 // banner, avatar with a status dot and a status bubble, name, handle, three buttons, then the sections
 // (bio, member since, connections). Every field is an empty rounded rectangle covered like the site's
 // ||spoiler|| markdown (the same smooth grey, fully opaque), with no text and no badges. It is a display only, so
-// nothing in it is a control. The effect lies on top of the whole card (components/profileEffect.js).
+// nothing in it is a control.
 // ============================================================================
-import { ProfileEffect } from './profileEffect';
-
 // The sections under the buttons. label is the width of the small field above the section, and every row
 // is one field: h is its height in cqw (a hundredth of the card's width), w is an optional width and cols
 // splits the row into that many fields side by side.
@@ -22,9 +20,9 @@ function Field({ w, h, className = '' }) {
   return <span className={`fxField ${className}`.trim()} style={{ '--w': w, '--h': h }} />;
 }
 
-export function DemoProfile({ effectSlug }) {
+export function DemoProfile() {
   return (
-    <article className="fxProfile" aria-label="Blank demo profile with the effect on top">
+    <article className="fxProfile" aria-label="Blank demo profile">
       <div className="fxProfileBanner" aria-hidden="true" />
 
       <div className="fxProfileBody" aria-hidden="true">
@@ -68,8 +66,6 @@ export function DemoProfile({ effectSlug }) {
           </section>
         ))}
       </div>
-
-      <ProfileEffect slug={effectSlug} />
     </article>
   );
 }
