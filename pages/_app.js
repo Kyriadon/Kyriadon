@@ -43,7 +43,7 @@ import '../styles/commandStyles.css';
 // Staff notes board of the debug logs (sticky notes)
 import '../styles/notesStyles.css';
 
-// Profile effect showcase and the effects themselves (/api/preview/profile/effects/display/[slug])
+// Profile showcase (/api/preview/profile/effects/display)
 import '../styles/profileEffects.css';
 
 // Text selection, site-wide: the blue twin of the purple == highlight (loaded last on purpose)
