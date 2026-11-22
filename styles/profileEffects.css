@@ -2,13 +2,14 @@
    profileEffects.css
    The profile showcase (/api/preview/profile/effects/display, a page in pages/effectDisplay): one blank
    demo profile (components/demoProfile.js), centred in the site shell. Colours are tokens from
-   lib/siteDesign.js (--effect-*). Everything is sized in cqw (one hundredth of the card's width), so the
-   card looks the same on a phone and on a desktop.
+   lib/siteDesign.js (--effect-* and --spoiler-teal-*). Everything is sized in cqw (one hundredth of the
+   card's width), so the card looks the same on a phone and on a desktop.
 
    Parts:
    1. The stage: the card
-   2. The demo profile (blank fields, floating teal and cyan gradients)
-   3. Reduced motion
+   2. The demo profile (a translucent teal box with blank spoiler fields)
+   3. The flowing overlay
+   4. Reduced motion
    ============================================================================ */
 
 /* 1. The stage: one card, centred in the site shell. */
@@ -20,198 +21,351 @@
   padding: var(--space-6) var(--space-4) var(--space-10);
 }
 
-/* 2. The demo profile: a long, blank Discord style card, solid and fully opaque. Banner, avatar with a status
-   bubble, name, handle, buttons and sections, every field an empty rounded rectangle covered like the site's
-   ||spoiler|| markdown: the same smooth grey, light to main (--spoiler-cover-light and --spoiler-cover-main),
-   but at full strength, so nothing shows through. The card is a size container, so cqw is a hundredth of its
-   width. Name and handle keep the right quarter free, which is where effects are allowed to play. Two floating
-   teal and cyan gradients drift slowly behind the fields, on top of the solid card colour. */
+/* 2. The demo profile: the layout of a long Discord profile (banner, avatar with a status dot and a status
+   bubble, name, handle and pill, badge shelf, main button, tabs, orbs panel, bio, member since and
+   connections), drawn as one translucent teal vertical box. Every field is an empty rounded area covered like
+   the site's ||spoiler|| markdown, in the teal spoiler gradient (--spoiler-teal-cover). The larger areas that
+   hold fields (banner, badge shelf, panels) use the diluted one (--spoiler-teal-cover-soft). The card's
+   corners are one step under the site's cards (--radius-control) and the areas inside it one step under that
+   (--radius-subtle). The card is a size container, so cqw is a hundredth of its width. */
 
 .fxProfile {
+  --fx-ring: color-mix(in srgb, var(--color-bg-page) 70%, transparent);
+
   position: relative;
   container-type: inline-size;
   width: min(100%, 22rem);
   overflow: hidden;
   isolation: isolate;
-  border: 1px solid var(--effect-profile-edge);
-  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
   background: var(--effect-profile-surface);
   box-shadow: var(--shadow-panel);
   text-align: left;
 }
 
-/* The floating gradients: two oversized layers of soft teal and cyan light that drift in opposite
-   directions. They sit behind the banner and the body, and the card clips them. */
-.fxProfile::before,
-.fxProfile::after {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  inset: -20cqw;
-  pointer-events: none;
-}
-
-.fxProfile::before {
-  background:
-    radial-gradient(ellipse 46% 11% at 16% 10%, color-mix(in srgb, var(--effect-profile-teal) 46%, transparent), transparent 100%),
-    radial-gradient(ellipse 40% 10% at 88% 32%, color-mix(in srgb, var(--effect-profile-cyan) 38%, transparent), transparent 100%),
-    radial-gradient(ellipse 36% 8% at 26% 60%, color-mix(in srgb, var(--effect-profile-teal) 30%, transparent), transparent 100%);
-  animation: fxFloatA 18s ease-in-out infinite alternate;
-}
-
-.fxProfile::after {
-  background:
-    radial-gradient(ellipse 40% 9% at 80% 50%, color-mix(in srgb, var(--effect-profile-teal) 34%, transparent), transparent 100%),
-    radial-gradient(ellipse 44% 10% at 18% 78%, color-mix(in srgb, var(--effect-profile-cyan) 36%, transparent), transparent 100%),
-    radial-gradient(ellipse 34% 7% at 76% 92%, color-mix(in srgb, var(--effect-profile-cyan-pale) 22%, transparent), transparent 100%);
-  animation: fxFloatB 23s ease-in-out infinite alternate;
-}
-
-@keyframes fxFloatA {
-  from { transform: translate3d(-3cqw, -2cqw, 0) scale(1); }
-  to { transform: translate3d(4cqw, 5cqw, 0) scale(1.06); }
-}
-
-@keyframes fxFloatB {
-  from { transform: translate3d(3cqw, 4cqw, 0) scale(1); }
-  to { transform: translate3d(-4cqw, -3cqw, 0) scale(1.05); }
-}
-
-/* The banner: teal to cyan with a pale light at the top right and a teal glow at the lower left */
+/* The banner: an image on a real profile, so here a soft cover */
 .fxProfileBanner {
   position: relative;
   z-index: 1;
-  height: 28cqw;
-  background:
-    radial-gradient(ellipse 60% 120% at 78% 0%, color-mix(in srgb, var(--effect-profile-cyan-pale) 38%, transparent), transparent 70%),
-    radial-gradient(ellipse 55% 130% at 12% 100%, color-mix(in srgb, var(--effect-profile-teal) 55%, transparent), transparent 72%),
-    linear-gradient(120deg, var(--effect-banner-from), var(--effect-banner-to));
+  height: 35cqw;
+  background: var(--spoiler-teal-cover-soft);
 }
 
-/* The body sits above the floating gradients but below the effect's own layer */
+/* The body sits above the banner, and below the flowing overlay */
 .fxProfileBody {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 4.5cqw;
-  padding: 0 5.5cqw 8cqw;
+  gap: 5cqw;
+  padding: 0 3.9cqw 7cqw;
 }
 
-/* One blank field: an empty rounded rectangle in the smooth grey of the site's ||spoiler|| cover (the same
-   two stops as .mdSpoiler in styles/announcementStyles.css), fully opaque, with no ring or border */
+/* One blank field: an empty rounded area in the teal spoiler gradient, with no ring or border */
 .fxField {
   display: block;
   width: var(--w, 100%);
-  height: var(--h, 8cqw);
-  border-radius: var(--radius-card);
-  background: linear-gradient(90deg, var(--spoiler-cover-light, #c4cad6), var(--spoiler-cover-main, #8a93a3));
+  height: var(--h, 4cqw);
+  border-radius: var(--radius-subtle);
+  background: var(--spoiler-teal-cover);
 }
 
-/* The avatar overlaps the banner by half, with the status bubble beside it */
+/* The avatar sits across the lower edge of the banner, with the status bubble beside it */
 .fxAvatarRow {
   display: flex;
   align-items: flex-start;
-  gap: 3cqw;
-  margin-top: -12.5cqw;
+  gap: 2.4cqw;
+  margin-top: -9.75cqw;
 }
 
 .fxAvatarWrap {
   position: relative;
   flex: none;
-  width: 24cqw;
+  width: 19.5cqw;
 }
 
-/* The avatar and the status dot: blank circles in the same opaque grey, cut out of the banner by a ring in
-   the card colour */
+/* The avatar and the status dot: blank circles, cut out of the banner by a dark ring */
 .fxAvatar {
   width: 100%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: linear-gradient(90deg, var(--spoiler-cover-light, #c4cad6), var(--spoiler-cover-main, #8a93a3));
-  box-shadow: 0 0 0 1.6cqw var(--effect-profile-surface);
+  background: var(--spoiler-teal-cover);
+  box-shadow: 0 0 0 1.4cqw var(--fx-ring);
 }
 
 .fxStatus {
   position: absolute;
-  right: 0.6cqw;
-  bottom: 1cqw;
-  width: 6.4cqw;
+  right: -0.2cqw;
+  bottom: -0.2cqw;
+  width: 4.2cqw;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: linear-gradient(90deg, var(--spoiler-cover-light, #c4cad6), var(--spoiler-cover-main, #8a93a3));
-  box-shadow: 0 0 0 1.2cqw var(--effect-profile-surface);
+  background: var(--spoiler-teal-cover);
+  box-shadow: 0 0 0 0.9cqw var(--fx-ring);
 }
 
-/* The status bubble is a field that straddles the lower edge of the banner */
+/* The status bubble straddles the lower edge of the banner, and two small dots lead from it to the avatar */
 .fxBubble {
-  --w: 36cqw;
-  --h: 8cqw;
-  margin-top: 7cqw;
+  --w: 51cqw;
+  --h: 10cqw;
+
+  position: relative;
+  margin-top: 7.75cqw;
+  border-radius: var(--radius-pill);
 }
 
-/* Name and handle */
+.fxBubble::before,
+.fxBubble::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: var(--spoiler-teal-cover);
+}
+
+.fxBubble::before {
+  left: -0.1cqw;
+  top: -4.05cqw;
+  width: 2.9cqw;
+  height: 2.9cqw;
+}
+
+.fxBubble::after {
+  left: 3.15cqw;
+  top: -3.05cqw;
+  width: 4.7cqw;
+  height: 4.7cqw;
+}
+
+/* Name with its chevron, the handle with its pill, and the shelf of badges */
 .fxIdentity {
   display: grid;
-  gap: 2cqw;
+  justify-items: start;
+  gap: 1.6cqw;
+}
+
+.fxNameRow,
+.fxHandleRow {
+  display: flex;
+  align-items: center;
+  gap: 2.2cqw;
 }
 
 .fxName {
-  --w: 56%;
-  --h: 7cqw;
+  --w: 56cqw;
+  --h: 6cqw;
+}
+
+.fxChevron {
+  --w: 2.8cqw;
+  --h: 2.8cqw;
+
+  flex: none;
+  border-radius: 50%;
 }
 
 .fxHandle {
-  --w: 40%;
-  --h: 4.6cqw;
+  --w: 48cqw;
+  --h: 4.2cqw;
 }
 
-/* The buttons: one wide, two square. They only look like buttons. */
-.fxActions {
+.fxPill {
+  --w: 16.7cqw;
+  --h: 5.8cqw;
+
+  border-radius: var(--radius-pill);
+}
+
+.fxBadges {
   display: flex;
-  gap: 2.4cqw;
+  align-items: center;
+  gap: 2.1cqw;
+  height: 6.1cqw;
+  margin-top: 0.8cqw;
+  padding: 0 2.4cqw;
+  border-radius: var(--radius-subtle);
+  background: var(--spoiler-teal-cover-soft);
 }
 
-.fxBtnMain {
-  --w: auto;
-  --h: 10cqw;
-  flex: 1;
+.fxBadge {
+  --w: 3.7cqw;
+  --h: 3.7cqw;
+
+  flex: none;
+  border-radius: 50%;
 }
 
-.fxBtnIcon {
-  --w: 10cqw;
-  --h: 10cqw;
+.fxBadgeMore {
+  --w: 3.4cqw;
+  --h: 3cqw;
+
   flex: none;
 }
 
-.fxRule {
-  height: 1px;
-  background: var(--effect-profile-edge);
+/* The main button: one wide field. It only looks like a button. */
+.fxBtn {
+  --h: 9.6cqw;
 }
 
-/* A section: a small field for its title, then its fields with a slim gap like the rules page */
+/* The tabs: four labels on a divider, the first one marked by a bar that sits on the divider */
+.fxTabs {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 1.6cqw;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.fxTab {
+  position: relative;
+  padding: 0 2.6cqw 3.4cqw;
+}
+
+.fxTabLabel {
+  --h: 3.4cqw;
+}
+
+.fxTab[data-active='true']::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 0.5cqw;
+  border-radius: 2px 2px 0 0;
+  background: var(--spoiler-teal-cover);
+}
+
+/* A panel: a soft area that holds fields (the orbs balance and the connection) */
+.fxPanel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3cqw;
+  min-height: 13.5cqw;
+  padding: 0 3cqw;
+  border-radius: var(--radius-subtle);
+  background: var(--spoiler-teal-cover-soft);
+}
+
+.fxPanel .fxField {
+  flex: none;
+}
+
+.fxPanelLabel {
+  --w: 23cqw;
+  --h: 3.4cqw;
+}
+
+.fxPanelValue {
+  --w: 16.1cqw;
+  --h: 7.5cqw;
+}
+
+/* A section: a small field for its title, then its content */
 .fxSection {
   display: grid;
   gap: 2.2cqw;
 }
 
 .fxLabel {
-  --h: 3.2cqw;
-  border-radius: var(--radius-subtle);
+  --h: 3.4cqw;
 }
 
-.fxRow {
-  display: flex;
+/* The bio: paragraphs of lines, with an empty line between the paragraphs */
+.fxLines {
+  display: grid;
+  gap: 8.5cqw;
+}
+
+.fxPara {
+  display: grid;
   gap: 2.2cqw;
 }
 
-.fxRow .fxField {
-  flex: 1;
-  --w: auto;
+.fxLine {
+  --h: 3.9cqw;
 }
 
-/* 3. Reduced motion: the floating gradients of the demo profile stand still. */
+/* Member since: a small icon and the date */
+.fxMember {
+  display: flex;
+  align-items: center;
+  gap: 2.4cqw;
+}
+
+.fxIcon {
+  --w: 3.6cqw;
+  --h: 3.6cqw;
+
+  flex: none;
+}
+
+.fxDate {
+  --w: 22cqw;
+  --h: 3.9cqw;
+}
+
+/* The connection: icon, name, a small check and an arrow at the far end */
+.fxConnection {
+  justify-content: flex-start;
+  gap: 3.2cqw;
+  min-height: 10.5cqw;
+  padding: 0 4.4cqw;
+}
+
+.fxConnIcon {
+  --w: 5cqw;
+  --h: 5cqw;
+
+  border-radius: 50%;
+}
+
+.fxConnName {
+  --w: 23.6cqw;
+  --h: 3.6cqw;
+}
+
+.fxConnCheck {
+  --w: 3.8cqw;
+  --h: 3.8cqw;
+
+  margin-left: -2cqw;
+  border-radius: 50%;
+}
+
+.fxConnGo {
+  --w: 2.6cqw;
+  --h: 2.6cqw;
+
+  margin-left: auto;
+}
+
+/* 3. The flowing overlay: the diluted teal gradient (--effect-profile-flow), laid on top of the whole card.
+   The layer is larger than the card (the card clips it) and moves along the gradient by exactly one band,
+   100cqw / sqrt 2 across and down, so the bands flow slowly down the diagonal and the loop has no seam.
+   It never takes a click. */
+
+.fxProfile::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: -80cqw;
+  pointer-events: none;
+  background: var(--effect-profile-flow);
+  animation: fxFlow var(--effect-profile-flow-time) linear infinite;
+  will-change: transform;
+}
+
+@keyframes fxFlow {
+  from { transform: translate3d(0, 0, 0); }
+  to {
+    transform: translate3d(
+      calc(var(--effect-profile-flow-length) * 0.7071),
+      calc(var(--effect-profile-flow-length) * 0.7071),
+      0
+    );
+  }
+}
+
+/* 4. Reduced motion: the overlay stands still. */
 @media (prefers-reduced-motion: reduce) {
-  .fxProfile::before,
   .fxProfile::after {
     animation: none;
   }
