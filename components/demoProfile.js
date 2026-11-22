@@ -1,18 +1,26 @@
 // ============================================================================
 // demoProfile.js
-// A blank demo profile. It follows the layout of a long Discord profile:
-// banner, avatar with a status dot and a status bubble, name, handle, three buttons, then the sections
-// (bio, member since, connections). Every field is an empty rounded rectangle covered like the site's
-// ||spoiler|| markdown (the same smooth grey, fully opaque), with no text and no badges. It is a display only, so
-// nothing in it is a control.
+// A blank demo profile. It follows the layout of a long Discord profile: banner, avatar with a status dot
+// and a status bubble, name, handle and pill, a shelf of badges, the main button, the tabs, the orbs panel,
+// then the sections (bio, member since, connections). Every field is an empty rounded area covered like the
+// site's ||spoiler|| markdown, in the teal spoiler gradient, with no text and no badges. The card is a
+// translucent teal box, and a diluted teal gradient flows slowly across it, on top of everything
+// (styles/profileEffects.css). It is a display only, so nothing in it is a control.
 // ============================================================================
-// The sections under the buttons. label is the width of the small field above the section, and every row
-// is one field: h is its height in cqw (a hundredth of the card's width), w is an optional width and cols
-// splits the row into that many fields side by side.
-const SECTIONS = [
-  { key: 'bio', label: '12cqw', rows: [{ h: 16 }] },
-  { key: 'since', label: '22cqw', rows: [{ h: 8, w: '58%' }] },
-  { key: 'connections', label: '26cqw', rows: [{ h: 8.5 }, { h: 8.5 }] },
+
+// The tabs: w is the width of the label's cover. The first tab is the open one.
+const TABS = [
+  { key: 'main', w: '8.5cqw', active: true },
+  { key: 'board', w: '10.2cqw' },
+  { key: 'activity', w: '13.6cqw' },
+  { key: 'wishlist', w: '13.8cqw' },
+];
+
+// The bio: paragraphs of lines. w is the width of a line's cover, as a share of the card's inner width.
+const BIO = [
+  [{ w: '93%' }, { w: '72%' }],
+  [{ w: '100%' }, { w: '11%' }],
+  [{ w: '42%' }],
 ];
 
 // One blank field. The size comes from the custom properties, the look from .fxField.
@@ -35,40 +43,73 @@ export function DemoProfile() {
           <Field className="fxBubble" />
         </div>
 
-        {/* Name and handle. They stay clear of the right edge, where effects are allowed to play. */}
+        {/* Name with its chevron, handle with its pill, and the shelf of badges */}
         <div className="fxIdentity">
-          <Field className="fxName" />
-          <Field className="fxHandle" />
+          <div className="fxNameRow">
+            <Field className="fxName" />
+            <Field className="fxChevron" />
+          </div>
+          <div className="fxHandleRow">
+            <Field className="fxHandle" />
+            <Field className="fxPill" />
+          </div>
+          <div className="fxBadges">
+            {Array.from({ length: 6 }, (_, n) => (
+              <Field key={n} className="fxBadge" />
+            ))}
+            <Field className="fxBadgeMore" />
+          </div>
         </div>
 
-        <div className="fxActions">
-          <Field className="fxBtnMain" />
-          <Field className="fxBtnIcon" />
-          <Field className="fxBtnIcon" />
+        <Field className="fxBtn" />
+
+        <div className="fxTabs">
+          {TABS.map((tab) => (
+            <div key={tab.key} className="fxTab" data-active={tab.active ? 'true' : undefined}>
+              <Field className="fxTabLabel" w={tab.w} />
+            </div>
+          ))}
         </div>
 
-        <div className="fxRule" />
+        {/* The orbs panel: a label and a value */}
+        <div className="fxPanel">
+          <Field className="fxPanelLabel" />
+          <Field className="fxPanelValue" />
+        </div>
 
-        {SECTIONS.map((section) => (
-          <section key={section.key} className="fxSection">
-            <Field className="fxLabel" w={section.label} />
-            {section.rows.map((row, index) =>
-              row.cols ? (
-                <div key={index} className="fxRow">
-                  {Array.from({ length: row.cols }, (_, n) => (
-                    <Field key={n} h={`${row.h}cqw`} />
-                  ))}
-                </div>
-              ) : (
-                <Field key={index} h={`${row.h}cqw`} w={row.w} />
-              )
-            )}
-          </section>
-        ))}
+        <section className="fxSection">
+          <Field className="fxLabel" w="5.4cqw" />
+          <div className="fxLines">
+            {BIO.map((paragraph, p) => (
+              <div key={p} className="fxPara">
+                {paragraph.map((line, l) => (
+                  <Field key={l} className="fxLine" w={line.w} />
+                ))}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="fxSection">
+          <Field className="fxLabel" w="24.7cqw" />
+          <div className="fxMember">
+            <Field className="fxIcon" />
+            <Field className="fxDate" />
+          </div>
+        </section>
+
+        <section className="fxSection">
+          <Field className="fxLabel" w="27cqw" />
+          <div className="fxPanel fxConnection">
+            <Field className="fxConnIcon" />
+            <Field className="fxConnName" />
+            <Field className="fxConnCheck" />
+            <Field className="fxConnGo" />
+          </div>
+        </section>
       </div>
     </article>
   );
 }
 
 export default DemoProfile;
-
