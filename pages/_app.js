@@ -31,6 +31,9 @@ import '../styles/accountStyles.css';
 // Experiments modal styles (flowing purple, dark purple, dark baby blue and teal surface)
 import '../styles/experimentsStyles.css';
 
+// Staff controls: menu item, opening scene and the Staff Controls modal
+import '../styles/staffControlsStyles.css';
+
 // Announcements page, cards, manager and custom markup styles
 import '../styles/announcementStyles.css';
 
