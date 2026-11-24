@@ -1,8 +1,8 @@
 /* ============================================================================
    staffControlsStyles.css
    1. The "Staff controls" button in the Account modal (white overlay and a small jiggle on hover)
-   2. The opening scene (a translucent, hydrophobic screen with its own glows and droplets, bobbing
-      letters with a teal, cyan and baby blue gradient, then a motion blurred slide up)
+   2. The opening scene (a black screen under a translucent frosted sheet, letters bobbing once with
+      one blended teal, cyan and baby blue gradient, then a motion blurred slide up)
    3. The Staff Controls modal (flowing azure surface, note boxes, fullscreen)
    Colours, gradients and timings are the named tokens --staff-controls-* (lib/siteDesign.js).
    Every animation and transition has a reduced motion fallback at the end of each section.
@@ -117,23 +117,13 @@
 
 /* --------------------------------------------------------------------------
    2. Opening scene
-   The scene never blurs the page behind it: there is no backdrop filter. It is translucent and
-   paints its own soft glows (--staff-controls-scene-surface) and water droplets that sit on it
-   like beads on water repellent glass. While it is on screen, the dialog backdrop's own dim and
-   blur wait too (they fade in as the scene leaves).
+   A black screen (--staff-controls-scene-black) with a translucent frosted sheet on top of it
+   (--staff-controls-scene-sheet) that blurs the black screen. The page behind is never shown blurred.
+   The black screen and the sheet leave together. The letters are one blended teal, cyan and baby
+   blue gradient that runs across the whole text.
    -------------------------------------------------------------------------- */
 .studioBackdrop:has(> .sheetDialog[data-tone='staff-controls']) {
-  transition:
-    padding var(--motion-slow) var(--motion-ease),
-    background-color var(--motion-slow) var(--motion-ease),
-    -webkit-backdrop-filter var(--motion-slow) var(--motion-ease),
-    backdrop-filter var(--motion-slow) var(--motion-ease);
-}
-
-.studioBackdrop:has(.scRoot[data-phase='loading']) {
-  background-color: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  transition: padding var(--motion-slow) var(--motion-ease);
 }
 
 .scScene {
@@ -143,10 +133,26 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: var(--staff-controls-scene-surface);
   transform-origin: 50% 100%;
-  will-change: transform, filter;
+  will-change: transform;
   animation: fadeIn var(--motion-base) linear both;
+}
+
+.scBlack,
+.scSheet {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scBlack {
+  background: var(--staff-controls-scene-black);
+}
+
+.scSheet {
+  background: var(--staff-controls-scene-sheet);
+  -webkit-backdrop-filter: blur(var(--staff-controls-scene-blur));
+  backdrop-filter: blur(var(--staff-controls-scene-blur));
 }
 
 /* A streak of light along the bottom edge: it shows while the screen is in motion */
@@ -154,6 +160,7 @@
   content: '';
   position: absolute;
   inset: auto 0 0;
+  z-index: 0;
   height: 34%;
   background: linear-gradient(0deg, color-mix(in srgb, var(--staff-controls-accent) 38%, transparent), transparent);
   opacity: 0;
@@ -186,29 +193,9 @@
   100% { opacity: 0.2; }
 }
 
-/* Droplets: round, clear beads with a bright highlight, a light rim and a soft shadow */
-.scBeads {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.scBead {
-  position: absolute;
-  background: var(--staff-controls-bead);
-  border: 1px solid var(--staff-controls-bead-rim);
-  border-radius: 50%;
-  box-shadow: var(--staff-controls-bead-shadow);
-  animation: scBeadIn 520ms var(--motion-ease) var(--d, 0ms) backwards;
-}
-
-@keyframes scBeadIn {
-  from { opacity: 0; transform: scale(0.35); }
-  to { opacity: 1; transform: scale(1); }
-}
-
 .scSceneInner {
   position: relative;
+  z-index: 1;
   display: grid;
   justify-items: center;
   gap: var(--space-5);
@@ -239,26 +226,31 @@
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: 0.01em;
+  /* A soft glow, so the blended gradient reads as a gentle blur of light */
+  filter: drop-shadow(0 0 0.45em var(--staff-controls-loading-glow));
 }
 
 .scWord {
   display: inline-flex;
 }
 
-/* Each letter bobs up and down ONCE, one after the other (a single wave). The gradient is a palindrome
-   that moves exactly one tile (3.2em) per loop, and every letter starts a little later than the one
-   before, so it keeps flowing through the word. */
+/* Each letter bobs up and down ONCE, one after the other (a single wave). Every letter paints the
+   same gradient, as wide as the whole text (--w) and shifted back by the letter's own distance from
+   the left edge (--ox): together they show ONE blended gradient across the text, not one colour per
+   letter. It flows by moving exactly one text width per loop (the gradient ends on its first colour,
+   so the loop has no seam). */
 .scLetter {
   display: inline-block;
   color: var(--staff-controls-accent);
   background-image: var(--staff-controls-loading-gradient);
-  background-size: 3.2em 100%;
-  background-repeat: repeat;
+  background-size: var(--w, 20em) 100%;
+  background-position: calc(var(--ox, 0px) * -1) 0;
+  background-repeat: repeat-x;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: scBob 720ms ease-in-out 1, scFlow 2.4s linear infinite;
-  animation-delay: calc(var(--i) * 60ms + 150ms), calc(var(--i) * 0.465s - 24s);
+  animation: scBob 720ms ease-in-out 1, scFlow 3.2s linear infinite;
+  animation-delay: calc(var(--i) * 60ms + 150ms), 0s;
 }
 
 @keyframes scBob {
@@ -269,8 +261,8 @@
 }
 
 @keyframes scFlow {
-  from { background-position: 0 0; }
-  to { background-position: 3.2em 0; }
+  from { background-position: calc(var(--ox, 0px) * -1) 0; }
+  to { background-position: calc(var(--ox, 0px) * -1 + var(--w, 20em)) 0; }
 }
 
 .scLoadingLine {
@@ -288,7 +280,7 @@
   to { background-position: 200% 0; }
 }
 
-/* Reduced motion: the letters and droplets stay still (a still gradient), and the screen just fades away */
+/* Reduced motion: the letters stay still (the blended gradient is still there), and the screen just fades away */
 @media (prefers-reduced-motion: reduce) {
   .scScene {
     animation: none;
@@ -304,14 +296,9 @@
     opacity: 0;
   }
 
-  .scBead,
   .scLetter,
   .scLoadingLine {
     animation: none;
-  }
-
-  .scLetter {
-    background-position: calc(var(--i) * -0.6em) 0;
   }
 
   .studioBackdrop:has(> .sheetDialog[data-tone='staff-controls']) {
