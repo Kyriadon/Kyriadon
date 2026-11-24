@@ -155,18 +155,6 @@
   backdrop-filter: blur(var(--staff-controls-scene-blur));
 }
 
-/* A streak of light along the bottom edge: it shows while the screen is in motion */
-.scScene::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0;
-  z-index: 0;
-  height: 34%;
-  background: linear-gradient(0deg, color-mix(in srgb, var(--staff-controls-accent) 38%, transparent), transparent);
-  opacity: 0;
-  pointer-events: none;
-}
-
 .scScene[data-phase='loading'] {
   pointer-events: auto;
 }
@@ -176,21 +164,11 @@
   animation: scSlideUp var(--staff-controls-scene-leave) cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
-.scScene[data-phase='leaving']::after {
-  animation: scStreak var(--staff-controls-scene-leave) cubic-bezier(0.76, 0, 0.24, 1) forwards;
-}
-
 /* Slides the whole screen up; the blur (of the screen itself) and the stretch grow with the speed */
 @keyframes scSlideUp {
   0% { transform: translateY(0) scaleY(1); filter: blur(0); opacity: 1; }
   28% { transform: translateY(-5%) scaleY(1.02); filter: blur(2px); opacity: 1; }
   100% { transform: translateY(-106%) scaleY(1.16); filter: blur(14px); opacity: 0.92; }
-}
-
-@keyframes scStreak {
-  0% { opacity: 0; }
-  35% { opacity: 0.9; }
-  100% { opacity: 0.2; }
 }
 
 .scSceneInner {
@@ -289,11 +267,6 @@
 
   .scScene[data-phase='leaving'] {
     animation: scFadeOut 200ms linear forwards;
-  }
-
-  .scScene[data-phase='leaving']::after {
-    animation: none;
-    opacity: 0;
   }
 
   .scLetter,
