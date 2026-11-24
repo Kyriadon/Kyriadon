@@ -9,7 +9,7 @@
 // Styles: styles/staffControlsStyles.css. Reduced motion has a fallback for every effect.
 // The Staff controls button that opens this modal lives in the Account modal (accountModal.js).
 // ============================================================================
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -73,11 +73,34 @@ function RoleChip({ role }) {
   );
 }
 
-// The letters bob up and down once, in a wave, and a gradient flows through them (styles: .scLetter)
+// The letters bob up and down once, in a wave. One blended gradient (teal, cyan, baby blue) runs across
+// the WHOLE text and flows through it: every letter paints the same gradient, sized to the whole text
+// (--w) and shifted by the letter's own distance from the left edge (--ox), so the colours blend from
+// letter to letter instead of each letter having one colour. The sizes are measured, and measured
+// again when the text changes size (for example when the font has loaded).
 function FlowingText({ value }) {
+  const rootRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return undefined;
+    const measure = () => {
+      const box = root.getBoundingClientRect();
+      root.style.setProperty('--w', `${Math.max(1, Math.ceil(box.width))}px`);
+      root.querySelectorAll('.scLetter').forEach((letter) => {
+        letter.style.setProperty('--ox', `${letter.getBoundingClientRect().left - box.left}px`);
+      });
+    };
+    measure();
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    observer?.observe(root);
+    document.fonts?.ready?.then(measure);
+    return () => observer?.disconnect();
+  }, [value]);
+
   let index = -1;
   return (
-    <span className="scLoading" aria-hidden="true">
+    <span className="scLoading" ref={rootRef} aria-hidden="true">
       {value.split(' ').map((word, wordIndex) => (
         <span className="scWord" key={`${word}-${wordIndex}`}>
           {[...word].map((character) => {
@@ -94,30 +117,13 @@ function FlowingText({ value }) {
   );
 }
 
-// Water droplets for the scene (hydrophobic: they sit on the glass as round beads). The scatter is
-// computed from the bead number, so it is the same every time.
-const seeded = (n) => {
-  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
-  return x - Math.floor(x);
-};
-
-const BEADS = Array.from({ length: 30 }, (_, index) => ({
-  left: 2 + seeded(index + 1) * 94,
-  top: 2 + seeded(index + 41) * 94,
-  size: Math.round(8 + seeded(index + 81) ** 2 * 30),
-  delay: Math.round(seeded(index + 121) * 800),
-}));
-
-// The opening scene: a translucent screen over the whole page. It has its own soft glows and
-// droplets and does not blur the page behind it. When it leaves it slides up.
+// The opening scene: a black screen with a translucent frosted sheet on top of it (the sheet blurs the
+// black screen). It never shows the page behind it blurred. When it leaves, it slides up.
 function Scene({ leaving }) {
   return (
     <div className="scScene" data-phase={leaving ? 'leaving' : 'loading'} role="status" aria-live="polite">
-      <div className="scBeads" aria-hidden="true">
-        {BEADS.map((bead, index) => (
-          <span key={index} className="scBead" style={{ left: `${bead.left}%`, top: `${bead.top}%`, width: bead.size, height: bead.size, '--d': `${bead.delay}ms` }} />
-        ))}
-      </div>
+      <div className="scBlack" aria-hidden="true" />
+      <div className="scSheet" aria-hidden="true" />
       <div className="scSceneInner">
         <span className="scSr">{text.loading}</span>
         <FlowingText value={text.loading} />
