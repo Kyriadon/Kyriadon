@@ -6,14 +6,10 @@
 // panels of the site; styles live in styles/accountStyles.css.
 // ============================================================================
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
-import { IconCheck, IconEraser, IconLock, IconMegaphone, IconPencil, IconTrash, IconUndo, IconUpload, IconWarning, Modal, logEvent } from './siteShell';
+import { IconCheck, IconEraser, IconLock, IconPencil, IconTrash, IconUndo, IconUpload, IconWarning, Modal, logEvent } from './siteShell';
 import { avatarPalette } from '../lib/siteDesign';
 import { formatRemaining, sendJson, useAccount, useRemaining } from '../lib/accountClient';
-
-// The Announcements manager is only downloaded when a staff member opens it
-const AnnouncementManager = dynamic(() => import('./announcementManager'), { ssr: false });
 
 // The picture is edited at 256 x 256 and shrunk further only if the file would be too large
 const SIZE = 256;
@@ -706,37 +702,9 @@ function StaffSection({ account }) {
 }
 
 // ----------------------------------------------------------------------------
-// Announcements: staff who are logged in (and admins) open the Announcements manager here
-// ----------------------------------------------------------------------------
-function AnnouncementsSection({ account, onOpen }) {
-  const { viewer, staff } = account;
-  const unlocked = Boolean(viewer?.admin || (viewer?.staff && staff?.loggedIn && !staff?.blocked));
-
-  return (
-    <section className="controlSection" aria-labelledby="acctAnnouncementsTitle">
-      <h4 id="acctAnnouncementsTitle" className="studioSectionTitle relevantTitle">
-        Announcements
-        <RoleChip role="staff" />
-      </h4>
-      {unlocked ? (
-        <>
-          <p className="helperText acctInline">Create, edit and review announcements, and see their statistics. You can change the ones you created{viewer?.admin ? ', and as an admin any other too' : ''}.</p>
-          <button type="button" className="btn btnPrimary" onClick={onOpen}>
-            <IconMegaphone size={16} />
-            Open announcements manager
-          </button>
-        </>
-      ) : (
-        <p className="helperText acctInline">Log in as staff above to open the announcements manager.</p>
-      )}
-    </section>
-  );
-}
-
-// ----------------------------------------------------------------------------
 // The modal
 // ----------------------------------------------------------------------------
-function AccountDialog({ onClose, onOpenManager }) {
+export default function AccountModal({ onClose }) {
   const account = useAccount();
   const { status, profile, viewer, staff, storage } = account;
 
@@ -809,29 +777,8 @@ function AccountDialog({ onClose, onOpenManager }) {
           />
           {storage === 'memory' && account.volatile && <p className="helperText acctNote" data-tone="error">Changes are not saved permanently until the Upstash Redis database is connected.</p>}
           {viewer?.staff && staff && <StaffSection account={account} />}
-          {(viewer?.staff || viewer?.admin) && <AnnouncementsSection account={account} onOpen={onOpenManager} />}
         </>
       )}
     </Modal>
-  );
-}
-
-// ----------------------------------------------------------------------------
-// The account modal with the Announcements manager next to it (a sibling, not a child,
-// so a key pressed in the manager never closes the account modal)
-// ----------------------------------------------------------------------------
-export default function AccountModal({ onClose }) {
-  const [managerOpen, setManagerOpen] = useState(false);
-
-  const openManager = () => {
-    logEvent({ code: 'ANNOUNCEMENT_MANAGER_OPENED', reason: 'Opened the announcements manager' });
-    setManagerOpen(true);
-  };
-
-  return (
-    <>
-      <AccountDialog onClose={onClose} onOpenManager={openManager} />
-      {managerOpen && <AnnouncementManager onClose={() => setManagerOpen(false)} />}
-    </>
   );
 }
