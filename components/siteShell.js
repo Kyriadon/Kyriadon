@@ -656,7 +656,7 @@ export function SiteShell({ title, description, children }) {
 
   // The avatar chosen in the Account modal replaces the Discord one everywhere
   const { profile, viewer, staff } = useAccount();
-  // Staff controls are only for staff who are logged in (and admins, like the Announcements manager)
+  // Staff controls are only for staff who are logged in (and admins). The button is in the Account modal.
   const staffControlsUnlocked = Boolean(viewer?.admin || (viewer?.staff && staff?.loggedIn && !staff?.blocked));
   const avatarSrc = profile?.avatarUrl || session?.user?.image;
 
@@ -717,6 +717,12 @@ export function SiteShell({ title, description, children }) {
   const closeExperiments = useCallback(() => {
     setExperimentsOpen(false);
     requestAnimationFrame(() => userButtonRef.current?.focus());
+  }, []);
+
+  // The Staff controls button in the Account modal closes the Account modal and opens Staff Controls
+  const openStaffControls = useCallback(() => {
+    setAccountOpen(false);
+    setStaffControlsOpen(true);
   }, []);
 
   // Closing the Staff Controls modal also returns focus to the avatar button
@@ -805,21 +811,6 @@ export function SiteShell({ title, description, children }) {
                   >
                     Account
                   </button>
-                  {staffControlsUnlocked && (
-                    <button
-                      type="button"
-                      className="userMenuItem userMenuStaff"
-                      onClick={() => {
-                        setUserMenuOpen(false);
-                        setStaffControlsOpen(true);
-                      }}
-                    >
-                      <span className="userMenuStaffIcon">
-                        <IconStaff size={18} />
-                      </span>
-                      <span className="userMenuStaffLabel">Staff controls</span>
-                    </button>
-                  )}
                   <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
                     Notifications
                   </button>
@@ -894,7 +885,7 @@ export function SiteShell({ title, description, children }) {
       <SearchPalette open={searchOpen} onClose={closeSearch} />
 
       {/* Account modal: avatar, username, display name and the staff login */}
-      {accountOpen && authStatus === 'authenticated' && <AccountModal onClose={closeAccount} />}
+      {accountOpen && authStatus === 'authenticated' && <AccountModal onClose={closeAccount} onOpenStaffControls={openStaffControls} />}
 
       {/* Experiments modal: same dialog as Account, with the flowing purple, dark purple, dark baby blue and teal surface */}
       {experimentsOpen && authStatus === 'authenticated' && <ExperimentsModal onClose={closeExperiments} />}
