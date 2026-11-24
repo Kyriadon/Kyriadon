@@ -7,6 +7,7 @@
 // modal to fullscreen and back. Every section is a note box with a Title Case title; the
 // default titles, the timings and the colours live in lib/siteDesign.js (staffControls*).
 // Styles: styles/staffControlsStyles.css. Reduced motion has a fallback for every effect.
+// The Staff controls button that opens this modal lives in the Account modal (accountModal.js).
 // ============================================================================
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -72,7 +73,7 @@ function RoleChip({ role }) {
   );
 }
 
-// The letters bob up and down in a wave, and a gradient flows through them (styles: .scLetter)
+// The letters bob up and down once, in a wave, and a gradient flows through them (styles: .scLetter)
 function FlowingText({ value }) {
   let index = -1;
   return (
@@ -93,10 +94,30 @@ function FlowingText({ value }) {
   );
 }
 
-// The opening scene: a translucent screen over the whole page. When it leaves it slides up
+// Water droplets for the scene (hydrophobic: they sit on the glass as round beads). The scatter is
+// computed from the bead number, so it is the same every time.
+const seeded = (n) => {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+const BEADS = Array.from({ length: 30 }, (_, index) => ({
+  left: 2 + seeded(index + 1) * 94,
+  top: 2 + seeded(index + 41) * 94,
+  size: Math.round(8 + seeded(index + 81) ** 2 * 30),
+  delay: Math.round(seeded(index + 121) * 800),
+}));
+
+// The opening scene: a translucent screen over the whole page. It has its own soft glows and
+// droplets and does not blur the page behind it. When it leaves it slides up.
 function Scene({ leaving }) {
   return (
     <div className="scScene" data-phase={leaving ? 'leaving' : 'loading'} role="status" aria-live="polite">
+      <div className="scBeads" aria-hidden="true">
+        {BEADS.map((bead, index) => (
+          <span key={index} className="scBead" style={{ left: `${bead.left}%`, top: `${bead.top}%`, width: bead.size, height: bead.size, '--d': `${bead.delay}ms` }} />
+        ))}
+      </div>
       <div className="scSceneInner">
         <span className="scSr">{text.loading}</span>
         <FlowingText value={text.loading} />
