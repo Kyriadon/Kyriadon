@@ -20,6 +20,9 @@ const AccountModal = dynamic(() => import('./accountModal'), { ssr: false });
 // The Experiments modal loads only when it is opened, like the Account modal
 const ExperimentsModal = dynamic(() => import('./experimentsModal'), { ssr: false });
 
+// The Staff Controls modal loads only when it is opened (staff who are logged in, and admins)
+const StaffControls = dynamic(() => import('./staffControls'), { ssr: false });
+
 // ----------------------------------------------------------------------------
 // Shared destinations: social links and where the footer credit leads
 // ----------------------------------------------------------------------------
@@ -645,13 +648,16 @@ export function SiteShell({ title, description, children }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [experimentsOpen, setExperimentsOpen] = useState(false);
+  const [staffControlsOpen, setStaffControlsOpen] = useState(false);
   const triggerRef = useRef(null);
   const userMenuRef = useRef(null);
   const userButtonRef = useRef(null);
   const fade = useScrollFade(behavior.scrollFade);
 
   // The avatar chosen in the Account modal replaces the Discord one everywhere
-  const { profile } = useAccount();
+  const { profile, viewer, staff } = useAccount();
+  // Staff controls are only for staff who are logged in (and admins, like the Announcements manager)
+  const staffControlsUnlocked = Boolean(viewer?.admin || (viewer?.staff && staff?.loggedIn && !staff?.blocked));
   const avatarSrc = profile?.avatarUrl || session?.user?.image;
 
   // Records page views, errors, failed requests, console warnings and clicks (debug logs)
@@ -710,6 +716,12 @@ export function SiteShell({ title, description, children }) {
   // Closing the Experiments modal also returns focus to the avatar button
   const closeExperiments = useCallback(() => {
     setExperimentsOpen(false);
+    requestAnimationFrame(() => userButtonRef.current?.focus());
+  }, []);
+
+  // Closing the Staff Controls modal also returns focus to the avatar button
+  const closeStaffControls = useCallback(() => {
+    setStaffControlsOpen(false);
     requestAnimationFrame(() => userButtonRef.current?.focus());
   }, []);
 
@@ -793,6 +805,21 @@ export function SiteShell({ title, description, children }) {
                   >
                     Account
                   </button>
+                  {staffControlsUnlocked && (
+                    <button
+                      type="button"
+                      className="userMenuItem userMenuStaff"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        setStaffControlsOpen(true);
+                      }}
+                    >
+                      <span className="userMenuStaffIcon">
+                        <IconStaff size={18} />
+                      </span>
+                      <span className="userMenuStaffLabel">Staff controls</span>
+                    </button>
+                  )}
                   <button type="button" className="userMenuItem" onClick={() => setUserMenuOpen(false)}>
                     Notifications
                   </button>
@@ -871,6 +898,9 @@ export function SiteShell({ title, description, children }) {
 
       {/* Experiments modal: same dialog as Account, with the flowing purple, dark purple, dark baby blue and teal surface */}
       {experimentsOpen && authStatus === 'authenticated' && <ExperimentsModal onClose={closeExperiments} />}
+
+      {/* Staff Controls: opening scene, then the modal with the Announcements manager and the debug logs */}
+      {staffControlsOpen && authStatus === 'authenticated' && staffControlsUnlocked && <StaffControls onClose={closeStaffControls} />}
     </>
   );
 }
@@ -879,6 +909,16 @@ export function SiteShell({ title, description, children }) {
 // Debug log icons (stroke style, same as the rest of the site)
 // ----------------------------------------------------------------------------
 const iconBase = (size) => ({ viewBox: '0 0 24 24', width: size, height: size, 'aria-hidden': 'true', focusable: 'false', ...strokeProps });
+
+// Staff: a shield with a star
+export function IconStaff({ size = 18 }) {
+  return (
+    <svg {...iconBase(size)}>
+      <path d="M12 3.5 5 6v5.4c0 4.2 2.8 7.4 7 9.1 4.2-1.7 7-4.9 7-9.1V6l-7-2.5Z" />
+      <path d="m12 8.6 1.1 2.3 2.5.3-1.8 1.7.5 2.5-2.3-1.2-2.3 1.2.5-2.5-1.8-1.7 2.5-.3L12 8.6Z" />
+    </svg>
+  );
+}
 
 export function IconFilter({ size = 18 }) {
   return (<svg {...iconBase(size)}><path d="M4 5.5h16l-6.2 7.3V19l-3.6-1.8v-4.4L4 5.5Z" /></svg>);
