@@ -2,12 +2,12 @@
 // accountModal.js
 // The Account modal (opened from "Account" in the user menu): avatar (upload or
 // draw), username (once a month), display name (once every 15 minutes) and, for
-// staff, the staff login. It uses the shared Modal, buttons, inputs, chips and
+// staff, the staff login and (for staff who are logged in) the Staff controls button. It uses the shared Modal, buttons, inputs, chips and
 // panels of the site; styles live in styles/accountStyles.css.
 // ============================================================================
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { IconCheck, IconEraser, IconLock, IconPencil, IconTrash, IconUndo, IconUpload, IconWarning, Modal, logEvent } from './siteShell';
+import { IconCheck, IconEraser, IconLock, IconPencil, IconStaff, IconTrash, IconUndo, IconUpload, IconWarning, Modal, logEvent } from './siteShell';
 import { avatarPalette } from '../lib/siteDesign';
 import { formatRemaining, sendJson, useAccount, useRemaining } from '../lib/accountClient';
 
@@ -702,9 +702,28 @@ function StaffSection({ account }) {
 }
 
 // ----------------------------------------------------------------------------
+// Staff controls: staff who are logged in (and admins) open the Staff Controls modal from here.
+// The button is plain until it is hovered: then a soft white overlay fades in and the icon jiggles.
+// ----------------------------------------------------------------------------
+const preloadStaffControls = () => {
+  import('./staffControls');
+};
+
+function StaffControlsButton({ onOpen }) {
+  return (
+    <button type="button" className="acctStaffControls" onClick={onOpen} onMouseEnter={preloadStaffControls} onFocus={preloadStaffControls}>
+      <span className="acctStaffIcon">
+        <IconStaff size={18} />
+      </span>
+      <span className="acctStaffLabel">Staff controls</span>
+    </button>
+  );
+}
+
+// ----------------------------------------------------------------------------
 // The modal
 // ----------------------------------------------------------------------------
-export default function AccountModal({ onClose }) {
+export default function AccountModal({ onClose, onOpenStaffControls }) {
   const account = useAccount();
   const { status, profile, viewer, staff, storage } = account;
 
@@ -777,6 +796,7 @@ export default function AccountModal({ onClose }) {
           />
           {storage === 'memory' && account.volatile && <p className="helperText acctNote" data-tone="error">Changes are not saved permanently until the Upstash Redis database is connected.</p>}
           {viewer?.staff && staff && <StaffSection account={account} />}
+          {Boolean(viewer?.admin || (viewer?.staff && staff?.loggedIn && !staff?.blocked)) && <StaffControlsButton onOpen={onOpenStaffControls} />}
         </>
       )}
     </Modal>
