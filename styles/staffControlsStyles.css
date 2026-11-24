@@ -1,0 +1,537 @@
+/* ============================================================================
+   staffControlsStyles.css
+   1. The "Staff controls" item in the user menu (white overlay and a small jiggle on hover)
+   2. The opening scene (bobbing letters with a flowing gradient, then a motion blurred slide up)
+   3. The Staff Controls modal (flowing azure surface, note boxes, fullscreen)
+   Colours, gradients and timings are the named tokens --staff-controls-* (lib/siteDesign.js).
+   Every animation and transition has a reduced motion fallback at the end of each section.
+   ============================================================================ */
+
+/* --------------------------------------------------------------------------
+   1. User menu item
+   -------------------------------------------------------------------------- */
+.userMenuItem.userMenuStaff {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+}
+
+/* The white overlay: it fades in smoothly instead of switching on */
+.userMenuItem.userMenuStaff::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--staff-controls-hover-overlay);
+  opacity: 0;
+  transition: opacity var(--motion-base) var(--motion-ease);
+  pointer-events: none;
+}
+
+.userMenuItem.userMenuStaff:hover,
+.userMenuItem.userMenuStaff:focus-visible {
+  background: transparent;
+}
+
+.userMenuItem.userMenuStaff:hover::before,
+.userMenuItem.userMenuStaff:focus-visible::before {
+  opacity: 1;
+}
+
+.userMenuStaffIcon {
+  display: inline-flex;
+  flex: none;
+  transform-origin: 50% 60%;
+}
+
+.userMenuStaffLabel {
+  display: inline-block;
+}
+
+/* A bit of a jiggle: the icon rocks, the label nudges, once per hover */
+.userMenuItem.userMenuStaff:hover .userMenuStaffIcon,
+.userMenuItem.userMenuStaff:focus-visible .userMenuStaffIcon {
+  animation: staffJiggle 560ms var(--motion-ease) both;
+}
+
+.userMenuItem.userMenuStaff:hover .userMenuStaffLabel,
+.userMenuItem.userMenuStaff:focus-visible .userMenuStaffLabel {
+  animation: staffNudge 560ms var(--motion-ease) both;
+}
+
+@keyframes staffJiggle {
+  0% { transform: rotate(0) scale(1); }
+  20% { transform: rotate(-14deg) scale(1.1); }
+  42% { transform: rotate(11deg) scale(1.1); }
+  64% { transform: rotate(-6deg) scale(1.05); }
+  82% { transform: rotate(3deg) scale(1.02); }
+  100% { transform: rotate(0) scale(1); }
+}
+
+@keyframes staffNudge {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(2px); }
+  55% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+  100% { transform: translateX(0); }
+}
+
+/* Reduced motion: the overlay appears at once and nothing jiggles */
+@media (prefers-reduced-motion: reduce) {
+  .userMenuItem.userMenuStaff::before {
+    transition: none;
+  }
+
+  .userMenuItem.userMenuStaff:hover .userMenuStaffIcon,
+  .userMenuItem.userMenuStaff:focus-visible .userMenuStaffIcon,
+  .userMenuItem.userMenuStaff:hover .userMenuStaffLabel,
+  .userMenuItem.userMenuStaff:focus-visible .userMenuStaffLabel {
+    animation: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. Opening scene
+   -------------------------------------------------------------------------- */
+.scScene {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--staff-controls-scene);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  transform-origin: 50% 100%;
+  will-change: transform, filter;
+  animation: fadeIn var(--motion-base) linear both;
+}
+
+/* A streak of light along the bottom edge: it shows while the screen is in motion */
+.scScene::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 34%;
+  background: linear-gradient(0deg, color-mix(in srgb, var(--staff-controls-accent) 38%, transparent), transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scScene[data-phase='loading'] {
+  pointer-events: auto;
+}
+
+.scScene[data-phase='leaving'] {
+  pointer-events: none;
+  animation: scSlideUp var(--staff-controls-scene-leave) cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+.scScene[data-phase='leaving']::after {
+  animation: scStreak var(--staff-controls-scene-leave) cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+/* Slides the whole screen up; the blur and the stretch grow with the speed (a motion blur) */
+@keyframes scSlideUp {
+  0% { transform: translateY(0) scaleY(1); filter: blur(0); opacity: 1; }
+  28% { transform: translateY(-5%) scaleY(1.02); filter: blur(2px); opacity: 1; }
+  100% { transform: translateY(-106%) scaleY(1.16); filter: blur(14px); opacity: 0.92; }
+}
+
+@keyframes scStreak {
+  0% { opacity: 0; }
+  35% { opacity: 0.9; }
+  100% { opacity: 0.2; }
+}
+
+.scSceneInner {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.scSr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.scLoading {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0 0.4em;
+  font-family: var(--font-special);
+  font-size: clamp(1.9rem, 6.4vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+
+.scWord {
+  display: inline-flex;
+}
+
+/* Each letter bobs in a wave. The gradient is a palindrome that moves exactly one tile (3.2em) per
+   loop, and every letter starts a little later than the one before, so it flows through the word */
+.scLetter {
+  display: inline-block;
+  color: var(--staff-controls-accent);
+  background-image: var(--staff-controls-loading-gradient);
+  background-size: 3.2em 100%;
+  background-repeat: repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: scBob 1.15s ease-in-out infinite, scFlow 2.4s linear infinite;
+  animation-delay: calc(var(--i) * -90ms), calc(var(--i) * 0.465s - 24s);
+}
+
+@keyframes scBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.28em); }
+}
+
+@keyframes scFlow {
+  from { background-position: 0 0; }
+  to { background-position: 3.2em 0; }
+}
+
+.scLoadingLine {
+  width: min(11rem, 52vw);
+  height: 3px;
+  border-radius: 999px;
+  background-image: var(--staff-controls-loading-gradient);
+  background-size: 200% 100%;
+  opacity: 0.85;
+  animation: scLine 2.4s linear infinite;
+}
+
+@keyframes scLine {
+  from { background-position: 0 0; }
+  to { background-position: 200% 0; }
+}
+
+/* Reduced motion: the letters stay still with a still gradient, and the screen just fades away */
+@media (prefers-reduced-motion: reduce) {
+  .scScene {
+    animation: none;
+    will-change: auto;
+  }
+
+  .scScene[data-phase='leaving'] {
+    animation: scFadeOut 200ms linear forwards;
+  }
+
+  .scScene[data-phase='leaving']::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  .scLetter,
+  .scLoadingLine {
+    animation: none;
+  }
+
+  .scLetter {
+    background-position: calc(var(--i) * -0.6em) 0;
+  }
+}
+
+@keyframes scFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   3. Staff Controls modal
+   -------------------------------------------------------------------------- */
+.studioBackdrop:has(> .sheetDialog[data-tone='staff-controls']) {
+  transition: padding var(--motion-slow) var(--motion-ease);
+}
+
+.studioBackdrop:has(.scRoot[data-fullscreen='true']) {
+  padding: 0;
+}
+
+.sheetDialog[data-tone='staff-controls'] {
+  --sc-accent: var(--staff-controls-accent);
+  --sc-accent-deep: var(--staff-controls-accent-deep);
+  --sc-ink: var(--color-text-primary);
+  --sc-ink-soft: var(--color-text-secondary);
+  --sc-line: color-mix(in srgb, var(--sc-accent) 16%, transparent);
+
+  width: 100%;
+  max-width: 54rem;
+  height: min(86dvh, 46rem);
+  max-height: 100dvh;
+  color: var(--sc-ink);
+  background-color: #0b0f16;
+  background-image: var(--staff-controls-surface);
+  background-size: 200% 200%;
+  background-position: 0% 0%;
+  border-color: color-mix(in srgb, var(--sc-accent) 20%, transparent);
+  box-shadow: var(--shadow-modal), 0 0 80px -28px color-mix(in srgb, var(--sc-accent-deep) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  opacity: 1;
+  transform: none;
+  animation: scSurfaceFlow 18s ease-in-out infinite;
+  transition:
+    opacity 520ms var(--motion-ease),
+    transform 520ms var(--motion-ease),
+    height var(--motion-slow) var(--motion-ease),
+    max-width var(--motion-slow) var(--motion-ease),
+    border-radius var(--motion-slow) var(--motion-ease);
+}
+
+/* While the scene is on screen the modal waits; when the scene starts to slide up it comes in */
+.sheetDialog[data-tone='staff-controls']:has(.scRoot[data-phase='loading']) {
+  opacity: 0;
+  transform: translateY(22px) scale(0.97);
+  pointer-events: none;
+}
+
+.sheetDialog[data-tone='staff-controls']:has(.scRoot[data-fullscreen='true']) {
+  max-width: 100vw;
+  height: 100dvh;
+  border-radius: 0;
+  border-width: 0;
+}
+
+@keyframes scSurfaceFlow {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+.sheetDialog[data-tone='staff-controls'] .studioHeader {
+  border-bottom-color: var(--sc-line);
+}
+
+.sheetDialog[data-tone='staff-controls'] .studioFooter {
+  border-top-color: var(--sc-line);
+}
+
+.sheetDialog[data-tone='staff-controls'] .studioHeader h3 {
+  color: var(--sc-ink);
+}
+
+.sheetDialog[data-tone='staff-controls'] .guideSubtitle {
+  color: var(--sc-ink-soft);
+}
+
+.sheetDialog[data-tone='staff-controls'] .btn:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+.scRoot {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+.scGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+/* Fullscreen gives the note boxes room to sit side by side */
+.scRoot[data-fullscreen='true'] .scGrid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+}
+
+/* Note boxes: a soft translucent box with a gradient line on the left, like a thinking note */
+.scNote,
+.scHint {
+  position: relative;
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-4) calc(var(--space-4) + 4px);
+  overflow: hidden;
+  background: var(--staff-controls-note-background);
+  border: 1px solid var(--staff-controls-note-border);
+  border-radius: var(--radius-control);
+}
+
+.scNote::before,
+.scHint::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--staff-controls-note-line);
+}
+
+.scNoteHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.scNoteIcon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--sc-accent);
+  background: color-mix(in srgb, var(--sc-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sc-accent) 22%, transparent);
+  border-radius: var(--radius-control);
+}
+
+.scNoteTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--sc-ink);
+}
+
+.scNoteText {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--sc-ink-soft);
+}
+
+.scNoteActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* The fullscreen prompt */
+.scHint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+
+.scHintBody {
+  display: grid;
+  flex: 1 1 14rem;
+  gap: 2px;
+  min-width: 0;
+}
+
+.scHintTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--sc-ink);
+}
+
+.scHintText {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--sc-ink-soft);
+}
+
+.scHintText .kbdGroup {
+  display: inline-flex;
+  gap: 4px;
+  vertical-align: baseline;
+}
+
+/* Legend of the debug logs card: categories and labels */
+.scLegend {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.scLegendTitle {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--sc-ink);
+}
+
+.scLegendList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scLegendList li {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  line-height: 1.45;
+  color: var(--sc-ink-soft);
+}
+
+.scLegendList li > :first-child {
+  justify-self: start;
+}
+
+@media (max-width: 520px) {
+  .scLegendList li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}
+
+/* The cards rise in one after another once the scene has started to leave */
+.scRoot[data-phase='loading'] .scHint,
+.scRoot[data-phase='loading'] .scNote {
+  opacity: 0;
+}
+
+.scRoot:not([data-phase='loading']) .scHint {
+  animation: scRise var(--motion-slow) var(--motion-ease) 120ms both;
+}
+
+.scRoot:not([data-phase='loading']) .scNote {
+  animation: scRise var(--motion-slow) var(--motion-ease) 240ms both;
+}
+
+.scRoot:not([data-phase='loading']) .scNote:nth-child(2) {
+  animation-delay: 360ms;
+}
+
+@keyframes scRise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Reduced motion: the surface stays still, the modal and the cards simply appear, nothing resizes with a delay */
+@media (prefers-reduced-motion: reduce) {
+  .sheetDialog[data-tone='staff-controls'] {
+    animation: none;
+    transition: none;
+  }
+
+  .sheetDialog[data-tone='staff-controls']:has(.scRoot[data-phase='loading']) {
+    transform: none;
+  }
+
+  .studioBackdrop:has(> .sheetDialog[data-tone='staff-controls']) {
+    transition: none;
+  }
+
+  .scRoot .scHint,
+  .scRoot .scNote {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
