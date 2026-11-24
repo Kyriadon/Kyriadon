@@ -1,23 +1,42 @@
 /* ============================================================================
    staffControlsStyles.css
-   1. The "Staff controls" item in the user menu (white overlay and a small jiggle on hover)
-   2. The opening scene (bobbing letters with a flowing gradient, then a motion blurred slide up)
+   1. The "Staff controls" button in the Account modal (white overlay and a small jiggle on hover)
+   2. The opening scene (a translucent, hydrophobic screen with its own glows and droplets, bobbing
+      letters with a teal, cyan and baby blue gradient, then a motion blurred slide up)
    3. The Staff Controls modal (flowing azure surface, note boxes, fullscreen)
    Colours, gradients and timings are the named tokens --staff-controls-* (lib/siteDesign.js).
    Every animation and transition has a reduced motion fallback at the end of each section.
    ============================================================================ */
 
 /* --------------------------------------------------------------------------
-   1. User menu item
+   1. Staff controls button (Account modal)
    -------------------------------------------------------------------------- */
-.userMenuItem.userMenuStaff {
+.acctStaffControls {
   position: relative;
   isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--button-gap);
+  width: 100%;
+  height: var(--button-height);
+  padding: 0 var(--button-padding-x);
+  overflow: hidden;
+  font-family: var(--font-ui);
+  font-size: var(--button-size);
+  font-weight: var(--button-weight);
+  line-height: 1;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  cursor: pointer;
   background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  transition: border-color var(--motion-base) var(--motion-ease);
 }
 
 /* The white overlay: it fades in smoothly instead of switching on */
-.userMenuItem.userMenuStaff::before {
+.acctStaffControls::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -28,35 +47,40 @@
   pointer-events: none;
 }
 
-.userMenuItem.userMenuStaff:hover,
-.userMenuItem.userMenuStaff:focus-visible {
-  background: transparent;
+.acctStaffControls:hover,
+.acctStaffControls:focus-visible {
+  border-color: var(--color-border-strong);
 }
 
-.userMenuItem.userMenuStaff:hover::before,
-.userMenuItem.userMenuStaff:focus-visible::before {
+.acctStaffControls:hover::before,
+.acctStaffControls:focus-visible::before {
   opacity: 1;
 }
 
-.userMenuStaffIcon {
+.acctStaffControls:focus-visible {
+  outline: 2px solid var(--staff-controls-accent);
+  outline-offset: 2px;
+}
+
+.acctStaffIcon {
   display: inline-flex;
   flex: none;
   transform-origin: 50% 60%;
 }
 
-.userMenuStaffLabel {
+.acctStaffLabel {
   display: inline-block;
 }
 
-/* A bit of a jiggle: the icon rocks, the label nudges, once per hover */
-.userMenuItem.userMenuStaff:hover .userMenuStaffIcon,
-.userMenuItem.userMenuStaff:focus-visible .userMenuStaffIcon {
-  animation: staffJiggle 560ms var(--motion-ease) both;
+/* A bit of a jiggle: the icon rocks and the label nudges, once per hover (no fill, so nothing stays applied) */
+.acctStaffControls:hover .acctStaffIcon,
+.acctStaffControls:focus-visible .acctStaffIcon {
+  animation: staffJiggle 560ms var(--motion-ease);
 }
 
-.userMenuItem.userMenuStaff:hover .userMenuStaffLabel,
-.userMenuItem.userMenuStaff:focus-visible .userMenuStaffLabel {
-  animation: staffNudge 560ms var(--motion-ease) both;
+.acctStaffControls:hover .acctStaffLabel,
+.acctStaffControls:focus-visible .acctStaffLabel {
+  animation: staffNudge 560ms var(--motion-ease);
 }
 
 @keyframes staffJiggle {
@@ -78,21 +102,40 @@
 
 /* Reduced motion: the overlay appears at once and nothing jiggles */
 @media (prefers-reduced-motion: reduce) {
-  .userMenuItem.userMenuStaff::before {
+  .acctStaffControls,
+  .acctStaffControls::before {
     transition: none;
   }
 
-  .userMenuItem.userMenuStaff:hover .userMenuStaffIcon,
-  .userMenuItem.userMenuStaff:focus-visible .userMenuStaffIcon,
-  .userMenuItem.userMenuStaff:hover .userMenuStaffLabel,
-  .userMenuItem.userMenuStaff:focus-visible .userMenuStaffLabel {
+  .acctStaffControls:hover .acctStaffIcon,
+  .acctStaffControls:focus-visible .acctStaffIcon,
+  .acctStaffControls:hover .acctStaffLabel,
+  .acctStaffControls:focus-visible .acctStaffLabel {
     animation: none;
   }
 }
 
 /* --------------------------------------------------------------------------
    2. Opening scene
+   The scene never blurs the page behind it: there is no backdrop filter. It is translucent and
+   paints its own soft glows (--staff-controls-scene-surface) and water droplets that sit on it
+   like beads on water repellent glass. While it is on screen, the dialog backdrop's own dim and
+   blur wait too (they fade in as the scene leaves).
    -------------------------------------------------------------------------- */
+.studioBackdrop:has(> .sheetDialog[data-tone='staff-controls']) {
+  transition:
+    padding var(--motion-slow) var(--motion-ease),
+    background-color var(--motion-slow) var(--motion-ease),
+    -webkit-backdrop-filter var(--motion-slow) var(--motion-ease),
+    backdrop-filter var(--motion-slow) var(--motion-ease);
+}
+
+.studioBackdrop:has(.scRoot[data-phase='loading']) {
+  background-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 .scScene {
   position: fixed;
   inset: 0;
@@ -100,9 +143,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: var(--staff-controls-scene);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
+  background: var(--staff-controls-scene-surface);
   transform-origin: 50% 100%;
   will-change: transform, filter;
   animation: fadeIn var(--motion-base) linear both;
@@ -132,7 +173,7 @@
   animation: scStreak var(--staff-controls-scene-leave) cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
-/* Slides the whole screen up; the blur and the stretch grow with the speed (a motion blur) */
+/* Slides the whole screen up; the blur (of the screen itself) and the stretch grow with the speed */
 @keyframes scSlideUp {
   0% { transform: translateY(0) scaleY(1); filter: blur(0); opacity: 1; }
   28% { transform: translateY(-5%) scaleY(1.02); filter: blur(2px); opacity: 1; }
@@ -145,7 +186,29 @@
   100% { opacity: 0.2; }
 }
 
+/* Droplets: round, clear beads with a bright highlight, a light rim and a soft shadow */
+.scBeads {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scBead {
+  position: absolute;
+  background: var(--staff-controls-bead);
+  border: 1px solid var(--staff-controls-bead-rim);
+  border-radius: 50%;
+  box-shadow: var(--staff-controls-bead-shadow);
+  animation: scBeadIn 520ms var(--motion-ease) var(--d, 0ms) backwards;
+}
+
+@keyframes scBeadIn {
+  from { opacity: 0; transform: scale(0.35); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 .scSceneInner {
+  position: relative;
   display: grid;
   justify-items: center;
   gap: var(--space-5);
@@ -182,8 +245,9 @@
   display: inline-flex;
 }
 
-/* Each letter bobs in a wave. The gradient is a palindrome that moves exactly one tile (3.2em) per
-   loop, and every letter starts a little later than the one before, so it flows through the word */
+/* Each letter bobs up and down ONCE, one after the other (a single wave). The gradient is a palindrome
+   that moves exactly one tile (3.2em) per loop, and every letter starts a little later than the one
+   before, so it keeps flowing through the word. */
 .scLetter {
   display: inline-block;
   color: var(--staff-controls-accent);
@@ -193,13 +257,15 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: scBob 1.15s ease-in-out infinite, scFlow 2.4s linear infinite;
-  animation-delay: calc(var(--i) * -90ms), calc(var(--i) * 0.465s - 24s);
+  animation: scBob 720ms ease-in-out 1, scFlow 2.4s linear infinite;
+  animation-delay: calc(var(--i) * 60ms + 150ms), calc(var(--i) * 0.465s - 24s);
 }
 
 @keyframes scBob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-0.28em); }
+  0% { transform: translateY(0); }
+  35% { transform: translateY(-0.34em); }
+  68% { transform: translateY(0.05em); }
+  100% { transform: translateY(0); }
 }
 
 @keyframes scFlow {
@@ -222,7 +288,7 @@
   to { background-position: 200% 0; }
 }
 
-/* Reduced motion: the letters stay still with a still gradient, and the screen just fades away */
+/* Reduced motion: the letters and droplets stay still (a still gradient), and the screen just fades away */
 @media (prefers-reduced-motion: reduce) {
   .scScene {
     animation: none;
@@ -238,6 +304,7 @@
     opacity: 0;
   }
 
+  .scBead,
   .scLetter,
   .scLoadingLine {
     animation: none;
@@ -245,6 +312,10 @@
 
   .scLetter {
     background-position: calc(var(--i) * -0.6em) 0;
+  }
+
+  .studioBackdrop:has(> .sheetDialog[data-tone='staff-controls']) {
+    transition: none;
   }
 }
 
@@ -256,10 +327,6 @@
 /* --------------------------------------------------------------------------
    3. Staff Controls modal
    -------------------------------------------------------------------------- */
-.studioBackdrop:has(> .sheetDialog[data-tone='staff-controls']) {
-  transition: padding var(--motion-slow) var(--motion-ease);
-}
-
 .studioBackdrop:has(.scRoot[data-fullscreen='true']) {
   padding: 0;
 }
@@ -327,6 +394,26 @@
 
 .sheetDialog[data-tone='staff-controls'] .guideSubtitle {
   color: var(--sc-ink-soft);
+}
+
+/* Buttons here change only their colours on hover. The site's primary button brightens with a
+   filter, and a filter makes the browser rebuild the button's layer on the first hover (the text
+   shifted for a moment). Plain colour changes need no new layer, so nothing moves. */
+.sheetDialog[data-tone='staff-controls'] .btn {
+  transition:
+    background-color var(--motion-fast) linear,
+    border-color var(--motion-fast) linear,
+    color var(--motion-fast) linear;
+}
+
+.sheetDialog[data-tone='staff-controls'] .btnPrimary:hover {
+  filter: none;
+  background-color: color-mix(in srgb, var(--color-discord) 90%, #fff);
+}
+
+.sheetDialog[data-tone='staff-controls'] .btnPrimary:active {
+  filter: none;
+  background-color: color-mix(in srgb, var(--color-discord) 94%, #000);
 }
 
 .sheetDialog[data-tone='staff-controls'] .btn:focus-visible {
@@ -491,27 +578,24 @@
   }
 }
 
-/* The cards rise in one after another once the scene has started to leave */
+/* The cards fade in one after another once the scene has started to leave. Only the opacity is
+   animated and the fill is "backwards", so when the fade is over NOTHING stays applied to the cards:
+   no leftover transform layer under the buttons, so the text is sharp and in place from the start. */
 .scRoot[data-phase='loading'] .scHint,
 .scRoot[data-phase='loading'] .scNote {
   opacity: 0;
 }
 
 .scRoot:not([data-phase='loading']) .scHint {
-  animation: scRise var(--motion-slow) var(--motion-ease) 120ms both;
+  animation: fadeIn var(--motion-slow) linear 120ms backwards;
 }
 
 .scRoot:not([data-phase='loading']) .scNote {
-  animation: scRise var(--motion-slow) var(--motion-ease) 240ms both;
+  animation: fadeIn var(--motion-slow) linear 240ms backwards;
 }
 
 .scRoot:not([data-phase='loading']) .scNote:nth-child(2) {
   animation-delay: 360ms;
-}
-
-@keyframes scRise {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Reduced motion: the surface stays still, the modal and the cards simply appear, nothing resizes with a delay */
@@ -525,7 +609,7 @@
     transform: none;
   }
 
-  .studioBackdrop:has(> .sheetDialog[data-tone='staff-controls']) {
+  .sheetDialog[data-tone='staff-controls'] .btn {
     transition: none;
   }
 
